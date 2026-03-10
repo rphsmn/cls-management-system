@@ -1,0 +1,116 @@
+.profile-container {
+  padding: 40px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #eee;
+}
+
+.avatar-circle {
+  width: 80px;
+  height: 80px;
+  background: #1a5336; /* Corlogic Green */
+  color: #ffeb3b; /* Corlogic Yellow */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.header-text h1 { margin: 0; color: #1a5336; }
+.subtitle { margin: 5px 0 10px; color: #666; font-style: italic; }
+
+.status-badge {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+.info-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.card-header h3 { margin: 0; color: #1a5336; font-size: 18px; }
+
+.verified-tag {
+  font-size: 11px;
+  color: #1a5336;
+  background: #e8f5e9;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.info-row span { color: #7f8c8d; }
+
+.readonly-value {
+  color: #546e7a;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Button Section */
+.profile-actions {
+  margin-top: 50px;
+  text-align: center;
+  padding: 30px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  border: 1px dashed #ddd;
+}
+
+.profile-actions p { margin-bottom: 15px; color: #666; }
+
+.btn-hr-request {
+  display: inline-block;
+  background-color: #ffeb3b; /* Corlogic Yellow */
+  color: #1a5336; /* Corlogic Green */
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: all 0.2s;
+}
+
+.btn-hr-request:hover {
+  background-color: #fdd835;
+  transform: translateY(-2px);
+}

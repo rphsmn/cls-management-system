@@ -1,0 +1,80 @@
+<div class="dashboard-container" *ngIf="currentUser$ | async as currentUser">
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h2>Leave Management System</h2>
+    </div>
+    <ul>
+      <li routerLink="/dashboard" routerLinkActive="active">DASHBOARD</li>
+      <li routerLink="/profile" routerLinkActive="active">PROFILE</li>
+      <li routerLink="/file-leave" routerLinkActive="active">FILE LEAVE</li>
+      <li routerLink="/history" routerLinkActive="active-link">
+        <span class="icon">📋</span>
+        <span>HISTORY / TRACKER</span>
+      </li>
+      <li *ngIf="currentUser && (currentUser.role === 'Manager' || currentUser.role === 'HR')" 
+          routerLink="/approvals" 
+          routerLinkActive="active"
+          class="admin-link">
+        APPROVALS
+      </li>
+    </ul>
+  </nav>
+
+  <main class="content">
+<header class="main-header">
+  <div class="header-left">
+    <h1>{{ greeting }}, {{ currentUser.name }}</h1> 
+    <span class="role-badge">{{ currentUser.role }}</span>
+  </div>
+  <button class="logout-btn" (click)="logout()">Logout</button>
+</header>
+
+    <section class="stats-grid">
+      <div class="stat-card">
+        <h3>Paid Leave</h3>
+        <p class="value">{{ currentUser.credits.paidLeave }}</p>
+        <span class="stat-label">Available Balance</span>
+      </div>
+      <div class="stat-card">
+        <h3>Birthday Leave</h3>
+        <p class="value">{{ currentUser.credits.birthdayLeave }}</p>
+        <span class="stat-label">Available Balance</span>
+      </div>
+      <div class="stat-card">
+        <h3>Sick Leave</h3>
+        <p class="value">{{ currentUser.credits.sickLeave }}</p>
+        <span class="stat-label">Available Balance</span>
+      </div>
+    </section>
+
+    <section class="recent-requests">
+      <div class="section-header">
+        <h2>Recent Activity</h2>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Request Type</th>
+              <th>Date Filed</th>
+              <th>Period</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let req of requests$ | async">
+              <td class="type-cell">{{ req.type }}</td>
+              <td>{{ req.dateFiled }}</td>
+              <td>{{ req.range }}</td>
+              <td>
+                <span [ngClass]="'status-pill ' + req.status.toLowerCase()">
+                  {{ req.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>

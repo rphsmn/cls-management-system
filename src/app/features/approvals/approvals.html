@@ -1,0 +1,38 @@
+<div class="approvals-container">
+  <h1>Leave Approvals</h1>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Employee Name</th>
+          <th>Role</th>
+          <th>Leave Type</th>
+          <th>Reason</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let req of requests$ | async">
+          <ng-container *ngIf="canApprove(req)">
+            <td>{{ req.requesterName }}</td>
+            <td><span class="role-badge">{{ req.requesterRole }}</span></td>
+            <td>{{ req.type }}</td>
+            <td>"{{ req.reason }}"</td>
+            <td>
+              <span [ngClass]="'status-pill ' + (req.status === 'Awaiting HR Approval' ? 'pending-hr' : req.status.toLowerCase())">
+                {{ req.status }}
+              </span>
+            </td>
+            <td>
+              <div *ngIf="req.status === 'Pending'" class="btn-group">
+                <button (click)="updateStatus(req, 'Approved')" class="btn-approve">Approve</button>
+                <button (click)="updateStatus(req, 'Rejected')" class="btn-reject">Reject</button>
+              </div>
+            </td>
+          </ng-container>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

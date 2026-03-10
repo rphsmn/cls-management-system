@@ -1,0 +1,22 @@
+<div class="form-container">
+  <div class="form-card">
+    <h2>File Leave</h2>
+    <form (submit)="submitLeave(); $event.preventDefault()">
+      <div class="input-group">
+        <label>Leave Type</label>
+        <select [(ngModel)]="leaveType" name="leaveType">
+          <option value="Paid Leave">Paid Leave (VL)</option>
+          <option value="Sick Leave">Sick Leave (SL)</option>
+          <option value="Birthday Leave">Birthday Leave</option>
+        </select>
+      </div>
+      <div class="date-row">
+        <input type="date" [(ngModel)]="startDate" name="startDate" required>
+        <input type="date" [(ngModel)]="endDate" name="endDate" required>
+      </div>
+<label>Reason for Leave</label>
+<textarea [(ngModel)]="leaveReason" name="reason" placeholder="e.g. Attending a family event"></textarea>
+      <button type="submit" class="btn-submit">Submit Request</button>
+    </form>
+  </div>
+</div>  

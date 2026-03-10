@@ -1,0 +1,197 @@
+/* Layout Core */
+.dashboard-container {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  background-color: #fcfdfd;
+}
+
+/* Sidebar: Sophisticated Dark Theme */
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  background-color: #1a5336; /* Corlogic Green */
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 40px 25px 20px;
+}
+
+.sidebar h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffeb3b; /* Corlogic Yellow */
+  letter-spacing: 2px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 30px 0;
+  margin: 0;
+}
+
+.sidebar ul li {
+  padding: 12px 25px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.7);
+  border-left: 3px solid transparent;
+}
+
+.sidebar ul li:hover {
+  color: #ffeb3b;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.active {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-left: 3px solid #ffeb3b !important;
+  color: #ffeb3b !important;
+}
+
+.admin-link {
+  margin-top: 20px;
+  padding-top: 30px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Main Content */
+.content {
+  flex-grow: 1;
+  padding: 50px 60px;
+  overflow-y: auto;
+}
+
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 50px;
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 300; /* Light weight for a modern look */
+  color: #1a5336;
+}
+
+.role-badge {
+  display: inline-block;
+  margin-top: 10px;
+  background: #f1f5f3;
+  color: #1a5336;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Value Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  margin-bottom: 50px;
+}
+
+.stat-card {
+  background: white;
+  padding: 35px;
+  border-radius: 4px; /* Industrial sharp look */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #edf2f0;
+}
+
+.stat-card h3 {
+  margin: 0;
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.stat-card .value {
+  margin: 15px 0 5px;
+  font-size: 44px;
+  font-weight: 200;
+  color: #1a5336;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+/* Table */
+.recent-requests {
+  margin-top: 20px;
+}
+
+.section-header h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a5336;
+  margin-bottom: 30px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  padding: 15px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+td {
+  padding: 20px 15px;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 13px;
+  color: #475569;
+}
+
+.type-cell {
+  font-weight: 600;
+  color: #1a5336;
+}
+
+/* Status: Clean Geometric Style */
+.status-pill {
+  padding: 5px 10px;
+  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pending { background: #fffbeb; color: #b45309; }
+.approved { background: #f0fdf4; color: #15803d; }
+.rejected { background: #fef2f2; color: #991b1b; }
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+}

@@ -1,0 +1,47 @@
+.form-container {
+  padding: 40px;
+  background-color: #1a5336; /* Corlogic Green */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+.form-card {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.form-header h2 { color: #1a5336; margin-bottom: 5px; }
+.form-header p { color: #666; font-size: 14px; margin-bottom: 25px; }
+
+.input-group { margin-bottom: 20px; }
+.input-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+
+input, select, textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.date-row { display: flex; gap: 20px; }
+
+.btn-submit {
+  width: 100%;
+  padding: 15px;
+  background-color: #ffeb3b; /* Corlogic Yellow */
+  color: #1a5336; /* Dark Green Text */
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-submit:hover { background-color: #fdd835; transform: translateY(-2px); }

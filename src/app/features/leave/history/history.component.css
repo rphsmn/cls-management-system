@@ -1,0 +1,121 @@
+.history-container {
+  padding: 50px 60px;
+  background-color: #fcfdfd;
+  min-height: 100vh;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 300;
+  color: #1a5336;
+  margin: 0;
+}
+
+.page-header p {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 10px;
+}
+
+.table-card {
+  margin-top: 40px;
+  background: white;
+  padding: 30px;
+  border-radius: 4px;
+  border: 1px solid #edf2f0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  padding: 15px;
+  font-size: 10px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+td {
+  padding: 20px 15px;
+  font-size: 13px;
+  color: #475569;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.type-cell { font-weight: 600; color: #1a5336; }
+
+.reason-cell { max-width: 250px; }
+
+.reason-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-pill {
+  padding: 5px 10px;
+  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.pending { background: #fffbeb; color: #b45309; }
+.approved { background: #f0fdf4; color: #15803d; }
+.rejected { background: #fef2f2; color: #991b1b; }
+
+/* tracker styles */
+.tracker-cell {
+  min-width: 300px;
+}
+
+.progress-track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 10px;
+  color: #cbd5e1;
+  position: relative;
+}
+
+.step .dot {
+  width: 12px;
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 50%;
+  margin-bottom: 4px;
+}
+
+.line {
+  flex-grow: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin-bottom: 18px; /* Aligns with the dots */
+}
+
+/* Active State (Current Boss) */
+.step.active .dot {
+  background: #3b82f6; /* Blue for 'Current' */
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+.step.active span { color: #3b82f6; font-weight: 600; }
+
+/* Completed State (Approved by this Boss) */
+.step.completed .dot {
+  background: #1a5336; /* CorLogics Green */
+}
+.step.completed span { color: #1a5336; }
+.step.completed + .line { background: #1a5336; }

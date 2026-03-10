@@ -1,0 +1,50 @@
+<div class="history-container">
+  <header class="page-header">
+    <h1>My Leave Tracker</h1>
+    <p>Monitor the approval progress of your requests</p>
+  </header>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Leave Details</th>
+          <th>Current Progress</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let req of requests$ | async">
+          <td>
+            <div class="leave-info">
+              <span class="type">{{ req.type | titlecase }}</span>
+              <span class="date">{{ req.range }}</span>
+            </div>
+          </td>
+          
+          <td class="tracker-cell">
+            <div class="progress-track">
+              <div class="step" [ngClass]="{'active': req.stage === 'Initial', 'completed': req.stage === 'Final' || req.status === 'Approved'}">
+                <div class="dot"></div>
+                <span>Supervisor</span>
+              </div>
+              
+              <div class="line"></div>
+
+              <div class="step" [ngClass]="{'active': req.stage === 'Final', 'completed': req.status === 'Approved'}">
+                <div class="dot"></div>
+                <span>HR / Admin</span>
+              </div>
+            </div>
+          </td>
+
+          <td>
+            <span [ngClass]="'status-pill ' + req.status.toLowerCase().replace(' ', '-')">
+              {{ req.status }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

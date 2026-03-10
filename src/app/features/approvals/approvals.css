@@ -1,0 +1,118 @@
+.approvals-container {
+  padding: 50px 60px;
+  background-color: #fcfdfd;
+  min-height: 100vh;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 300;
+  color: #1a5336;
+  margin: 0;
+}
+
+.page-header p {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.table-card {
+  margin-top: 40px;
+  background: white;
+  padding: 30px;
+  border-radius: 4px;
+  border: 1px solid #edf2f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  padding: 15px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+td {
+  padding: 20px 15px;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 13px;
+  color: #475569;
+}
+
+.type-cell {
+  font-weight: 600;
+  color: #1a5336;
+}
+
+.reason-text {
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Status Pills */
+.status-pill {
+  padding: 5px 10px;
+  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.pending { background: #fffbeb; color: #b45309; }
+.approved { background: #f0fdf4; color: #15803d; }
+.rejected { background: #fef2f2; color: #991b1b; }
+
+/* Action Buttons */
+.btn-group { display: flex; gap: 10px; }
+
+.btn-approve {
+  background: #1a5336;
+  color: #ffeb3b;
+  border: none;
+  padding: 8px 15px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.btn-reject {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  padding: 8px 15px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+  tr:hover {
+  background-color: #f8fafc; /* Subtle highlight when hovering over a row */
+}
+
+td {
+  padding: 16px 20px; /* More vertical space for each request */
+  vertical-align: middle;
+}
+
+.role-badge {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+}

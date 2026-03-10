@@ -1,0 +1,60 @@
+<div class="profile-container" *ngIf="currentUser">
+  <div class="profile-header">
+    <div class="avatar-circle">
+      {{ currentUser.name.charAt(0) }}
+    </div>
+    <div class="header-text">
+      <h1>{{ currentUser.name }}</h1>
+      <p class="subtitle">4th Year BSIT Student & IT Intern</p>
+      <span class="status-badge">Active Account</span>
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="card-header">
+        <h3>Employment Details</h3>
+        <span class="verified-tag">✓ Verified</span>
+      </div>
+      <div class="info-row">
+        <span>Employee ID:</span>
+        <strong class="readonly-value">{{ currentUser.id }}</strong>
+      </div>
+      <div class="info-row">
+        <span>Department:</span>
+        <strong class="readonly-value">Information Technology</strong>
+      </div>
+      <div class="info-row">
+        <span>Position:</span>
+        <strong class="readonly-value">Software Development Intern</strong>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <div class="card-header">
+        <h3>Official Government IDs</h3>
+        <span class="verified-tag">✓ Verified</span>
+      </div>
+      <div class="info-row">
+        <span>SSS Number:</span>
+        <strong class="readonly-value">{{ govInfo.sss }}</strong>
+      </div>
+      <div class="info-row">
+        <span>PhilHealth:</span>
+        <strong class="readonly-value">{{ govInfo.philHealth }}</strong>
+      </div>
+      <div class="info-row">
+        <span>TIN Number:</span>    
+        <strong class="readonly-value">{{ govInfo.tin }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-actions">
+    <p>Need to update your information?</p>
+    <a href="mailto:ralphsamsonidsc@gmail.com?subject=Information Update Request - {{currentUser.id}}" 
+       class="btn-hr-request">
+      Request Info Update from HR
+    </a>
+  </div>
+</div>
