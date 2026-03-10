@@ -1,6 +1,18 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { User } from '../models/user.model';
+
+// Defining the interface here so other files can import it directly from auth.ts
+export interface User {
+  id: string;
+  name: string;
+  password?: string;
+  role: string;
+  credits: {
+    paidLeave: number;
+    birthdayLeave: number;
+    sickLeave: number;
+  };
+}
 
 @Injectable({
   providedIn: 'root'
@@ -27,7 +39,7 @@ export class AuthService {
 
   private getInitialUser(): User | null {
     const saved = localStorage.getItem(this.USER_KEY);
-    return saved ? JSON.parse(saved) : null;
+    return saved ? JSON.parse(saved) as User : null;
   }
 
   private getSavedRequests(): any[] {
@@ -38,7 +50,7 @@ export class AuthService {
   login(id: string, pass: string): boolean {
     const user = this.users.find(u => u.id === id && u.password === pass);
     if (user) {
-      this.currentUserSubject.next({ ...user });
+      this.currentUserSubject.next({ ...user } as User);
       localStorage.setItem(this.USER_KEY, JSON.stringify(user));
       return true;
     }
@@ -72,34 +84,53 @@ export class AuthService {
     this.syncRequests();
   }
 
-  private getInitialReviewer(role: string): string {
-    switch (role) {
-      case 'Ops Staff': return 'Ops Sup';
-      case 'Ops Sup':
-      case 'IT Dev': return 'Manager';
-      case 'HR': return 'Admin Manager';
-      default: return 'Manager';
-    }
+private getInitialReviewer(role: string): string {
+  switch (role) {
+    case 'Ops Staff': return 'Ops Sup';
+    case 'Acc Staff': return 'Acc Sup';
+    // For Supervisors and IT Devs, the Admin Manager reviews first
+    case 'Ops Sup':
+    case 'Acc Sup':
+    case 'IT Dev': return 'Admin Manager'; 
+    case 'HR': return 'Admin Manager';
+    case 'Admin Manager': return 'HR';
+    default: return 'HR';
   }
+}
 
-  updateRequestStatus(requestToUpdate: any, newStatus: string) {
-    const currentRequests = this.requestsSubject.value.map(req => {
-      const isMatch = req.dateFiled === requestToUpdate.dateFiled && 
-                      req.requesterName === requestToUpdate.requesterName;
+updateRequestStatus(requestToUpdate: any, newStatus: string) {
+  const currentRequests = this.requestsSubject.value.map(req => {
+    const isMatch = req.dateFiled === requestToUpdate.dateFiled && 
+                    req.requesterName === requestToUpdate.requesterName;
 
-      if (isMatch) {
-        if (newStatus === 'Rejected') return { ...req, status: 'Rejected', targetReviewer: 'None' };
-        if (newStatus === 'Approved') {
-          if (req.stage === 'Initial') {
-            return { ...req, stage: 'Final', status: 'Awaiting HR Approval', targetReviewer: 'HR' };
-          } else {
-            return { ...req, status: 'Approved', targetReviewer: 'None' };
-          }
+    if (isMatch) {
+      if (newStatus === 'Rejected') return { ...req, status: 'Rejected', targetReviewer: 'None' };
+      
+      if (newStatus === 'Approved') {
+        // STEP 1: If Ops/Acc Sup approved Staff request -> Send to HR
+        if (req.targetReviewer === 'Ops Sup' || req.targetReviewer === 'Acc Sup') {
+          return { ...req, status: 'Awaiting HR Approval', targetReviewer: 'HR' };
         }
+
+        // STEP 2: If Admin Manager approved Ops/Acc Sup/IT request -> Send to HR
+        if (req.targetReviewer === 'Admin Manager' && 
+           (req.requesterRole === 'Ops Sup' || req.requesterRole === 'Acc Sup' || req.requesterRole === 'IT Dev' || req.requesterRole === 'HR')) {
+          return { ...req, status: 'Awaiting HR Approval', targetReviewer: 'HR' };
+        }
+
+        // STEP 3: If Admin Manager approved a request from an Admin Manager -> Send to HR
+        if (req.targetReviewer === 'Admin Manager' && req.requesterRole === 'Admin Manager') {
+            return { ...req, status: 'Awaiting HR Approval', targetReviewer: 'HR' };
+        }
+        
+        // FINAL STEP: If HR approves (and they were the last step) -> Fully Approved
+        return { ...req, status: 'Approved', targetReviewer: 'None' };
       }
-      return req;
-    });
-    this.requestsSubject.next(currentRequests);
-    this.syncRequests();
-  }
+    }
+    return req;
+  });
+
+  this.requestsSubject.next(currentRequests);
+  this.syncRequests();
+}
 }

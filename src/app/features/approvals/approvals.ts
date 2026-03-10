@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../core/services/auth';
-import { User } from '../../core/models/user.model';
-import { Observable } from 'rxjs';
+import { AuthService, User } from '../../core/services/auth';
+import { Observable, map } from 'rxjs';
 
 @Component({
   selector: 'app-approvals',
@@ -20,14 +19,15 @@ export class ApprovalsComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.authService.currentUser$.subscribe((user: User | null) => {
+    this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
     });
   }
 
+  // Fixes TS2339: Logic to check if current user is the target reviewer
   canApprove(req: any): boolean {
     if (!this.currentUser) return false;
-    return req.targetReviewer === this.currentUser.role;
+    return req.targetReviewer === this.currentUser.role && req.status !== 'Approved' && req.status !== 'Rejected';
   }
 
   updateStatus(req: any, status: string) {

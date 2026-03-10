@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../core/services/auth';
-import { User } from '../../core/models/user.model';
+import { AuthService, User } from '../../core/services/auth';
 
 @Component({
   selector: 'app-profile',
@@ -11,19 +10,19 @@ import { User } from '../../core/models/user.model';
   styleUrl: './profile.css'
 })
 export class ProfileComponent implements OnInit {
+  // FIXED: Changed name to match the template's *ngIf="currentUser"
   currentUser: User | null = null;
-
-  // Mock government data for the prototype
+  
   govInfo = {
-    sss: '34-7712345-1',
-    philHealth: '12-050123456-7',
-    pagIbig: '1212-4567-8901',
-    tin: '123-456-789-000'
+    tin: '000-000-000',
+    sss: '00-0000000-0',
+    philHealth: '00-000000000-0'
   };
 
   constructor(private authService: AuthService) {}
 
   ngOnInit() {
+    // Subscribe so the template gets the raw user data without needing the async pipe
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
     });

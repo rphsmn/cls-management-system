@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { AuthService } from '../../core/services/auth';
-import { User } from '../../core/models/user.model';
+import { AuthService, User } from '../../core/services/auth';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -14,8 +13,8 @@ import { Observable } from 'rxjs';
 })
 export class DashboardComponent implements OnInit {
   currentUser$: Observable<User | null>;
-  requests$: Observable<any[]>;
-  greeting: string = '';
+  requests$: Observable<any[]>; // Fixes TS2339 (requests$)
+  greeting: string = 'Welcome back';
 
   constructor(private authService: AuthService, private router: Router) {
     this.currentUser$ = this.authService.currentUser$;
@@ -26,20 +25,15 @@ export class DashboardComponent implements OnInit {
     this.setGreeting();
   }
 
-  setGreeting(): void {
+  private setGreeting() {
     const hour = new Date().getHours();
-    if (hour < 12) {
-      this.greeting = 'Good Morning';
-    } else if (hour < 18) {
-      this.greeting = 'Good Afternoon';
-    } else {
-      this.greeting = 'Good Evening';
-    }
+    if (hour < 12) this.greeting = 'Good Morning';
+    else if (hour < 18) this.greeting = 'Good Afternoon';
+    else this.greeting = 'Good Evening';
   }
 
-  logout(): void {
+  logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
 }
-
