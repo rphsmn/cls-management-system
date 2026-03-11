@@ -13,37 +13,20 @@ import { AuthService } from '../../core/services/auth';
 })
 export class ApprovalsComponent {
   requests$: Observable<any[]>;
-  
-  // Modal state management
-  showModal: boolean = false;
+  showModal = false; // Fixes image_266df8.png
   pendingAction: 'Approve' | 'Reject' | null = null;
   selectedRequest: any = null;
 
   constructor(private authService: AuthService) {
-    this.requests$ = combineLatest([
-      this.authService.currentUser$,
-      this.authService.requests$
-    ]).pipe(
-      map(([user, requests]) => {
-        if (!user) return [];
-        // Filters for requests where the user is the current target reviewer
-        return requests.filter(req => 
-          req.targetReviewer === user.role && 
-          req.status !== 'Rejected' && 
-          req.status !== 'Approved'
-        );
-      })
-    );
+    this.requests$ = this.authService.requests$; // Corrected variable name
   }
 
-  // Matches (click)="updateStatus(req, 'Approve')"
-  updateStatus(request: any, action: 'Approve' | 'Reject') {
-    this.selectedRequest = request;
+  updateStatus(req: any, action: 'Approve' | 'Reject') {
+    this.selectedRequest = req;
     this.pendingAction = action;
     this.showModal = true;
   }
 
-  // Matches (click)="confirmAction()"
   confirmAction() {
     if (this.selectedRequest && this.pendingAction) {
       this.authService.updateRequestStatus(this.selectedRequest, this.pendingAction === 'Approve' ? 'Approved' : 'Rejected');
@@ -51,11 +34,8 @@ export class ApprovalsComponent {
     }
   }
 
-  // Matches (click)="closeModal()"
   closeModal() {
     this.showModal = false;
-    this.selectedRequest = null;
-    this.pendingAction = null;
   }
 
   hasPendingRequests(requests: any[]): boolean {

@@ -1,71 +1,36 @@
-<div class="history-container">
-  <header class="main-header">
-    <button routerLink="/dashboard" class="back-link">
-      <span class="arrow">←</span> BACK TO DASHBOARD
-    </button>
-    <h1 class="page-title">My Leave History</h1>
-  </header>
-
-  <main class="content">
-    <div class="table-card">
-      <ng-container *ngIf="(requests$ | async) as requestsList">
-        <table class="history-table" *ngIf="requestsList.length > 0; else noData">
-          <thead>
-            <tr>
-              <th>Date Filed</th>
-              <th>Leave Type</th>
-              <th>Period</th>
-              <th>Reason</th>
-              <th class="progress-col">Approval Progress</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let req of requestsList">
-              <td>{{ req.dateFiled | date:'MMM dd, yyyy' }}</td>
-              <td>{{ req.type }}</td>
-              <td>{{ req.period }}</td>
-              <td class="reason-text">"{{ req.reason }}"</td>
-              <td>
-                <div class="progress-track">
-                  <div class="step completed">
-                    <div class="icon-circle">✓</div>
-                    <span class="step-label">Filed</span>
-                  </div>
-
-                  <div class="connector" [class.green]="req.status !== 'Pending'"></div>
-
-                  <div class="step" 
-                       [class.completed]="req.status === 'Awaiting HR Approval' || req.status === 'Approved' || (req.status === 'Rejected' && req.targetReviewer === 'HR')"
-                       [class.rejected]="req.status === 'Rejected' && (req.targetReviewer === 'Ops Sup' || req.targetReviewer === 'Acc Sup')">
-                    <div class="icon-circle">
-                      <ng-container *ngIf="req.status === 'Awaiting HR Approval' || req.status === 'Approved' || (req.status === 'Rejected' && req.targetReviewer === 'HR')">✓</ng-container>
-                      <ng-container *ngIf="req.status === 'Rejected' && (req.targetReviewer === 'Ops Sup' || req.targetReviewer === 'Acc Sup')">✕</ng-container>
-                      <ng-container *ngIf="req.status === 'Pending'">?</ng-container>
-                    </div>
-                    <span class="step-label">Supervisor</span>
-                  </div>
-
-                  <div class="connector" [class.green]="req.status === 'Approved' || (req.status === 'Rejected' && req.targetReviewer === 'HR')"></div>
-
-<div class="step" 
-     [class.completed]="req.status === 'Awaiting HR Approval' || req.status === 'Approved' || (req.status === 'Rejected' && req.targetReviewer === 'HR')"
-     [class.rejected]="req.status === 'Rejected' && (req.targetReviewer === 'Ops Sup' || req.targetReviewer === 'Acc Sup')">
-  <div class="icon-circle">
-    <ng-container *ngIf="req.status === 'Awaiting HR Approval' || req.status === 'Approved' || (req.status === 'Rejected' && req.targetReviewer === 'HR')">✓</ng-container>
-    <ng-container *ngIf="req.status === 'Rejected' && (req.targetReviewer === 'Ops Sup' || req.targetReviewer === 'Acc Sup')">✕</ng-container>
-    <ng-container *ngIf="req.status === 'Pending'">?</ng-container>
+<tr *ngFor="let req of (requests$ | async)">
+  <td>
+<div class="progress-track">
+  <div class="step completed">
+    <div class="icon-circle">✓</div>
+    <span class="step-label">Filed</span>
   </div>
-  <span class="step-label">Supervisor</span>
-</div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <ng-template #noData>
-          <div class="no-data-msg">You haven't filed any leave requests yet.</div>
-        </ng-template>
-      </ng-container>
+
+  <div class="connector" [class.green]="req.status !== 'Pending'"></div>
+
+  <div class="step" 
+       [class.completed]="req.status === 'Awaiting HR Approval' || req.status === 'Approved' || (req.status === 'Rejected' && req.targetReviewer === 'HR')"
+       [class.rejected]="req.status === 'Rejected' && (req.targetReviewer === 'Ops Sup' || req.targetReviewer === 'Acc Sup')">
+    <div class="icon-circle">
+      <ng-container *ngIf="req.status === 'Awaiting HR Approval' || req.status === 'Approved' || (req.status === 'Rejected' && req.targetReviewer === 'HR')">✓</ng-container>
+      <ng-container *ngIf="req.status === 'Rejected' && (req.targetReviewer === 'Ops Sup' || req.targetReviewer === 'Acc Sup')">✕</ng-container>
+      <ng-container *ngIf="req.status === 'Pending'">?</ng-container>
     </div>
-  </main>
+    <span class="step-label">Supervisor</span>
+  </div>
+
+  <div class="connector" [class.green]="req.status === 'Approved' || (req.status === 'Rejected' && req.targetReviewer === 'HR')"></div>
+
+  <div class="step" 
+       [class.completed]="req.status === 'Approved'"
+       [class.rejected]="req.status === 'Rejected' && req.targetReviewer === 'HR'">
+    <div class="icon-circle">
+      <ng-container *ngIf="req.status === 'Approved'">✓</ng-container>
+      <ng-container *ngIf="req.status === 'Rejected' && req.targetReviewer === 'HR'">✕</ng-container>
+      <ng-container *ngIf="req.status === 'Awaiting HR Approval'">...</ng-container>
+    </div>
+    <span class="step-label">HR / Manager</span>
+  </div>
 </div>
+  </td>
+</tr>

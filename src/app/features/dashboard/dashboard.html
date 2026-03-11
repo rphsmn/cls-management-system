@@ -67,7 +67,7 @@
             <tr *ngFor="let req of requests$ | async">
               <td class="type-cell">{{ req.type | titlecase }}</td>
               <td>{{ req.dateFiled }}</td>
-              <td>{{ req.range }}</td>
+<td>{{ req.period }}</td>
               <td>
                 <span [ngClass]="'status-pill ' + req.status.toLowerCase()">
                   {{ req.status }}

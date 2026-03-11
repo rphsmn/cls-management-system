@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { Observable } from 'rxjs';
 import { AuthService, User } from '../../core/services/auth';
-import { Observable, map, switchMap, of } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,29 +12,16 @@ import { Observable, map, switchMap, of } from 'rxjs';
   styleUrl: './dashboard.css'
 })
 export class DashboardComponent implements OnInit {
-  // Use public observables to satisfy the template's async pipes
   currentUser$: Observable<User | null>;
   requests$: Observable<any[]>;
   greeting: string = '';
 
   constructor(private authService: AuthService, private router: Router) {
     this.currentUser$ = this.authService.currentUser$;
-    
-    this.requests$ = this.currentUser$.pipe(
-      switchMap(user => {
-        if (!user) return of([]);
-        return this.authService.requests$.pipe(
-          map(all => all.filter(r => r.requesterName === user.name).slice(0, 5))
-        );
-      })
-    );
+    this.requests$ = this.authService.requests$;
   }
 
   ngOnInit() {
-    this.setGreeting();
-  }
-
-  private setGreeting() {
     const hour = new Date().getHours();
     if (hour < 12) this.greeting = 'Good Morning';
     else if (hour < 18) this.greeting = 'Good Afternoon';
@@ -46,3 +33,4 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 }
+
