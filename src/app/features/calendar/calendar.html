@@ -1,19 +1,106 @@
 <main class="calendar-wrapper">
-  <div class="content-header">
-    <div class="title-section">
-      <h1>Company Calendar</h1>
-      <div class="sub-header">
-        <span class="role-badge">Holidays & Events</span>
-        <span class="status-text">{{ today | date:'MMMM yyyy' }}</span>
+  <div class="calendar-layout">
+    <div class="calendar-main">
+      <header class="calendar-header">
+        <div class="header-info">
+          <h1>Company Calendar</h1>
+          <div class="breadcrumb-nav">
+            <span class="role-badge">Global Schedule</span>
+            <span class="date-display">{{ viewDate | date:'MMMM yyyy' }}</span>
+          </div>
+        </div>
+
+        <div class="nav-controls">
+          <button (click)="changeMonth(-1)" class="nav-btn">‹</button>
+          <button (click)="viewDate = today; generateCalendar()" class="today-btn">Today</button>
+          <button (click)="changeMonth(1)" class="nav-btn">›</button>
+        </div>
+      </header>
+
+      <div class="calendar-card">
+        <div class="weekday-grid">
+          <div *ngFor="let day of weekDays" class="weekday-label">{{ day }}</div>
+        </div>
+
+        <div class="days-grid">
+          <div *ngFor="let p of paddingDays" class="day-cell empty"></div>
+          
+          <div *ngFor="let day of daysInMonth" 
+               class="day-cell" 
+               (click)="openDayDetails(day)"
+               [class.is-today]="isToday(day)">
+            <div class="day-header">
+              <span class="day-number">{{ day }}</span>
+            </div>
+            <div class="day-content">
+              <div *ngIf="getEvent(day) as event" 
+                   class="holiday-pill" 
+                   [ngClass]="[event.type, getRegionClass(event.title)]">
+                {{ event.title }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+
+    <aside class="calendar-sidebar">
+      <div class="sidebar-card">
+        <h3>Holiday Types</h3>
+<ul class="legend-list">
+  <li><span class="dot regular"></span> 
+      <div><span class="l-label">Regular Holiday</span><span class="l-desc">Statutory Off</span></div></li>
+  <li><span class="dot special-non"></span> 
+      <div><span class="l-label">Special Non-Working</span><span class="l-desc">Observed Day</span></div></li>
+  <li><span class="dot special-work"></span> 
+      <div><span class="l-label">Special Working</span><span class="l-desc">Work Day</span></div></li>
+  <li><span class="dot company"></span> 
+      <div><span class="l-label">Company Event</span><span class="l-desc">Internal Sync</span></div></li>
+</ul>
+      </div>
+
+      <div class="sidebar-card">
+        <h3>Regions</h3>
+        <ul class="legend-list">
+          <li><span class="region-bar ph"></span> <div><span class="l-label">Philippines</span></div></li>
+          <li><span class="region-bar au"></span> <div><span class="l-label">Australia</span></div></li>
+          <li><span class="region-bar both"></span> <div><span class="l-label">Shared PH/AU</span></div></li>
+        </ul>
+        <div class="sidebar-footer">
+          <p>PH: Philippines | AU: Australia</p>
+        </div>
+      </div>
+    </aside>
   </div>
 
-  <div class="calendar-inner">
-    <div class="calendar-card">
-      <div class="calendar-placeholder">
-        <p>Calendar Integration coming soon...</p>
-        <span class="notice">Planned: FullCalendar integration with Holiday Sync.</span>
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span class="modal-date">{{ viewDate | date:'MMMM' }} {{ selectedDay }}, {{ viewDate | date:'yyyy' }}</span>
+        <button class="close-btn" (click)="closeModal()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <div *ngIf="selectedEvent; else noEvent">
+          <div class="event-tag" [ngClass]="[selectedEvent.type, getRegionClass(selectedEvent.title)]">
+            {{ selectedEvent.type | uppercase }}
+          </div>
+          <h2>{{ selectedEvent.title }}</h2>
+          <p class="event-desc">{{ selectedEvent.description || 'No additional details provided for this date.' }}</p>
+        </div>
+        
+        <ng-template #noEvent>
+          <div class="empty-modal-state">
+            <div class="empty-icon">📅</div>
+            <h3>Regular Work Day</h3>
+            <p>No holidays or events scheduled for this date.</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="modal-footer">
+        <button class="action-btn secondary" (click)="closeModal()">Close</button>
+        <button class="action-btn primary" (click)="requestLeave()">Request Leave</button>
       </div>
     </div>
   </div>

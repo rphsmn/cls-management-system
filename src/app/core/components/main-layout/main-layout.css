@@ -1,10 +1,10 @@
-/* Sidebar Styles */
-.dashboard-container {
+/* Sidebar & Shell Styles */
+.main-app-shell {
   display: flex;
   height: 100vh;
   width: 100%;
   overflow: hidden;
-  background-color: #f8fafc;
+  background-color: #f8fafc; /* Neutral background for the entire app */
 }
 
 .sidebar {
@@ -15,36 +15,63 @@
   flex-direction: column;
   height: 100%;
   flex-shrink: 0;
+  z-index: 10;
 }
 
-.sidebar-header { padding: 32px 24px; display: flex; align-items: center; gap: 12px; }
-.logo-dot { width: 10px; height: 10px; background-color: #4ade80; border-radius: 50%; }
-.sidebar-content { flex: 1; padding: 0 16px; }
+.sidebar-header { 
+  padding: 32px 24px; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+}
 
-.nav-menu { list-style: none; padding: 0; margin: 0; }
+.logo-dot { 
+  width: 10px; 
+  height: 10px; 
+  background-color: #4ade80; 
+  border-radius: 50%; 
+}
+
+.sidebar-content { 
+  flex: 1; 
+  padding: 0 16px; 
+}
+
+.nav-menu { 
+  list-style: none; 
+  padding: 0; 
+  margin: 0; 
+}
+
 .nav-menu li {
   padding: 12px 16px;
   margin: 4px 0;
   border-radius: 8px;
   cursor: pointer;
   color: rgba(255, 255, 255, 0.7);
-  transition: all 0.2s;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
+/* Active Link State */
 .active-link {
   background-color: white !important;
   color: #1a5336 !important;
-  font-weight: 700;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.sidebar-footer { padding: 24px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.sidebar-footer { 
+  padding: 24px; 
+  border-top: 1px solid rgba(255, 255, 255, 0.1); 
+}
 
 .logout-btn-sidebar {
   width: 100%;
   padding: 12px;
-  background: transparent !important; 
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  color: white !important;
+  background: transparent; 
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: white;
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
@@ -53,8 +80,18 @@
 }
 
 .logout-btn-sidebar:hover {
-  background-color: #ef4444 !important;
-  border-color: #ef4444 !important;
+  background-color: #ef4444;
+  border-color: #ef4444;
+}
+
+/* Main Content Area */
+.content-wrapper { 
+  flex: 1; 
+  height: 100vh;
+  overflow-y: auto; 
+  overflow-x: hidden; 
+  display: flex;
+  flex-direction: column;
 }
 
 /* CUSTOM MODAL STYLES */
@@ -62,7 +99,7 @@
   position: fixed;
   top: 0; left: 0;
   width: 100vw; height: 100vh;
-  background: rgba(15, 23, 42, 0.6); /* Darkened blur effect */
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -74,7 +111,7 @@
   background: white;
   padding: 32px;
   border-radius: 20px;
-  width: 100%;
+  width: 90%;
   max-width: 400px;
   text-align: center;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
@@ -101,7 +138,6 @@
 
 .modal-card h3 { color: #1e293b; margin: 0 0 8px; font-size: 20px; }
 .modal-card p { color: #64748b; font-size: 14px; margin-bottom: 24px; }
-
 .modal-actions { display: flex; gap: 12px; }
 
 .btn-cancel {
@@ -120,5 +156,3 @@
 
 .btn-confirm:hover { background: #dc2626; }
 .btn-cancel:hover { background: #e2e8f0; }
-
-.content-wrapper { flex: 1; overflow-y: auto; overflow-x: hidden; }

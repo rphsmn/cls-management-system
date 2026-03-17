@@ -4,7 +4,7 @@
       <div class="toast-icon">✓</div>
       <div class="toast-body">
         <strong>SUBMISSION SUCCESSFUL</strong>
-        <span>Your leave request is now pending review.</span>
+        <span>Your request has been filed for review.</span>
       </div>
     </div>
   </div>
@@ -16,7 +16,7 @@
       <h1>File a Request</h1>
       <div class="sub-header">
         <span class="role-badge">{{ currentUser.role }}</span>
-        <span class="status-text">Submit your leave application for approval</span>
+        <span class="status-text">Apply for leave credits</span>
       </div>
     </div>
   </div>
@@ -24,59 +24,66 @@
   <div class="content-card">
     <form (ngSubmit)="onSubmit()" #leaveForm="ngForm" class="leave-form">
       <div class="form-grid">
-        
         <div class="form-group full-width">
           <div class="label-row">
             <label>Leave Type</label>
-            <div class="balance-meta" *ngIf="leaveRequest.type">
-              <span class="bal available">Available: {{ currentUser.balances[leaveRequest.type].rem }}</span>
-              <span class="bal pending" *ngIf="currentUser.balances[leaveRequest.type].pen > 0">
-                Pending: {{ currentUser.balances[leaveRequest.type].pen }}
-              </span>
-            </div>
+<div class="balance-meta" *ngIf="leaveRequest.type">
+  <span class="bal available" [class.insufficient]="isOverBalance">
+    AVAILABLE: {{ currentUser.balances[leaveRequest.type].rem }}
+  </span>
+  
+  <span class="bal pending">
+    PENDING: {{ currentUser.balances[leaveRequest.type].pen }}
+  </span>
+</div>
           </div>
-          <select name="type" [(ngModel)]="leaveRequest.type" required>
+          <select name="type" [(ngModel)]="leaveRequest.type" (change)="checkBalance()" required>
             <option value="" disabled selected>Select type of leave</option>
             <option value="Paid Leave">Paid Leave</option>
             <option value="Sick Leave">Sick Leave</option>
             <option value="Birthday Leave" [disabled]="!currentUser.isBirthMonth">
-              Birthday Leave {{ !currentUser.isBirthMonth ? '(Only available on birth month)' : '' }}
+              Birthday Leave {{ !currentUser.isBirthMonth ? '(Birth month only)' : '' }}
             </option>
           </select>
         </div>
 
         <div class="form-group">
           <label>Start Date</label>
-          <input type="date" name="startDate" [(ngModel)]="leaveRequest.startDate" required>
+          <input type="date" name="startDate" [(ngModel)]="leaveRequest.startDate" 
+                 [min]="minDate" (change)="calculateDays()" required>
         </div>
 
         <div class="form-group">
           <label>End Date</label>
-          <input type="date" name="endDate" [(ngModel)]="leaveRequest.endDate" required>
+          <input type="date" name="endDate" [(ngModel)]="leaveRequest.endDate" 
+                 [min]="leaveRequest.startDate || minDate" (change)="calculateDays()" required>
+        </div>
+
+        <div class="duration-summary full-width" *ngIf="totalDays > 0">
+          <div class="summary-content error" *ngIf="isOverBalance">
+            <span class="summary-icon">⚠️</span>
+            <span>Insufficient balance for this duration.</span>
+          </div>
+          <div class="summary-content" *ngIf="!isOverBalance">
+            <span class="summary-icon">🗓️</span>
+            <span>You are requesting <strong>{{ totalDays }} {{ totalDays === 1 ? 'day' : 'days' }}</strong>.</span>
+          </div>
         </div>
 
         <div class="form-group full-width">
-          <label>Reason for Leave</label>
-          <textarea 
-            name="reason" 
-            [(ngModel)]="leaveRequest.reason" 
-            placeholder="Provide a brief explanation..."
-            rows="4" 
-            required></textarea>
+          <label>Reason for leave: Required</label>
+          <textarea name="reason" [(ngModel)]="leaveRequest.reason" placeholder="State your reason..." rows="4" required></textarea>
         </div>
 
         <div class="form-group full-width">
-          <label>Attachment (Optional)</label>
+          <label>Attachment: Optional (Max 2mb)</label>
           <div class="attachment-upload-box" [class.has-file]="fileName" (click)="!fileName && fileInput.click()">
             <input type="file" (change)="onFileSelected($event)" #fileInput hidden>
-            
             <div class="upload-content" *ngIf="!fileName">
               <span class="upload-icon">📎</span>
-              <span class="upload-text">Click to upload a supporting document</span>
+              <span class="upload-text">Click to upload document</span>
             </div>
-
             <div class="file-info-active" *ngIf="fileName">
-              <span class="file-status-icon">✅</span>
               <span class="file-name-display">{{ fileName }}</span>
               <button type="button" class="btn-remove-file" (click)="$event.stopPropagation(); removeFile()">✕</button>
             </div>
@@ -86,7 +93,9 @@
 
       <div class="form-actions">
         <button type="button" class="btn-secondary" routerLink="/dashboard">Cancel</button>
-        <button type="submit" class="btn-primary" [disabled]="!leaveForm.valid">Submit Request</button>
+        <button type="submit" class="btn-primary" [disabled]="!leaveForm.valid || totalDays <= 0 || isOverBalance">
+          Submit
+        </button>
       </div>
     </form>
   </div>
