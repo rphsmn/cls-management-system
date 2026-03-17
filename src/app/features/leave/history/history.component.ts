@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Observable, combineLatest, BehaviorSubject, startWith, map, tap } from 'rxjs';
@@ -11,19 +11,23 @@ import { AuthService, User } from '../../../core/services/auth';
   templateUrl: './history.component.html',
   styleUrl: './history.component.css'
 })
-export class HistoryComponent {
+export class HistoryComponent implements OnInit {
+  // Observables for data streams
   currentUser$: Observable<User | null>;
   allFilteredRequests$: Observable<any[]>;
   paginatedRequests$: Observable<any[]>;
   
+  // Pagination State
   itemsPerPage = 10;
   private currentPageSubject = new BehaviorSubject<number>(1);
   currentPage$ = this.currentPageSubject.asObservable();
 
-  searchControl = new FormControl('');
-  monthControl = new FormControl(new Date().getMonth());
-  yearControl = new FormControl(new Date().getFullYear());
+  // Form Controls for Filters
+  searchControl = new FormControl('', { nonNullable: true });
+  monthControl = new FormControl(new Date().getMonth(), { nonNullable: true });
+  yearControl = new FormControl(new Date().getFullYear(), { nonNullable: true });
 
+  // Filter Options
   months = [
     { v: 0, l: 'Jan' }, { v: 1, l: 'Feb' }, { v: 2, l: 'Mar' }, { v: 3, l: 'Apr' },
     { v: 4, l: 'May' }, { v: 5, l: 'Jun' }, { v: 6, l: 'Jul' }, { v: 7, l: 'Aug' },
@@ -34,43 +38,63 @@ export class HistoryComponent {
   expandedReq: any = null;
 
   constructor(private authService: AuthService) {
+    // 1. Initialize Current User
     this.currentUser$ = this.authService.currentUser$;
     
+    // 2. Setup the Filtered Stream
     this.allFilteredRequests$ = combineLatest([
       this.authService.currentUser$,
       this.authService.requests$,
-      this.searchControl.valueChanges.pipe(startWith(''), tap(() => this.currentPageSubject.next(1))),
-      this.monthControl.valueChanges.pipe(startWith(this.monthControl.value), tap(() => this.currentPageSubject.next(1))),
-      this.yearControl.valueChanges.pipe(startWith(this.yearControl.value), tap(() => this.currentPageSubject.next(1)))
+      this.searchControl.valueChanges.pipe(startWith(''), tap(() => this.resetPagination())),
+      this.monthControl.valueChanges.pipe(startWith(this.monthControl.value), tap(() => this.resetPagination())),
+      this.yearControl.valueChanges.pipe(startWith(this.yearControl.value), tap(() => this.resetPagination()))
     ]).pipe(
       map(([user, requests, term, selMonth, selYear]) => {
         if (!user || !requests) return [];
+        
         const s = term?.toLowerCase() || '';
         const role = user.role?.toUpperCase() || '';
 
         return requests.filter(req => {
-          // 1. Search Filter
-          const matchesSearch = req.employeeName?.toLowerCase().includes(s) || 
-                                req.companyId?.toLowerCase().includes(s) ||
-                                req.type?.toLowerCase().includes(s);
+          // Search Logic
+          const matchesSearch = 
+            req.employeeName?.toLowerCase().includes(s) || 
+            req.companyId?.toLowerCase().includes(s) ||
+            req.type?.toLowerCase().includes(s);
 
           if (!matchesSearch) return false;
 
-          // 2. Month/Year Filter (Overlaps with Leave Period)
+          // Date Filter Logic
           if (!this.checkPeriodMatch(req.period, Number(selMonth), Number(selYear))) return false;
 
-          // 3. Role-based Permission
+          // Permission Logic: Staff only see their own
           if (role.includes('STAFF') || role.includes('DEV') || role.includes('IT')) {
              return req.companyId === user.id;
           }
+          
           return true;
         });
       })
     );
 
-    this.paginatedRequests$ = combineLatest([this.allFilteredRequests$, this.currentPage$]).pipe(
-      map(([reqs, page]) => reqs.slice((page - 1) * this.itemsPerPage, page * this.itemsPerPage))
+    // 3. Setup Pagination Stream
+    this.paginatedRequests$ = combineLatest([
+      this.allFilteredRequests$, 
+      this.currentPage$
+    ]).pipe(
+      map(([reqs, page]) => {
+        const start = (page - 1) * this.itemsPerPage;
+        return reqs.slice(start, start + this.itemsPerPage);
+      })
     );
+  }
+
+  ngOnInit(): void {
+    // Initialization logic if needed
+  }
+
+  private resetPagination() {
+    this.currentPageSubject.next(1);
   }
 
   private checkPeriodMatch(period: string, selMonth: number, selYear: number): boolean {
@@ -84,18 +108,29 @@ export class HistoryComponent {
            (end.getMonth() === selMonth && end.getFullYear() === selYear);
   }
 
+  // --- UI Formatters ---
+
   getFormattedPeriod(period: string): string {
     if (!period) return 'N/A';
     const sep = period.includes(' to ') ? ' to ' : ' - ';
+    
     if (!period.includes(sep)) {
       const singleDate = new Date(period.trim());
+      if (isNaN(singleDate.getTime())) return period;
       return `1 Day (${singleDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
     }
+
     const parts = period.split(sep);
     const start = new Date(parts[0].trim());
     const end = new Date(parts[1].trim());
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return period;
+
     const diff = Math.ceil(Math.abs(end.getTime() - start.getTime()) / 86400000) + 1;
-    return `${diff} ${diff === 1 ? 'Day' : 'Days'} (${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
+    const startFmt = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const endFmt = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    return `${diff} ${diff === 1 ? 'Day' : 'Days'} (${startFmt} - ${endFmt})`;
   }
 
   getSupervisorClass(r: any) { 
@@ -143,6 +178,7 @@ export class HistoryComponent {
     return '💰'; 
   }
 
+  // --- Pagination Helpers ---
   getTotalPages(t: number) { return Math.ceil(t / this.itemsPerPage) || 1; }
   getStartRange(t: number) { return t === 0 ? 0 : (this.currentPageSubject.value - 1) * this.itemsPerPage + 1; }
   getEndRange(t: number) { return Math.min(this.currentPageSubject.value * this.itemsPerPage, t); }
