@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import { Observable, map, switchMap, combineLatest } from 'rxjs';
-import { AuthService, User } from '../../core/services/auth';
+import { RouterModule } from '@angular/router';
+import { Observable, map, combineLatest, switchMap } from 'rxjs';
+import { AuthService } from '../../core/services/auth';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,13 +12,14 @@ import { AuthService, User } from '../../core/services/auth';
   styleUrl: './dashboard.css'
 })
 export class DashboardComponent implements OnInit {
+  private authService = inject(AuthService);
+  
   currentUser$: Observable<any>;
   requests$: Observable<any[]>; 
   greeting: string = '';
   today: Date = new Date();
 
-  constructor(private authService: AuthService, private router: Router) {
-    
+  constructor() {
     this.currentUser$ = combineLatest([
       this.authService.currentUser$,
       this.authService.requests$
@@ -26,37 +27,35 @@ export class DashboardComponent implements OnInit {
       map(([user, allRequests]) => {
         if (!user) return null;
 
-        const myApprovedRequests = allRequests.filter(req => 
-          req.requesterName === user.name && 
-          req.status.toLowerCase() === 'approved'
-        );
+        const myRequests = allRequests.filter(req => req.employeeName === user.name);
 
-        const calculateUsed = (type: string) => {
-          return myApprovedRequests
-            .filter(req => req.type.toLowerCase() === type.toLowerCase())
-            .reduce((sum, req) => {
-              let days = 0;
-              if (req.period && req.period.includes(' - ')) {
-                const dates = req.period.split(' - ');
-                const start = new Date(dates[0]);
-                const end = new Date(dates[1]);
-                if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-                  const diffTime = Math.abs(end.getTime() - start.getTime());
-                  days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                }
-              } else {
-                days = parseFloat(req.period) || 0;
-              }
-              return sum + days;
-            }, 0);
+        const calculateDays = (reqList: any[]) => {
+          return reqList.reduce((sum, req) => {
+            if (req.period && req.period.includes(' - ')) {
+              const dates = req.period.split(' - ');
+              const start = new Date(dates[0]);
+              const end = new Date(dates[1]);
+              return sum + (Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+            }
+            return sum + 1;
+          }, 0);
         };
 
         return {
           ...user,
-          liveCredits: {
-            paidLeave: Math.max(0, user.credits.paidLeave - calculateUsed('paid leave')),
-            birthdayLeave: Math.max(0, user.credits.birthdayLeave - calculateUsed('birthday leave')),
-            sickLeave: Math.max(0, user.credits.sickLeave - calculateUsed('sick leave'))
+          displayCredits: {
+            paidLeave: {
+              used: calculateDays(myRequests.filter(r => r.type === 'Paid Leave' && r.status === 'Approved')),
+              pending: calculateDays(myRequests.filter(r => r.type === 'Paid Leave' && (r.status === 'Pending' || r.status === 'Awaiting HR Approval')))
+            },
+            sickLeave: {
+              used: calculateDays(myRequests.filter(r => r.type === 'Sick Leave' && r.status === 'Approved')),
+              pending: calculateDays(myRequests.filter(r => r.type === 'Sick Leave' && (r.status === 'Pending' || r.status === 'Awaiting HR Approval')))
+            },
+            birthdayLeave: {
+              used: calculateDays(myRequests.filter(r => r.type === 'Birthday Leave' && r.status === 'Approved')),
+              pending: calculateDays(myRequests.filter(r => r.type === 'Birthday Leave' && (r.status === 'Pending' || r.status === 'Awaiting HR Approval')))
+            }
           }
         };
       })
@@ -67,9 +66,10 @@ export class DashboardComponent implements OnInit {
         this.authService.requests$.pipe(
           map(requests => {
             if (!user) return [];
-            const filtered = (user.role !== 'Ops Staff') 
-              ? [...requests] 
-              : requests.filter(req => req.requesterName === user.name);
+            const isStaff = user.role === 'Operations Staff' || user.role === 'Accounts Staff';
+            const filtered = isStaff 
+              ? requests.filter(req => req.employeeName === user.name)
+              : [...requests];
             
             return filtered
               .sort((a, b) => new Date(b.dateFiled).getTime() - new Date(a.dateFiled).getTime())

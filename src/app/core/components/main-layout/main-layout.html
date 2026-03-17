@@ -12,7 +12,11 @@
         <li routerLink="/history" routerLinkActive="active-link">History / Tracker</li>
         <li routerLink="/calendar" routerLinkActive="active-link">Company Calendar</li> 
         
-        <li *ngIf="currentUser.role !== 'Ops Staff'" routerLink="/approvals" routerLinkActive="active-link">Approvals</li>
+        <li *ngIf="currentUser.role.includes('Supervisor') || currentUser.role.includes('Manager') || currentUser.role === 'HR'" 
+            routerLink="/approvals" 
+            routerLinkActive="active-link">
+          Approvals
+        </li>
         
         <li routerLink="/profile" routerLinkActive="active-link">Profile</li>
       </ul>
@@ -31,7 +35,7 @@
     <div class="modal-card">
       <div class="modal-icon">!</div>
       <h3>Confirm Logout</h3>
-      <p>Are you sure you want to log out of your account?</p>
+      <p>Are you sure you want to log out, {{ currentUser.name }}?</p>
       
       <div class="modal-actions">
         <button class="btn-cancel" (click)="cancelLogout()">Cancel</button>

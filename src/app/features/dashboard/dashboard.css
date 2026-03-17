@@ -54,11 +54,13 @@
 
 .stat-card {
   background: white;
-  padding: 32px;
+  padding: 24px;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 12px rgba(0,0,0,0.03);
   transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .stat-card:hover {
@@ -80,9 +82,30 @@
   margin: 8px 0; 
 }
 
+/* NEW: Footer for Available vs Locked */
+.stat-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #f8fafc;
+}
+
 .stat-label { 
   font-size: 11px; 
   color: #cbd5e1; 
+}
+
+.pending-tag {
+  background: #fef9c3;
+  color: #854d0e;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  border: 1px solid #fef08a;
 }
 
 /* Recent Activity Card */

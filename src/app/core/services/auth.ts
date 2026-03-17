@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface Attachment {
   name: string;
-  data: string; // Base64 String
+  data: string;
   type: string;
 }
 
@@ -11,6 +11,7 @@ export interface User {
   id: string;
   name: string;
   role: string;
+  department: string;
   credits: { paidLeave: number; birthdayLeave: number; sickLeave: number; };
 }
 
@@ -20,23 +21,28 @@ export class AuthService {
   private readonly USER_KEY = 'cls_user_session';
 
   private defaultUsers: User[] = [
-    { id: 'OPS-STF', name: 'Reymart L. Prado', role: 'Ops Staff', credits: { paidLeave: 15, birthdayLeave: 1, sickLeave: 10 } },
-    { id: 'OPS-SUP', name: 'Domingo N. Reantaso Jr.', role: 'Ops Sup', credits: { paidLeave: 15, birthdayLeave: 1, sickLeave: 10 } },
-    { id: 'MGR-001', name: 'Roy Belen', role: 'Manager', credits: { paidLeave: 20, birthdayLeave: 1, sickLeave: 15 } },
-    { id: 'HR-001', name: 'Rosalie Neptuno', role: 'HR', credits: { paidLeave: 18, birthdayLeave: 1, sickLeave: 12 } }
+    { id: 'OPS-ADM-STF', name: 'Reymart L. Prado', role: 'Operations Staff', department: 'Operations', credits: { paidLeave: 15, birthdayLeave: 1, sickLeave: 10 } },
+    { id: 'OPS-ADM-SUP', name: 'Domingo N. Reantaso Jr.', role: 'Ops Supervisor', department: 'Operations', credits: { paidLeave: 15, birthdayLeave: 1, sickLeave: 10 } },
+    { id: 'ACC-SUP', name: 'Olympia B. Oreste', role: 'Acc Supervisor', department: 'Accounts', credits: { paidLeave: 18, birthdayLeave: 1, sickLeave: 12 } },
+    { id: 'ADM-MGR', name: 'Riza Jane A. Amoncio', role: 'Admin Manager', department: 'Administration', credits: { paidLeave: 20, birthdayLeave: 1, sickLeave: 15 } },
+    { id: 'HR-001', name: 'Rosalie Neptuno', role: 'HR', department: 'HR', credits: { paidLeave: 18, birthdayLeave: 1, sickLeave: 12 } },
+    { id: 'CLS-ACC', name: 'Accounts Employee', role: 'Accounts Staff', department: 'Accounts', credits: { paidLeave: 15, birthdayLeave: 1, sickLeave: 10 } },
+    { id: 'CLS-DEV', name: 'Developer', role: 'It Developer', department: 'IT', credits: { paidLeave: 30, birthdayLeave: 1, sickLeave: 20 } },
+    { id: 'MGR-001', name: 'Roy Belen', role: 'Manager', department: 'Management', credits: { paidLeave: 20, birthdayLeave: 1, sickLeave: 15 } }
   ];
-
-  private users: User[] = [...this.defaultUsers];
 
   public currentUserSubject = new BehaviorSubject<User | null>(this.getInitialUser());
   currentUser$ = this.currentUserSubject.asObservable();
-
   private requestsSubject = new BehaviorSubject<any[]>(this.getSavedRequests());
   requests$ = this.requestsSubject.asObservable();
 
   private getInitialUser(): User | null {
     const saved = localStorage.getItem(this.USER_KEY);
-    return saved ? JSON.parse(saved) : null;
+    if (!saved) return null;
+    try {
+      const user = JSON.parse(saved);
+      return (user && user.id) ? user : null;
+    } catch { return null; }
   }
 
   private getSavedRequests(): any[] {
@@ -44,17 +50,9 @@ export class AuthService {
     return saved ? JSON.parse(saved) : [];
   }
 
-  resetAllData() {
-    localStorage.removeItem(this.REQ_KEY);
-    localStorage.removeItem(this.USER_KEY);
-    this.requestsSubject.next([]);
-    this.currentUserSubject.next(null);
-    this.users = JSON.parse(JSON.stringify(this.defaultUsers));
-  }
-
   login(id: string, pass: string): boolean {
-    // Current validation logic (ID check). In production, check 'pass' as well.
-    const user = this.users.find(u => u.id === id);
+    const cleanId = id.trim().toUpperCase();
+    const user = this.defaultUsers.find(u => u.id.toUpperCase() === cleanId);
     if (user) {
       this.currentUserSubject.next({ ...user });
       localStorage.setItem(this.USER_KEY, JSON.stringify(user));
@@ -70,13 +68,25 @@ export class AuthService {
 
   addRequest(newRequest: any) {
     const user = this.currentUserSubject.value;
+    if (!user) return;
+
+    let firstReviewer = ''; 
+    if (user.role === 'Operations Staff') firstReviewer = 'Ops Supervisor';
+    else if (user.role === 'Accounts Staff') firstReviewer = 'Acc Supervisor';
+    else if (['Ops Supervisor', 'Acc Supervisor', 'It Developer', 'HR'].includes(user.role)) firstReviewer = 'Admin Manager';
+    else if (user.role === 'Admin Manager') firstReviewer = 'HR';
+    else firstReviewer = 'HR';
+
     const enriched = { 
       ...newRequest, 
       id: Date.now(), 
       status: 'Pending', 
-      employeeName: user?.name || 'Staff',
-      companyId: user?.id || 'N/A',
-      targetReviewer: 'Supervisor' 
+      employeeName: user.name,
+      companyId: user.id,
+      role: user.role,
+      department: user.department,
+      targetReviewer: firstReviewer,
+      dateFiled: new Date().toISOString()
     };
     
     const updated = [enriched, ...this.requestsSubject.value];
@@ -89,16 +99,23 @@ export class AuthService {
 
     const updated = this.requestsSubject.value.map(req => {
       if (req.id === requestId) {
-        if (action === 'Reject') {
-          return { ...req, status: 'Rejected', targetReviewer: 'None' };
+        if (action === 'Reject') return { ...req, status: 'Rejected', targetReviewer: 'None' };
+
+        if (currentUser.role === 'Admin Manager') {
+          if (req.role === 'HR') {
+            this.deductCredits(req.employeeName, req.type, req.period);
+            return { ...req, status: 'Approved', targetReviewer: 'None' };
+          }
+          return { ...req, status: 'Awaiting HR Approval', targetReviewer: 'HR' };
         }
 
-        if (currentUser.role === 'Ops Sup' || currentUser.role === 'Supervisor') {
-          return { ...req, status: 'Awaiting HR Approval', targetReviewer: 'HR' };
-        } 
-        else if (currentUser.role === 'HR' || currentUser.role === 'Manager') {
+        if (currentUser.role === 'HR') {
           this.deductCredits(req.employeeName, req.type, req.period);
           return { ...req, status: 'Approved', targetReviewer: 'None' };
+        }
+
+        if (['Ops Supervisor', 'Acc Supervisor'].includes(currentUser.role)) {
+          return { ...req, status: 'Awaiting HR Approval', targetReviewer: 'HR' };
         }
       }
       return req;
@@ -108,8 +125,16 @@ export class AuthService {
   }
 
   private deductCredits(userName: string, leaveType: string, period: string) {
-    const user = this.users.find(u => u.name === userName);
+    const user = this.defaultUsers.find(u => u.name === userName);
     if (!user) return;
+
+    let days = 1;
+    if (period.includes(' - ') || period.includes(' to ')) {
+      const parts = period.split(/ - | to /);
+      const start = new Date(parts[0]);
+      const end = new Date(parts[1]);
+      days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    }
 
     const typeMap: { [key: string]: keyof User['credits'] } = {
       'Paid Leave': 'paidLeave',
@@ -119,16 +144,7 @@ export class AuthService {
 
     const creditKey = typeMap[leaveType];
     if (creditKey) {
-      let daysToDeduct = 1;
-      if (period && period.includes(' - ')) {
-        const dates = period.split(' - ');
-        const start = new Date(dates[0]);
-        const end = new Date(dates[1]);
-        const diff = Math.abs(end.getTime() - start.getTime());
-        daysToDeduct = Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
-      }
-      user.credits[creditKey] = Math.max(0, user.credits[creditKey] - daysToDeduct);
-      
+      user.credits[creditKey] = Math.max(0, user.credits[creditKey] - days);
       if (this.currentUserSubject.value?.name === userName) {
         this.currentUserSubject.next({ ...user });
         localStorage.setItem(this.USER_KEY, JSON.stringify(user));

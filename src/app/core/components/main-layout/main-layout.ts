@@ -1,8 +1,7 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common'; 
-import { RouterModule, Router } from '@angular/router'; 
-import { Observable } from 'rxjs';
-import { AuthService, User } from '../../services/auth'; 
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth';
 
 @Component({
   selector: 'app-main-layout',
@@ -12,12 +11,11 @@ import { AuthService, User } from '../../services/auth';
   styleUrls: ['./main-layout.css']
 })
 export class MainLayoutComponent {
-  currentUser$: Observable<User | null>;
-  showLogoutModal = false;
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
-  constructor(private authService: AuthService, private router: Router) {
-    this.currentUser$ = this.authService.currentUser$;
-  }
+  showLogoutModal = false;
+  currentUser$ = this.authService.currentUser$;
 
   confirmLogout() {
     this.showLogoutModal = true;
@@ -29,7 +27,7 @@ export class MainLayoutComponent {
 
   executeLogout() {
     this.authService.logout();
-    this.showLogoutModal = false; // Reset modal state
+    this.showLogoutModal = false;
     this.router.navigate(['/login']);
   }
 }

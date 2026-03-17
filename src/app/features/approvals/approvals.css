@@ -1,4 +1,3 @@
-/* Expansive layout for 1400px width */
 .approvals-container { 
   padding: 40px; 
   width: 95%; 
@@ -40,6 +39,7 @@
   font-size: 12px; 
 }
 
+/* Search Box */
 .search-box { 
   display: flex; 
   align-items: center; 
@@ -48,6 +48,11 @@
   padding: 10px 18px; 
   border: 1.5px solid #eef2f6; 
   box-shadow: 0 2px 8px rgba(0,0,0,0.02); 
+  transition: border-color 0.2s ease;
+}
+
+.search-box:focus-within {
+  border-color: #1a5336;
 }
 
 .search-box input { 
@@ -60,7 +65,7 @@
   width: 250px; 
 }
 
-/* Main Content Card - Fixed height to prevent "jumping" */
+/* Card Container */
 .card-full-width { 
   background: white; 
   border-radius: 16px; 
@@ -72,7 +77,7 @@
   flex-direction: column; 
 }
 
-/* Strict Table Lock */
+/* Table Styles */
 .approval-table { 
   width: 100%; 
   border-collapse: collapse; 
@@ -96,25 +101,15 @@
   vertical-align: middle; 
 }
 
-/* Column Width Ratios */
-.col-emp { width: 20%; }
-.col-type { width: 15%; }
-.col-period { width: 18%; }
-.col-reason { width: 25%; }
+.col-emp { width: 20%; } 
+.col-type { width: 15%; } 
+.col-period { width: 18%; } 
+.col-reason { width: 25%; } 
 .col-actions { width: 22%; }
 
-.user-name { 
-  font-size: 14px; 
-  color: #1e293b; 
-  font-weight: 700; 
-  display: block; 
-}
-
-.emp-id { 
-  font-size: 11px; 
-  color: #94a3b8; 
-  font-weight: 600; 
-}
+/* Content Styles */
+.user-name { font-size: 14px; color: #1e293b; font-weight: 700; display: block; }
+.emp-id { font-size: 11px; color: #94a3b8; font-weight: 600; }
 
 .type-pill { 
   display: inline-flex; 
@@ -129,19 +124,8 @@
   color: #166534; 
 }
 
-/* Period Formatting to match Tracker */
-.period-word { 
-  color: #1a5336; 
-  font-weight: 800; 
-  font-size: 12px; 
-  display: block; 
-}
-
-.period-sub { 
-  color: #94a3b8; 
-  font-size: 10px; 
-  font-weight: 500; 
-}
+.period-word { color: #1a5336; font-weight: 800; font-size: 12px; display: block; }
+.period-sub { color: #94a3b8; font-size: 10px; font-weight: 500; }
 
 .reason-text { 
   font-size: 13px; 
@@ -152,18 +136,7 @@
   white-space: nowrap; 
 }
 
-.reason-full { 
-  font-size: 13px; 
-  line-height: 1.6; 
-  color: #64748b; 
-}
-
-.reason-meta { 
-  margin-top: 10px; 
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between; 
-}
+.reason-full { font-size: 13px; line-height: 1.6; color: #64748b; }
 
 .see-more { 
   font-size: 10px; 
@@ -171,7 +144,10 @@
   color: #1a5336; 
   cursor: pointer; 
   text-transform: uppercase; 
+  transition: opacity 0.2s;
 }
+
+.see-more:hover { opacity: 0.7; }
 
 .doc-link-btn { 
   background: #ffffff; 
@@ -182,8 +158,15 @@
   font-weight: 700; 
   border: 1.5px solid #e2e8f0; 
   cursor: pointer; 
+  transition: all 0.2s ease;
 }
 
+.doc-link-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* Action Buttons with Hover Animations */
 .action-buttons { 
   display: flex; 
   gap: 10px; 
@@ -199,6 +182,13 @@
   font-weight: 800; 
   font-size: 11px; 
   cursor: pointer; 
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-approve:hover {
+  background: #14422b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 83, 54, 0.15);
 }
 
 .btn-reject { 
@@ -210,9 +200,20 @@
   font-weight: 800; 
   font-size: 11px; 
   cursor: pointer; 
+  transition: all 0.2s ease-in-out;
 }
 
-/* Pagination Footer */
+.btn-reject:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  transform: translateY(-2px);
+}
+
+.btn-approve:active, .btn-reject:active {
+  transform: translateY(0);
+}
+
+/* Pagination */
 .pagination-footer { 
   margin-top: auto; 
   display: flex; 
@@ -221,22 +222,6 @@
   padding: 20px 24px; 
   background: #fafbfc; 
   border-top: 1px solid #f1f5f9; 
-}
-
-.pagination-left { 
-  font-size: 12px; 
-  color: #64748b; 
-  display: flex; 
-  align-items: center; 
-  gap: 15px; 
-}
-
-.rows-select select { 
-  border: 1.5px solid #e2e8f0; 
-  border-radius: 6px; 
-  padding: 4px 8px; 
-  font-weight: 600; 
-  color: #1a5336; 
 }
 
 .btn-pager { 
@@ -248,6 +233,12 @@
   font-size: 11px; 
   font-weight: 700; 
   cursor: pointer; 
+  transition: all 0.2s ease;
+}
+
+.btn-pager:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .btn-pager:disabled { 
@@ -255,76 +246,71 @@
   cursor: not-allowed; 
 }
 
-.page-num { 
-  font-size: 12px; 
-  font-weight: 700; 
-  color: #1a5336; 
-  min-width: 40px; 
-  text-align: center; 
+/* Premium SweetAlert Overrides */
+::ng-deep .swal-premium-popup { 
+  border-radius: 24px !important; 
+  padding: 2.5em !important; 
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important; 
+  border: none !important; 
 }
 
-/* --- PREMIUM SWEETALERT OVERRIDES (FIXED BUTTONS) --- */
-::ng-deep .swal-premium-popup {
-  border-radius: 24px !important;
-  padding: 2.5em !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
-  border: none !important;
-}
-
+/* Fixed spacing for popup buttons */
 ::ng-deep .swal-button-container {
-  margin-top: 25px !important;
+  display: flex !important;
   gap: 15px !important;
+  justify-content: center !important;
+  margin-top: 15px !important;
 }
 
-/* Restore Mint Button Style */
-::ng-deep .swal-confirm-mint {
-  background-color: #1a5336 !important;
-  color: #facc15 !important;
-  padding: 14px 32px !important;
-  border-radius: 12px !important;
-  font-weight: 800 !important;
-  font-size: 14px !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
-  border: none !important;
-  cursor: pointer !important;
+::ng-deep .swal-confirm-mint { 
+  background-color: #1a5336 !important; 
+  color: #facc15 !important; 
+  padding: 14px 32px !important; 
+  border-radius: 12px !important; 
+  font-weight: 800 !important; 
+  font-size: 14px !important; 
+  text-transform: uppercase !important; 
+  border: none !important; 
+  cursor: pointer !important; 
   transition: all 0.2s ease !important;
 }
 
-/* Restore Danger Button Style */
-::ng-deep .swal-confirm-danger {
-  background-color: #ef4444 !important;
-  color: white !important;
-  padding: 14px 32px !important;
-  border-radius: 12px !important;
-  font-weight: 800 !important;
-  font-size: 14px !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
-  border: none !important;
-  cursor: pointer !important;
+::ng-deep .swal-confirm-mint:hover {
+  background-color: #14422b !important;
+  transform: scale(1.02);
+}
+
+::ng-deep .swal-confirm-danger { 
+  background-color: #dc2626 !important; 
+  color: white !important; 
+  padding: 14px 32px !important; 
+  border-radius: 12px !important; 
+  font-weight: 800 !important; 
+  font-size: 14px !important; 
+  text-transform: uppercase !important; 
+  border: none !important; 
+  cursor: pointer !important; 
   transition: all 0.2s ease !important;
 }
 
-/* Restore Cancel Button Style */
-::ng-deep .swal-cancel-outline {
-  background-color: white !important;
-  color: #64748b !important;
-  border: 2px solid #e2e8f0 !important;
-  padding: 14px 32px !important;
-  border-radius: 12px !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-}
-
-::ng-deep .swal-confirm-mint:hover, 
 ::ng-deep .swal-confirm-danger:hover {
-  transform: translateY(-2px) !important;
-  filter: brightness(1.1) !important;
+  background-color: #dc2626 !important;
+  transform: scale(1.02);
+}
+
+::ng-deep .swal-cancel-outline { 
+  background-color: white !important; 
+  color: #64748b !important; 
+  border: 2px solid #e2e8f0 !important; 
+  padding: 14px 32px !important; 
+  border-radius: 12px !important; 
+  font-weight: 700 !important; 
+  font-size: 14px !important; 
+  cursor: pointer !important; 
+  transition: all 0.2s ease !important;
 }
 
 ::ng-deep .swal-cancel-outline:hover {
   background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
 }

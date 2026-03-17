@@ -24,8 +24,17 @@
   <div class="content-card">
     <form (ngSubmit)="onSubmit()" #leaveForm="ngForm" class="leave-form">
       <div class="form-grid">
+        
         <div class="form-group full-width">
-          <label>Leave Type</label>
+          <div class="label-row">
+            <label>Leave Type</label>
+            <div class="balance-meta" *ngIf="leaveRequest.type">
+              <span class="bal available">Available: {{ currentUser.balances[leaveRequest.type].rem }}</span>
+              <span class="bal pending" *ngIf="currentUser.balances[leaveRequest.type].pen > 0">
+                Pending: {{ currentUser.balances[leaveRequest.type].pen }}
+              </span>
+            </div>
+          </div>
           <select name="type" [(ngModel)]="leaveRequest.type" required>
             <option value="" disabled selected>Select type of leave</option>
             <option value="Paid Leave">Paid Leave</option>
@@ -55,12 +64,19 @@
         </div>
 
         <div class="form-group full-width">
-          <label>Attachment (Optional: Medical Cert / Documents)</label>
-          <div class="attachment-upload-box" (click)="fileInput.click()" [class.has-file]="fileName">
+          <label>Attachment (Optional)</label>
+          <div class="attachment-upload-box" [class.has-file]="fileName" (click)="!fileName && fileInput.click()">
             <input type="file" (change)="onFileSelected($event)" #fileInput hidden>
-            <div class="upload-content">
-              <span class="upload-icon">{{ fileName ? '✅' : '📎' }}</span>
-              <span class="upload-text">{{ fileName || 'Click to upload a supporting document' }}</span>
+            
+            <div class="upload-content" *ngIf="!fileName">
+              <span class="upload-icon">📎</span>
+              <span class="upload-text">Click to upload a supporting document</span>
+            </div>
+
+            <div class="file-info-active" *ngIf="fileName">
+              <span class="file-status-icon">✅</span>
+              <span class="file-name-display">{{ fileName }}</span>
+              <button type="button" class="btn-remove-file" (click)="$event.stopPropagation(); removeFile()">✕</button>
             </div>
           </div>
         </div>

@@ -65,6 +65,13 @@
   gap: 8px; 
 }
 
+/* Label Row for Balance Info */
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .form-group label { 
   font-size: 12px; 
   font-weight: 700; 
@@ -72,6 +79,22 @@
   text-transform: uppercase; 
   letter-spacing: 0.5px; 
 }
+
+.balance-meta {
+  display: flex;
+  gap: 8px;
+}
+
+.bal {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.bal.available { background: #f0fdf4; color: #166534; }
+.bal.pending { background: #fffbeb; color: #92400e; }
 
 input, select, textarea {
   padding: 12px 16px;
@@ -131,11 +154,6 @@ input:focus, select:focus, textarea:focus {
   transition: all 0.2s;
 }
 
-.btn-secondary:hover { 
-  background-color: #f1f5f9; 
-  color: #1e293b;
-}
-
 /* ATTACHMENT BOX */
 .attachment-upload-box {
   border: 2px dashed #e2e8f0;
@@ -148,34 +166,46 @@ input:focus, select:focus, textarea:focus {
   margin-top: 8px;
 }
 
-.attachment-upload-box:hover {
-  border-color: #1a5336;
-  background: #f1f5f9;
+.attachment-upload-box:hover { border-color: #1a5336; background: #f1f5f9; }
+.attachment-upload-box.has-file { border-style: solid; border-color: #1a5336; background: #f0fdf4; cursor: default; }
+
+.file-info-active {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
 }
 
-.attachment-upload-box.has-file {
-  border-style: solid;
-  border-color: #1a5336;
-  background: #f0fdf4;
-}
-
-.upload-icon {
-  font-size: 24px;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.upload-text {
+.file-name-display {
+  flex: 1;
+  text-align: left;
   font-size: 14px;
   font-weight: 600;
-  color: #64748b;
-}
-
-.attachment-upload-box.has-file .upload-text {
   color: #1a5336;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* GLOBAL TOAST - FIXED TO SCREEN */
+.btn-remove-file {
+  background: #fee2e2;
+  color: #ef4444;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-remove-file:hover { background: #ef4444; color: white; transform: scale(1.1); }
+
+/* TOAST STYLES */
 .toast-wrapper {
   position: fixed;
   top: 0;
@@ -205,7 +235,6 @@ input:focus, select:focus, textarea:focus {
   gap: 16px;
   box-shadow: 0 15px 35px rgba(0,0,0,0.3);
   border: 2px solid #facc15;
-  min-width: 350px;
 }
 
 .toast-icon {
@@ -217,19 +246,7 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
   font-weight: bold;
-  flex-shrink: 0;
-}
-
-.toast-body strong {
-  display: block;
-  font-size: 16px;
-  color: #facc15;
-}
-
-.toast-body span {
-  font-size: 14px;
 }
 
 @keyframes dropIn {

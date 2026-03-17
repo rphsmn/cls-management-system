@@ -1,23 +1,23 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Router, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthGuard {
-  constructor(private authService: AuthService, private router: Router) {}
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
   canActivate(): boolean | UrlTree {
-    // Check if user session exists in localStorage
-    const savedUser = localStorage.getItem('cls_user_session');
-    
-    if (savedUser) {
-      // Session exists, allow access to protected routes
-      return true;
+    // 1. Check Service State
+    const user = this.authService.currentUserSubject.value;
+    // 2. Check Storage as backup
+    const hasSession = localStorage.getItem('cls_user_session');
+
+    if (user || hasSession) {
+      return true; // Keep the user in the app
     }
 
-    // No session, redirect to login
+    // Only redirect if there is absolutely no user found
     return this.router.createUrlTree(['/login']);
   }
 }

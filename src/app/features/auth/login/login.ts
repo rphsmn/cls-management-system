@@ -39,7 +39,7 @@ export class LoginComponent {
     this.isLoading = true;
     this.errorMessage = null;
 
-    // Small delay to show the "Authenticating" state as requested
+    // Simulated network delay for the "Authenticating" UI state
     await new Promise(resolve => setTimeout(resolve, 1200));
 
     const { employeeId, password } = this.loginForm.value;

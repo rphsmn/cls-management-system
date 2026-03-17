@@ -1,30 +1,47 @@
-<main class="dashboard-content-wrapper" *ngIf="currentUser$ | async as currentUser">
-  <div class="content-header">
+<main class="dashboard-content-wrapper" *ngIf="currentUser$ | async as user">
+  <header class="content-header">
     <div class="title-section">
-      <h1>{{ greeting }}, {{ currentUser.name }}</h1>
+      <h1>{{ greeting }}, {{ user.name }}</h1>
       <div class="sub-header">
-        <span class="role-badge">{{ currentUser.role }}</span>
+        <span class="role-badge">{{ user.role }}</span>
         <span class="status-text">{{ today | date:'fullDate' }}</span>
       </div>
     </div>
-  </div>
+  </header>
 
   <div class="dashboard-inner">
     <section class="stats-grid">
       <div class="stat-card">
         <h3>Paid Leave</h3>
-        <p class="value">{{ currentUser.liveCredits.paidLeave }}</p>
-        <span class="stat-label">Available Balance</span>
+        <p class="value">{{ user.credits.paidLeave - user.displayCredits.paidLeave.used }}</p>
+        <div class="stat-footer">
+          <span class="stat-label">Available</span>
+          <span class="pending-tag" *ngIf="user.displayCredits.paidLeave.pending > 0">
+            {{ user.displayCredits.paidLeave.pending }} Pending
+          </span>
+        </div>
       </div>
+
       <div class="stat-card">
         <h3>Birthday Leave</h3>
-        <p class="value">{{ currentUser.liveCredits.birthdayLeave }}</p>
-        <span class="stat-label">Available Balance</span>
+        <p class="value">{{ user.credits.birthdayLeave - user.displayCredits.birthdayLeave.used }}</p>
+        <div class="stat-footer">
+          <span class="stat-label">Available</span>
+          <span class="pending-tag" *ngIf="user.displayCredits.birthdayLeave.pending > 0">
+            {{ user.displayCredits.birthdayLeave.pending }} Pending
+          </span>
+        </div>
       </div>
+
       <div class="stat-card">
         <h3>Sick Leave</h3>
-        <p class="value">{{ currentUser.liveCredits.sickLeave }}</p>
-        <span class="stat-label">Available Balance</span>
+        <p class="value">{{ user.credits.sickLeave - user.displayCredits.sickLeave.used }}</p>
+        <div class="stat-footer">
+          <span class="stat-label">Available</span>
+          <span class="pending-tag" *ngIf="user.displayCredits.sickLeave.pending > 0">
+            {{ user.displayCredits.sickLeave.pending }} Pending
+          </span>
+        </div>
       </div>
     </section>
 
@@ -36,26 +53,22 @@
         <table class="cls-table">
           <thead>
             <tr>
-              <th *ngIf="currentUser.role !== 'Ops Staff'">Employee</th>
+              <th *ngIf="user.role !== 'Operations Staff' && user.role !== 'Accounts Staff'">Employee</th>
               <th>Type</th>
               <th>Date Filed</th>
-              <th>Period</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let req of requests$ | async">
-              <td *ngIf="currentUser.role !== 'Ops Staff'"><strong>{{ req.requesterName }}</strong></td>
-              <td><span class="type-tag">{{ req.type | titlecase }}</span></td>
-              <td>{{ req.dateFiled | date:'MMM d, y' }}</td>
-              <td class="period-text">{{ req.period || '---' }}</td>
+              <td *ngIf="user.role !== 'Operations Staff' && user.role !== 'Accounts Staff'">
+                <strong>{{ req.employeeName }}</strong>
+              </td>
+              <td><span class="type-tag">{{ req.type }}</span></td>
+              <td>{{ req.dateFiled | date:'MMM d' }}</td>
               <td>
                 <span [ngClass]="'status-pill ' + (req.status.toLowerCase().split(' ').join('-'))">
                   {{ req.status }}
-                  <span *ngIf="(currentUser.role === 'HR' || currentUser.role === 'Manager') && req.status === 'Pending'" 
-                        style="font-size: 9px; opacity: 0.8; display: block; margin-top: 2px;">
-                    (With Supervisor)
-                  </span>
                 </span>
               </td>
             </tr>
