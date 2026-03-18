@@ -36,12 +36,9 @@ export class FileLeaveComponent implements OnInit {
   showSuccessToast = false;
 
   constructor() {
-    // Set minDate to Today: March 18, 2026
+    // Current System Date: March 18, 2026
     const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    this.minDate = `${year}-${month}-${day}`;
+    this.minDate = today.toISOString().split('T')[0];
 
     this.liveCredits$ = combineLatest([
       this.authService.currentUser$,
@@ -91,61 +88,51 @@ export class FileLeaveComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       if (params['date']) {
         const selectedDate = params['date'];
-        // Strict Enforcement: If date from calendar is in the past, reset to today
-        if (selectedDate < this.minDate) {
-          this.leaveRequest.startDate = this.minDate;
-          this.leaveRequest.endDate = this.minDate;
-        } else {
-          this.leaveRequest.startDate = selectedDate;
-          this.leaveRequest.endDate = selectedDate;
+        // Ensure we don't allow past dates even via URL params
+        const finalDate = selectedDate < this.minDate ? this.minDate : selectedDate;
+        
+        this.leaveRequest.startDate = finalDate;
+        this.leaveRequest.endDate = finalDate;
+        
+        // Default to Paid Leave if coming from Calendar to trigger validation
+        if (!this.leaveRequest.type) {
+          this.leaveRequest.type = 'Paid Leave';
         }
+        
         this.calculateDays();
       }
     });
   }
 
   calculateDays() {
-    // 1. Double-check for past dates and reset them if they somehow got selected
-    if (this.leaveRequest.startDate && this.leaveRequest.startDate < this.minDate) {
-      this.leaveRequest.startDate = this.minDate;
-    }
-    if (this.leaveRequest.endDate && this.leaveRequest.endDate < this.leaveRequest.startDate) {
-      this.leaveRequest.endDate = this.leaveRequest.startDate;
-    }
-
     if (this.leaveRequest.startDate && this.leaveRequest.endDate) {
       const start = new Date(this.leaveRequest.startDate);
       const end = new Date(this.leaveRequest.endDate);
+      
+      // Reset end date if it's before start date
+      if (end < start) {
+        this.leaveRequest.endDate = this.leaveRequest.startDate;
+      }
+
+      const diffTime = new Date(this.leaveRequest.endDate).getTime() - new Date(this.leaveRequest.startDate).getTime();
+      this.totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+      // Notice Logic
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      today.setHours(0,0,0,0);
+      const noticeDiff = Math.ceil((start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-      const diffTime = end.getTime() - start.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      this.totalDays = diffDays > 0 ? diffDays : 0;
-
-      const noticeTime = start.getTime() - today.getTime();
-      const noticeDays = Math.ceil(noticeTime / (1000 * 60 * 60 * 24));
-
-      // Notice rules apply ONLY to "Paid Leave"
       if (this.leaveRequest.type === 'Paid Leave') {
-        if (this.totalDays <= 2) {
-          this.noticeRequired = 3;
-        } else if (this.totalDays === 3) {
-          this.noticeRequired = 5;
-        } else {
-          this.noticeRequired = 7;
-        }
-        this.isInsufficientNotice = noticeDays < this.noticeRequired;
+        if (this.totalDays <= 2) this.noticeRequired = 3;
+        else if (this.totalDays === 3) this.noticeRequired = 5;
+        else this.noticeRequired = 7;
+        this.isInsufficientNotice = noticeDiff < this.noticeRequired;
       } else {
         this.isInsufficientNotice = false;
         this.noticeRequired = 0;
       }
       
       this.checkBalance();
-    } else {
-      this.totalDays = 0;
-      this.isOverBalance = false;
-      this.isInsufficientNotice = false;
     }
   }
 
@@ -180,7 +167,7 @@ export class FileLeaveComponent implements OnInit {
 
     const period = this.leaveRequest.startDate === this.leaveRequest.endDate 
       ? this.leaveRequest.startDate 
-      : `${this.leaveRequest.startDate} - ${this.leaveRequest.endDate}`;
+      : `${this.leaveRequest.startDate} to ${this.leaveRequest.endDate}`;
     
     const newRequest = {
       type: this.leaveRequest.type,
@@ -195,7 +182,7 @@ export class FileLeaveComponent implements OnInit {
     this.showSuccessToast = true;
     setTimeout(() => {
       this.showSuccessToast = false;
-      this.router.navigate(['/history']);
-    }, 2500);
+      this.router.navigate(['/my-tracker']); // Updated to go to tracker/history
+    }, 2000);
   }
 }

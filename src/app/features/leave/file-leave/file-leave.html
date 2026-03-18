@@ -37,7 +37,7 @@
             </div>
           </div>
           <select name="type" [(ngModel)]="leaveRequest.type" (change)="calculateDays()" required>
-            <option value="" disabled selected>Select type of leave</option>
+            <option value="" disabled>Select type of leave</option>
             <option value="Paid Leave">Paid Leave</option>
             <option value="Sick Leave">Sick Leave</option>
             <option value="Birthday Leave" [disabled]="!currentUser.isBirthMonth">
@@ -49,21 +49,19 @@
         <div class="form-group">
           <label>Start Date</label>
           <input type="date" name="startDate" [(ngModel)]="leaveRequest.startDate" 
-                 [min]="minDate" (change)="calculateDays()" (input)="calculateDays()"
-                 onkeydown="return false" required>
+                 [min]="minDate" (change)="calculateDays()" required>
         </div>
 
         <div class="form-group">
           <label>End Date</label>
           <input type="date" name="endDate" [(ngModel)]="leaveRequest.endDate" 
-                 [min]="leaveRequest.startDate || minDate" (change)="calculateDays()" (input)="calculateDays()"
-                 onkeydown="return false" required>
+                 [min]="leaveRequest.startDate || minDate" (change)="calculateDays()" required>
         </div>
 
         <div class="duration-summary full-width" *ngIf="totalDays > 0">
           <div class="summary-content error" *ngIf="isOverBalance">
             <span class="summary-icon">⚠️</span>
-            <span>Insufficient balance for this duration.</span>
+            <span>Insufficient balance for this duration ({{totalDays}} days requested).</span>
           </div>
           
           <div class="summary-content error" *ngIf="isInsufficientNotice && !isOverBalance">
@@ -78,17 +76,17 @@
         </div>
 
         <div class="form-group full-width">
-          <label>Reason for leave: Required</label>
-          <textarea name="reason" [(ngModel)]="leaveRequest.reason" placeholder="State your reason..." rows="4" required></textarea>
+          <label>Reason for leave</label>
+          <textarea name="reason" [(ngModel)]="leaveRequest.reason" placeholder="Please provide a brief reason..." rows="4" required></textarea>
         </div>
 
         <div class="form-group full-width">
-          <label>Attachment: Optional (Max 2mb)</label>
+          <label>Attachment (Optional)</label>
           <div class="attachment-upload-box" [class.has-file]="fileName" (click)="!fileName && fileInput.click()">
             <input type="file" (change)="onFileSelected($event)" #fileInput hidden>
             <div class="upload-content" *ngIf="!fileName">
               <span class="upload-icon">📎</span>
-              <span class="upload-text">Click to upload document</span>
+              <span class="upload-text">Click to upload supporting document (Max 2MB)</span>
             </div>
             <div class="file-info-active" *ngIf="fileName">
               <span class="file-name-display">{{ fileName }}</span>
@@ -99,10 +97,10 @@
       </div>
 
       <div class="form-actions">
-        <button type="button" class="btn-secondary" routerLink="/dashboard">Cancel</button>
+        <button type="button" class="btn-secondary" routerLink="/calendar">Back to Calendar</button>
         <button type="submit" class="btn-primary" 
                 [disabled]="!leaveForm.valid || totalDays <= 0 || isOverBalance || isInsufficientNotice">
-          Submit
+          Submit Request
         </button>
       </div>
     </form>

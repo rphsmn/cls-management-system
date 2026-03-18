@@ -1,89 +1,127 @@
-.calendar-wrapper { 
-  padding: 32px 40px; 
-  width: 100%;
-  max-width: 1550px; 
-  margin: 0 auto; 
-  /* Removing min-height: 100vh to prevent accidental overflow */
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  animation: fadeIn 0.4s ease-out; 
-}
-
-.calendar-header { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: flex-end; 
-  margin-bottom: 24px;
-}
-
+.calendar-wrapper { padding: 32px 40px; width: 100%; max-width: 1550px; margin: 0 auto; display: flex; flex-direction: column; box-sizing: border-box; }
+.calendar-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
 .calendar-header h1 { font-size: 32px; color: #1a5336; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
-.date-display { color: #64748b; font-weight: 600; font-size: 15px; margin-left: 8px; }
+.date-display { color: #64748b; font-weight: 600; font-size: 24px; margin-left: 12px; }
 
-.nav-controls { 
-  display: flex; 
-  align-items: center; 
-  background: white; 
-  padding: 6px 10px; 
-  border-radius: 14px; 
-  border: 1px solid #e2e8f0; 
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
-}
-
+.nav-controls { display: flex; align-items: center; background: white; padding: 6px 10px; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); gap: 4px; }
 .nav-btn { width: 34px; height: 34px; border: none; background: transparent; cursor: pointer; color: #64748b; font-size: 18px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 .nav-btn:hover { background: #f1f5f9; color: #1a5336; }
-.today-btn { border: none; background: #1a5336; color: white; padding: 0 16px; height: 34px; border-radius: 10px; font-weight: 700; cursor: pointer; margin: 0 6px; font-size: 13px; }
+.today-btn { border: none; background: #1a5336; color: white; padding: 0 16px; height: 34px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 13px; }
+.year-select { border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px 8px; font-weight: 600; color: #64748b; cursor: pointer; outline: none; }
 
-.calendar-layout { 
-  display: grid; 
-  grid-template-columns: 1fr 300px; 
-  gap: 32px; 
-}
-
-.calendar-card { 
-  background: white; 
-  border-radius: 20px; 
-  border: 1px solid #e2e8f0; 
-  box-shadow: 0 10px 30px rgba(0,0,0,0.04); 
-  overflow: hidden; 
-}
-
+.calendar-layout { display: grid; grid-template-columns: 1fr 300px; gap: 32px; }
+.calendar-card { background: white; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.04); overflow: hidden; }
 .weekday-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
 .weekday-label { padding: 16px; text-align: center; font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
 
-.days-grid { 
-  display: grid; 
-  grid-template-columns: repeat(7, 1fr); 
-  grid-auto-rows: minmax(120px, auto); 
-}
-
-.day-cell { padding: 12px; border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: all 0.2s; background: #fff; min-height: 130px; }
+.days-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(130px, auto); }
+.day-cell { padding: 12px; border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: all 0.2s; background: #fff; display: flex; flex-direction: column; }
+.day-cell.is-past { background-color: #f8fafc; cursor: not-allowed; opacity: 0.6; pointer-events: none; }
 .day-cell:hover:not(.empty):not(.is-past) { box-shadow: inset 0 0 0 2px #1a5336; z-index: 2; }
-.day-cell.is-past { background-color: #f8fafc; cursor: not-allowed; opacity: 0.7; }
-
 .day-number { font-size: 14px; font-weight: 700; color: #64748b; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
 .is-today { background-color: #f0fdf4 !important; }
 .is-today .day-number { background: #1a5336; color: white; border-radius: 50%; }
 
-.empty { background-color: #f8fafc; background-image: radial-gradient(#e2e8f0 0.5px, transparent 0.5px); background-size: 10px 10px; }
+.empty { background-color: #f8fafc; background-image: radial-gradient(#e2e8f0 0.5px, transparent 0.5px); background-size: 10px 10px; cursor: default; }
+.away-badge { background: #eff6ff; color: #1e40af; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 6px; border: 1px solid #dbeafe; width: fit-content; margin: 4px 0; }
 
-.away-badge { background: #eff6ff; color: #1e40af; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 6px; border: 1px solid #dbeafe; width: fit-content; margin-bottom: 6px; }
+/* Holiday Type Styles */
+.holiday-pill { font-size: 10px; font-weight: 700; padding: 6px 10px; border-radius: 8px; margin-top: auto; display: flex; flex-direction: column; gap: 4px; border-left: 4px solid currentColor !important; }
+.type-regular { background-color: #e0f2fe; color: #0369a1; }
+.type-special-non { background-color: #fef3c7; color: #92400e; }
+.type-special-work { background-color: #fee2e2; color: #991b1b; }
+.type-company { background-color: #f0fdf4; color: #1a5336; }
 
-.holiday-pill { font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 6px; margin-top: 8px; border-left: 4px solid currentColor !important; }
-.region-ph { background-color: #e0f2fe !important; color: #0369a1 !important; }
-.region-au { background-color: #fef3c7 !important; color: #92400e !important; }
-.region-both { background-color: #f0fdf4 !important; color: #166534 !important; }
+.flag-row { display: flex; gap: 4px; font-size: 14px; }
 
-.sidebar-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.03); margin-bottom: 24px; }
+/* Sidebar */
+.sidebar-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0; margin-bottom: 24px; }
 .sidebar-card h3 { margin: 0 0 20px; font-size: 14px; font-weight: 800; color: #1e293b; text-transform: uppercase; }
 .legend-list { list-style: none; padding: 0; margin: 0; }
-.legend-list li { display: flex; gap: 14px; margin-bottom: 12px; }
-
+.legend-list li { display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start; }
 .dot { width: 10px; height: 10px; border-radius: 3px; margin-top: 4px; flex-shrink: 0; }
 .dot.regular { background-color: #0369a1; }
 .dot.special-non { background-color: #f59e0b; }
 .dot.special-work { background-color: #991b1b; }
 .dot.company { background-color: #1a5336; }
-
 .l-label { font-size: 13px; font-weight: 700; color: #334155; display: block; }
 .l-desc { font-size: 11px; color: #94a3b8; }
+
+/* Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px); }
+.modal-card { background: white; width: 90%; max-width: 450px; border-radius: 24px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-date-text { font-weight: 700; color: #64748b; }
+.close-x { background: #f1f5f9; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; }
+.modal-title-text { color: #1a5336; margin: 0 0 12px; font-size: 24px; }
+.modal-subtitle { color: #64748b; font-size: 14px; line-height: 1.5; margin-bottom: 24px; }
+.modal-actions { display: flex; gap: 12px; }
+.btn-cancel { flex: 1; background: #f1f5f9; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.btn-confirm { flex: 1; background: #1a5336; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+.modal-card { 
+  background: white; 
+  width: 95%; 
+  max-width: 480px; 
+  border-radius: 28px; 
+  overflow: hidden; /* Clips the hero background */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: none;
+}
+
+/* Hero Header Area */
+.modal-hero { padding: 40px 32px; position: relative; color: white; }
+.modal-hero.work-day { background: linear-gradient(135deg, #1a5336 0%, #2d7a50 100%); }
+.modal-hero.regular { background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%); }
+.modal-hero.special-non { background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); }
+.modal-hero.special-work { background: linear-gradient(135deg, #991b1b 0%, #ef4444 100%); }
+.modal-hero.company { background: linear-gradient(135deg, #064e3b 0%, #10b981 100%); }
+
+.hero-date { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; display: block; margin-bottom: 8px; }
+.hero-title { font-size: 28px; font-weight: 800; margin: 0; line-height: 1.2; }
+
+.close-x-white { 
+  position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); 
+  border: none; width: 32px; height: 32px; border-radius: 50%; color: white; cursor: pointer;
+  transition: 0.2s;
+}
+.close-x-white:hover { background: rgba(255,255,255,0.3); }
+
+/* Content & Layout */
+.modal-content { padding: 32px; }
+
+.notice-box { 
+  background: #fffbeb; border: 1px solid #fef3c7; border-radius: 16px; 
+  padding: 16px; display: flex; gap: 16px; margin-bottom: 24px;
+}
+.notice-icon { font-size: 20px; }
+.notice-text { display: flex; flex-direction: column; font-size: 13px; line-height: 1.4; color: #92400e; }
+.notice-text strong { font-size: 14px; margin-bottom: 2px; }
+
+.status-details { margin-bottom: 32px; }
+.status-row { 
+  display: flex; justify-content: space-between; align-items: center; 
+  padding: 12px 0; border-bottom: 1px solid #f1f5f9;
+}
+.status-label { color: #64748b; font-weight: 600; font-size: 14px; }
+.status-value { font-weight: 700; color: #1e293b; }
+.holiday-text { color: #0369a1; }
+
+.flag-tags { display: flex; gap: 8px; }
+.flag-tag { 
+  background: #f8fafc; padding: 4px 10px; border-radius: 20px; 
+  font-size: 12px; font-weight: 700; color: #475569; border: 1px solid #e2e8f0;
+}
+
+/* Actions */
+.modal-footer { display: flex; gap: 12px; }
+.btn-secondary { 
+  flex: 1; padding: 14px; border-radius: 14px; border: 1px solid #e2e8f0; 
+  background: white; font-weight: 700; color: #64748b; cursor: pointer;
+}
+.btn-primary { 
+  flex: 1.5; padding: 14px; border-radius: 14px; border: none; 
+  background: #1a5336; font-weight: 700; color: white; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(26, 83, 54, 0.3);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26, 83, 54, 0.4); }

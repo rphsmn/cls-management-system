@@ -7,6 +7,9 @@
       <button class="nav-btn" (click)="prevMonth()">‹</button>
       <button class="today-btn" (click)="goToToday()">Today</button>
       <button class="nav-btn" (click)="nextMonth()">›</button>
+      <select class="year-select" [value]="currentDate.getFullYear()" (change)="changeYear($event)">
+        <option *ngFor="let yr of years" [value]="yr">{{ yr }}</option>
+      </select>
     </div>
   </header>
 
@@ -29,8 +32,12 @@
             👥 {{ day.awayCount }} Away
           </div>
 
-          <div class="holiday-pill" *ngIf="day.holiday" [className]="'holiday-pill region-' + day.holiday.region">
-            {{ day.holiday.name }}
+          <div class="holiday-pill" *ngIf="day.holiday" [className]="'holiday-pill type-' + day.holiday.type">
+            <span class="holiday-name">{{ day.holiday.name }}</span>
+            <div class="flag-row">
+              <span *ngIf="day.holiday.region === 'ph' || day.holiday.region === 'both'">🇵🇭</span>
+              <span *ngIf="day.holiday.region === 'au' || day.holiday.region === 'both'">🇦🇺</span>
+            </div>
           </div>
         </div>
       </div>
@@ -38,21 +45,19 @@
 
     <aside class="sidebar-info">
       <div class="sidebar-card">
-        <h3>Holiday Types</h3>
+        <h3>Holiday & Event Guide</h3>
         <ul class="legend-list">
-          <li><span class="dot regular"></span> <div><span class="l-label">Regular Holiday</span><span class="l-desc">Statutory Off</span></div></li>
-          <li><span class="dot special-non"></span> <div><span class="l-label">Special Non-Working</span><span class="l-desc">Observed Day</span></div></li>
-          <li><span class="dot special-work"></span> <div><span class="l-label">Special Working</span><span class="l-desc">Work Day</span></div></li>
+          <li><span class="dot regular"></span> <div><span class="l-label">Public Holiday</span><span class="l-desc">Paid Day Off</span></div></li>
+          <li><span class="dot special-non"></span> <div><span class="l-label">Special Holiday</span><span class="l-desc">No Work • Observed</span></div></li>
+          <li><span class="dot special-work"></span> <div><span class="l-label">Special Day</span><span class="l-desc">Work as Usual</span></div></li>
           <li><span class="dot company"></span> <div><span class="l-label">Company Event</span><span class="l-desc">Internal Sync</span></div></li>
         </ul>
       </div>
-
       <div class="sidebar-card">
         <h3>Regions</h3>
         <ul class="legend-list">
-          <li><div style="width:10px; height:10px; background:#0ea5e9; border-radius:3px; margin-top:4px;"></div> <span class="l-label">Philippines</span></li>
-          <li><div style="width:10px; height:10px; background:#f59e0b; border-radius:3px; margin-top:4px;"></div> <span class="l-label">Australia</span></li>
-          <li><div style="width:10px; height:10px; background:#22c55e; border-radius:3px; margin-top:4px;"></div> <span class="l-label">Both Regions</span></li>
+          <li><span class="flag-lg">🇵🇭</span> <span class="l-label">Philippines</span></li>
+          <li><span class="flag-lg">🇦🇺</span> <span class="l-label">Australia</span></li>
         </ul>
       </div>
     </aside>
@@ -61,20 +66,50 @@
 
 <div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
   <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-body" *ngIf="selectedDay">
-      <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <span style="font-weight: 700; color: #64748b;">{{ selectedDay.date | date:'fullDate' }}</span>
-        <button (click)="showModal = false" style="background: #f1f5f9; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;">✕</button>
+    <div class="modal-hero" [className]="'modal-hero ' + (selectedDay.holiday?.type || 'work-day')">
+      <div class="hero-content">
+        <span class="hero-date">{{ selectedDay.date | date:'EEEE, MMMM d, yyyy' }}</span>
+        <h2 class="hero-title">{{ selectedDay.holiday?.name || 'Standard Work Day' }}</h2>
+      </div>
+      <button (click)="showModal = false" class="close-x-white">✕</button>
+    </div>
+
+    <div class="modal-content">
+      <div class="notice-box" *ngIf="isNoticeWarning">
+        <div class="notice-icon">⚠️</div>
+        <div class="notice-text">
+          <strong>Short Notice Period</strong>
+          <span>This date is within the {{suggestedNoticeDays}}-day window. Review leave notice policy.</span>
+        </div>
       </div>
 
-      <h2 style="color: #1a5336; margin-bottom: 12px;">{{ selectedDay.holiday?.name || 'Work Day' }}</h2>
-      <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin-bottom: 24px;">
-        {{ selectedDay.holiday ? 'This is an official holiday.' : 'This is a standard working day.' }}
-      </p>
+<div class="status-details">
+  <div class="status-row" *ngIf="selectedDay.holiday">
+    <span class="status-label">Office Status</span>
+    <span class="status-value holiday-text">Closed</span>
+  </div>
+  
+  <div class="status-row" *ngIf="selectedDay.holiday">
+    <span class="status-label">Observed In</span>
+    <div class="flag-tags">
+      <span class="flag-tag" *ngIf="selectedDay.holiday.region === 'ph' || selectedDay.holiday.region === 'both'">🇵🇭 PH</span>
+      <span class="flag-tag" *ngIf="selectedDay.holiday.region === 'au' || selectedDay.holiday.region === 'both'">🇦🇺 AU</span>
+    </div>
+  </div>
 
-      <div style="display: flex; gap: 12px;">
-        <button class="btn-cancel" style="flex:1" (click)="showModal = false">Close</button>
-        <button class="btn-confirm" style="flex:1; background: #1a5336;" (click)="goToFiling(selectedDay.date)" *ngIf="!selectedDay.holiday">File Leave</button>
+  <div class="status-row" *ngIf="!selectedDay.holiday && selectedDay.awayCount > 0">
+    <span class="status-label">Team Availability</span>
+    <span class="status-value">{{ selectedDay.awayCount }} colleague(s) away</span>
+  </div>
+</div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="showModal = false">Dismiss</button>
+        <button class="btn-primary" 
+                (click)="goToFiling(selectedDay.date)" 
+                *ngIf="!selectedDay.holiday">
+          Request Leave
+        </button>
       </div>
     </div>
   </div>
