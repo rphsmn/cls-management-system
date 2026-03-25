@@ -31,113 +31,115 @@
   <div class="card-full-width">
     <ng-container *ngIf="allFilteredRequests$ | async as allReqs">
       <div class="table-container">
-        <table class="history-table">
-          <thead>
-            <tr>
-              <th *ngIf="!currentUser.role.includes('Staff') && currentUser.role !== 'It Developer'" class="col-emp">Employee</th>
-              <th class="col-date">Date Filed</th>
-              <th class="col-type">Leave Type</th>
-              <th class="col-period">Period</th>
-              <th class="col-reason">Reason</th>
-              <th class="col-progress">Approval Progress</th>
-            </tr>
-          </thead>
-          
-          <tbody *ngIf="allReqs.length > 0; else emptyHistory">
-            <tr *ngFor="let req of (paginatedRequests$ | async)">
-              <td *ngIf="!currentUser.role.includes('Staff') && currentUser.role !== 'It Developer'">
-                <div class="employee-info">
-                  <span class="user-name">{{ req.employeeName }}</span>
-                  <span class="emp-id">{{ req.companyId }}</span>
-                </div>
-              </td>
-
-              <td>
-                <div class="period-stack">
-                  <span class="period-word">{{ getRelativeDate(req.dateFiled) || (req.dateFiled | date:'MMM d') }}</span>
-                  <span class="period-sub">{{ req.dateFiled | date:'yyyy' }}, {{ req.dateFiled | date:'MMM d' }}</span>
-                </div>
-              </td>
-
-              <td>
-                <div class="type-pill">
-                  <span class="pill-icon">{{ getLeaveIcon(req.type) }}</span>
-                  {{ req.type }}
-                </div>
-              </td>
-
-              <td>
-                <div class="period-stack">
-                  <span class="period-word">{{ getFormattedPeriod(req.period) }}</span>
-                  <span class="period-sub">{{ req.period }}</span>
-                </div>
-              </td>
-
-              <td>
-                <div class="reason-container">
-                  <div [ngClass]="expandedReq === req ? 'reason-full' : 'reason-text'">
-                    "{{ req.reason }}"
+        <ng-container *ngIf="allReqs.length > 0; else emptyHistory">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th *ngIf="!currentUser.role.includes('Staff') && currentUser.role !== 'It Developer'" class="col-emp">Employee</th>
+                <th class="col-date">Date Filed</th>
+                <th class="col-type">Leave Type</th>
+                <th class="col-period">Period</th>
+                <th class="col-reason">Reason</th>
+                <th class="col-progress">Approval Progress</th>
+              </tr>
+            </thead>
+            
+            <tbody>
+              <tr *ngFor="let req of (paginatedRequests$ | async)">
+                <td *ngIf="!currentUser.role.includes('Staff') && currentUser.role !== 'It Developer'">
+                  <div class="employee-info">
+                    <span class="user-name">{{ req.employeeName }}</span>
+                    <span class="emp-id" *ngIf="req.employeeId">{{ req.employeeId }}</span>
                   </div>
-                  <div class="reason-meta">
-                    <span class="see-more" *ngIf="req.reason && req.reason.length > 40" (click)="toggleReason(req)">
-                      {{ expandedReq === req ? 'Collapse ↑' : 'Read More ↓' }}
-                    </span>
-                    <button *ngIf="req.attachment" (click)="viewDocument(req.attachment)" class="doc-link-btn">
-                      👁️ View Doc
-                    </button>
-                  </div>
-                </div>
-              </td>
+                </td>
 
-              <td>
-                <div class="progress-track">
-                  <div class="step completed">
-                    <div class="icon-circle">✓</div>
-                    <span class="step-label">Filed</span>
+                <td>
+                  <div class="period-stack">
+                    <span class="period-word">{{ getRelativeDate(req.dateFiled) || (req.dateFiled | date:'MMM d') }}</span>
+                    <span class="period-sub">{{ req.dateFiled | date:'yyyy' }}, {{ req.dateFiled | date:'MMM d' }}</span>
                   </div>
-                  
-                  <ng-container *ngFor="let stepName of getSteps(req); let i = index">
-                    <div class="connector" 
-                         [class.active]="getStepStatus(req, i) === 'completed'" 
-                         [class.rejected]="getStepStatus(req, i) === 'rejected'">
+                </td>
+
+                <td>
+                  <div class="type-pill">
+                    <span class="pill-icon">{{ getLeaveIcon(req.type) }}</span>
+                    {{ req.type }}
+                  </div>
+                </td>
+
+                <td>
+                  <div class="period-stack">
+                    <span class="period-word">{{ getFormattedPeriod(req.period) }}</span>
+                    <span class="period-sub">{{ req.period }}</span>
+                  </div>
+                </td>
+
+                <td>
+                  <div class="reason-container">
+                    <div [ngClass]="expandedReq === req ? 'reason-full' : 'reason-text'">
+                      "{{ req.reason }}"
                     </div>
-
-                    <div class="step" [ngClass]="getStepStatus(req, i)">
-                      <div class="icon-circle">{{ getStepIcon(req, i) }}</div>
-                      <span class="step-label">{{ stepName }}</span>
+                    <div class="reason-meta">
+                      <span class="see-more" *ngIf="req.reason && req.reason.length > 40" (click)="toggleReason(req)">
+                        {{ expandedReq === req ? 'Collapse ↑' : 'Read More ↓' }}
+                      </span>
+                      <button *ngIf="req.attachment" (click)="viewDocument(req.attachment)" class="doc-link-btn">
+                        👁️ View Doc
+                      </button>
                     </div>
-                  </ng-container>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                  </div>
+                </td>
 
-        <div class="pagination-footer" *ngIf="allReqs.length > 0">
-          <div class="pagination-left">
-              Showing <strong>{{ getStartRange(allReqs.length) }}</strong> - <strong>{{ getEndRange(allReqs.length) }}</strong> of <strong>{{ allReqs.length }}</strong>
-              <span class="rows-select">
-                Rows:
-                <select (change)="onItemsPerPageChange($event)">
-                  <option value="10">10</option>
-                  <option value="25">25</option>
-                </select>
-              </span>
+                <td>
+                  <div class="progress-track">
+                    <div class="step completed">
+                      <div class="icon-circle">✓</div>
+                      <span class="step-label">Filed</span>
+                    </div>
+                    
+                    <ng-container *ngFor="let stepName of getSteps(req); let i = index">
+                      <div class="connector" 
+                           [class.active]="getStepStatus(req, i) === 'completed'" 
+                           [class.rejected]="getStepStatus(req, i) === 'rejected'">
+                      </div>
+
+                      <div class="step" [ngClass]="getStepStatus(req, i)">
+                        <div class="icon-circle">{{ getStepIcon(req, i) }}</div>
+                        <span class="step-label">{{ stepName }}</span>
+                      </div>
+                    </ng-container>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="pagination-footer">
+            <div class="pagination-left">
+                Showing <strong>{{ getStartRange(allReqs.length) }}</strong> - <strong>{{ getEndRange(allReqs.length) }}</strong> of <strong>{{ allReqs.length }}</strong>
+                <span class="rows-select">
+                  Rows:
+                  <select (change)="onItemsPerPageChange($event)">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                  </select>
+                </span>
+            </div>
+            <div class="pagination-controls" *ngIf="currentPage$ | async as curPage">
+              <button class="btn-pager" (click)="prevPage()" [disabled]="curPage === 1">Previous</button>
+              <span class="page-num">{{ curPage }} / {{ getTotalPages(allReqs.length) }}</span>
+              <button class="btn-pager" (click)="nextPage(allReqs.length)" [disabled]="curPage >= getTotalPages(allReqs.length)">Next</button>
+            </div>
           </div>
-          <div class="pagination-controls" *ngIf="currentPage$ | async as curPage">
-            <button class="btn-pager" (click)="prevPage()" [disabled]="curPage === 1">Previous</button>
-            <span class="page-num">{{ curPage }} / {{ getTotalPages(allReqs.length) }}</span>
-            <button class="btn-pager" (click)="nextPage(allReqs.length)" [disabled]="curPage >= getTotalPages(allReqs.length)">Next</button>
+        </ng-container>
+
+        <ng-template #emptyHistory>
+          <div class="empty-state">
+            <div class="empty-icon">🍃</div>
+            <p>No leave records found for the selected period.</p>
           </div>
-        </div>
+        </ng-template>
       </div>
     </ng-container>
-
-    <ng-template #emptyHistory>
-      <div class="empty-state">
-        <div class="empty-icon">🍃</div>
-        <p>No leave records found for the selected period.</p>
-      </div>
-    </ng-template>
   </div>
 </main>

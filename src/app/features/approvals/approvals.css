@@ -140,6 +140,7 @@
   font-size: 12px; 
   font-weight: 600; 
   color: #166534; 
+  white-space: nowrap;
 }
 
 .period-word { color: #1a5336; font-weight: 800; font-size: 12px; display: block; }

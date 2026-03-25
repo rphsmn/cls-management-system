@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Observable, map, combineLatest, startWith, BehaviorSubject, tap } from 'rxjs';
 import { AuthService, User } from '../../core/services/auth';
+import { LeaveService } from '../../core/services/leave.services';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -15,6 +16,7 @@ import Swal from 'sweetalert2';
 })
 export class ApprovalsComponent {
   private authService = inject(AuthService);
+  private leaveService = inject(LeaveService);
   
   currentUser$: Observable<User | null> = this.authService.currentUser$;
   allFilteredRequests$: Observable<any[]>;
@@ -40,7 +42,7 @@ export class ApprovalsComponent {
   constructor() {
     this.allFilteredRequests$ = combineLatest([
       this.authService.currentUser$,
-      this.authService.requests$,
+      this.leaveService.requests$,
       this.searchControl.valueChanges.pipe(startWith(''), tap(() => this.currentPageSubject.next(1))),
       this.monthControl.valueChanges.pipe(startWith(this.monthControl.value), tap(() => this.currentPageSubject.next(1))),
       this.yearControl.valueChanges.pipe(startWith(this.yearControl.value), tap(() => this.currentPageSubject.next(1)))
@@ -49,42 +51,21 @@ export class ApprovalsComponent {
         if (!user || !allRequests) return [];
         
         const term = searchTerm?.toLowerCase().trim() || '';
-        const myRole = user.role?.toUpperCase().trim() || '';
+        const normalizedUserRole = user.role.toLowerCase();
 
         return allRequests.filter(req => {
-          // 1. Search Logic
           const matchesSearch = 
             req.employeeName?.toLowerCase().includes(term) || 
             req.companyId?.toLowerCase().includes(term) ||
             req.type?.toLowerCase().includes(term);
 
-          if (!matchesSearch || req.companyId === user.id) return false;
+          if (!matchesSearch || req.uid === user.uid) return false;
 
-          // 2. Filter by Leave Period (Matches Month/Year dropdown)
           const isMatch = this.checkPeriodMatch(req.period, Number(selMonth), Number(selYear));
           if (!isMatch) return false;
 
-          // 3. Role Hierarchy Logic
-          const reqRole = req.role?.toUpperCase().trim() || '';
-          const status = req.status;
-
-          if (myRole === 'OPS-ADM-SUP' || myRole === 'OPS SUPERVISOR') {
-            return status === 'Pending' && (reqRole === 'OPS-ADM-STF' || reqRole === 'OPERATIONS STAFF');
-          }
-          if (myRole === 'ACC-ADM-SUP' || myRole === 'ACC SUPERVISOR') {
-            return status === 'Pending' && (reqRole === 'ACC-ADM-STF' || reqRole === 'ACCOUNTS STAFF');
-          }
-          if (myRole === 'ADM-MGR' || myRole === 'ADMIN MANAGER') {
-            const managedRoles = ['OPS-ADM-SUP', 'OPS SUPERVISOR', 'ACC-ADM-SUP', 'ACC SUPERVISOR', 'IT-DEV', 'IT DEVELOPER', 'HR-ADM', 'HR'];
-            return status === 'Pending' && managedRoles.includes(reqRole);
-          }
-          if (myRole === 'HR-ADM' || myRole === 'HR') {
-            const isAdminManager = (reqRole === 'ADM-MGR' || reqRole === 'ADMIN MANAGER');
-            const isEscalated = status === 'Awaiting HR Approval' || status === 'Awaiting Final HR Approval';
-            return (isAdminManager && status === 'Pending') || isEscalated;
-          }
-
-          return false;
+          const normalizedTarget = (req.targetReviewer || '').toLowerCase();
+          return normalizedTarget === normalizedUserRole;
         });
       })
     );
@@ -97,39 +78,30 @@ export class ApprovalsComponent {
     );
   }
 
-  // Logic to see if the leave falls within the selected month/year
   private checkPeriodMatch(period: string, selMonth: number, selYear: number): boolean {
     if (!period) return false;
     const separator = period.includes(' to ') ? ' to ' : ' - ';
     const dates = period.split(separator);
-    
     const startDate = new Date(dates[0].trim());
     const endDate = dates[1] ? new Date(dates[1].trim()) : startDate;
-
     return (startDate.getMonth() === selMonth && startDate.getFullYear() === selYear) || 
            (endDate.getMonth() === selMonth && endDate.getFullYear() === selYear);
   }
 
-  // Fixed formatting logic for both single days and ranges
   getFormattedPeriod(period: string): string {
     if (!period) return 'N/A';
-    
     const separator = period.includes(' to ') ? ' to ' : ' - ';
     
-    // Handle Single Date
     if (!period.includes(separator)) {
       const singleDate = new Date(period.trim());
       return `1 Day (${singleDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
     }
 
-    // Handle Date Range
     const parts = period.split(separator);
     const start = new Date(parts[0].trim());
     const end = new Date(parts[1].trim());
-    
     const diff = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    
-    return `${diff} ${diff === 1 ? 'Day' : 'Days'} (${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
+    return `${diff} ${diff === 1 ? 'Day' : 'Days'} (${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
   }
 
   updateStatus(req: any, action: string) {
@@ -151,14 +123,28 @@ export class ApprovalsComponent {
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        this.authService.updateRequestStatus(req.id, action);
-        Swal.fire({ 
-          toast: true, 
-          position: 'top-end', 
-          showConfirmButton: false, 
-          timer: 2000, 
-          icon: 'success', 
-          title: `Request ${action === 'Approve' ? 'Approved' : 'Rejected'}` 
+        const user = this.authService.currentUser;
+        if (!user) return;
+        
+        const status = action === 'Approve' ? 'Approved' : 'Rejected';
+        this.leaveService.updateRequestStatus(req.id, status, user.role).then(() => {
+          Swal.fire({ 
+            toast: true, 
+            position: 'top-end', 
+            showConfirmButton: false, 
+            timer: 2000, 
+            icon: 'success', 
+            title: `Request ${action === 'Approve' ? 'Approved' : 'Rejected'}` 
+          });
+        }).catch(() => {
+          Swal.fire({ 
+            toast: true, 
+            position: 'top-end', 
+            showConfirmButton: false, 
+            timer: 2000, 
+            icon: 'error', 
+            title: 'Failed to process request' 
+          });
         });
       }
     });
@@ -179,7 +165,15 @@ export class ApprovalsComponent {
   toggleReason(req: any) { this.expandedReq = (this.expandedReq === req) ? null : req; }
   
   getLeaveIcon(type: string): string {
-    const icons: any = { 'Birthday Leave': '🎂', 'Sick Leave': '🤒', 'Paid Leave': '💰' };
+    const icons: any = { 
+      'Birthday Leave': '🎂', 
+      'Sick Leave': '🤒', 
+      'Paid Time Off': '💰',
+      'Paid Leave': '💰',
+      'Maternity Leave': '🤱',
+      'Paternity Leave': '👶',
+      'Leave Without Pay': '⏰'
+    };
     return icons[type] || '📄';
   }
 }

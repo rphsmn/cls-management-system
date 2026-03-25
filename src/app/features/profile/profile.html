@@ -4,7 +4,7 @@
       <h1>My Profile</h1>
       <div class="badge-row">
         <span class="role-badge">{{ user.role }}</span>
-        <span class="id-text">CLS-2026-0042</span>
+        <span class="id-text">{{ user.employeeId || 'N/A' }}</span>
       </div>
     </div>
   </header>
@@ -14,7 +14,7 @@
       <div class="avatar-circle">{{ user.name.charAt(0) }}</div>
       <div class="user-details">
         <h2>{{ user.name }}</h2>
-        <p>IT Intern • Information Technology</p>
+        <p>{{ user.email }}</p>
       </div>
     </section>
 
@@ -23,25 +23,34 @@
         <h3>Employment Details</h3>
         <span class="verified">✓ Verified</span>
       </div>
-      <div class="data-row"><label>Department</label><span>Information Technology</span></div>
-      <div class="data-row"><label>Position</label><span>Software Development Intern</span></div>
-      <div class="data-row"><label>Supervisor</label><span>Technical Lead</span></div>
+      <div class="data-row"><label>Department</label><span>{{ user.department || user.dept || 'N/A' }}</span></div>
+      <div class="data-row"><label>Role</label><span>{{ user.role }}</span></div>
+      <div class="data-row"><label>Joined Date</label><span>{{ formatDate(user.joinedDate) }}</span></div>
+      <div class="data-row"><label>Years of Service</label><span>{{ yearsOfService }}</span></div>
+    </section>
+
+    <section class="info-card" *ngIf="user.birthday || user.gender">
+      <div class="card-title">
+        <h3>Personal Information</h3>
+        <span class="verified">✓ Verified</span>
+      </div>
+      <div class="data-row" *ngIf="user.birthday"><label>Birthday</label><span>{{ user.birthday }}</span></div>
+      <div class="data-row" *ngIf="user.gender"><label>Gender</label><span>{{ user.gender | titlecase }}</span></div>
     </section>
 
     <section class="info-card">
       <div class="card-title">
-        <h3>Government IDs</h3>
-        <span class="verified">✓ Verified</span>
+        <h3>Leave Balance</h3>
+        <span class="verified">✓ Available</span>
       </div>
-      <div class="data-row"><label>TIN Number</label><span class="mono">{{ govInfo.tin }}</span></div>
-      <div class="data-row"><label>SSS Number</label><span class="mono">{{ govInfo.sss }}</span></div>
-      <div class="data-row"><label>PhilHealth</label><span class="mono">{{ govInfo.philHealth }}</span></div>
+      <div class="data-row"><label>Birthday Leave</label><span>{{ user.birthdayLeave }} day(s)</span></div>
+      <div class="data-row"><label>Paid Time Off</label><span>{{ paidTimeOff }} day(s)</span></div>
     </section>
   </div>
 
   <footer class="action-footer">
     <p>Need to update your professional information?</p>
-    <a [href]="'mailto:hr@corlogics.com?subject=Update Request - ' + user.id" class="update-btn">
+    <a [href]="'mailto:hr@corlogics.com?subject=Update Request - ' + user.name" class="update-btn">
       Request Info Update from HR
     </a>
   </footer>

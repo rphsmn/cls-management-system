@@ -43,7 +43,8 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #1a5336
 
 /* Success Toast */
 .toast-wrapper { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 10000; display: flex; justify-content: center; }
-.toast-container { position: absolute; top: 40px; pointer-events: auto; animation: slideDown 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+.toast-container { position: absolute; top: 40px; pointer-events: auto; }
 .toast-content { background: #1a5336; color: white; padding: 20px 40px; border-radius: 100px; display: flex; align-items: center; gap: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 2px solid #facc15; }
 .toast-icon { background: #facc15; color: #1a5336; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
-@keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.toast-container.toast-error .toast-content { background: #dc2626; border-color: #fecaca; }
+.toast-container.toast-error .toast-icon { background: #fecaca; color: #dc2626; }

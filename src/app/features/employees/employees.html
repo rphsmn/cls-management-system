@@ -45,7 +45,7 @@
         <span class="status-badge" 
               [class.in-office]="emp.status === 'In Office'" 
               [class.upcoming]="emp.status === 'Upcoming Leave'"
-              [class.is-away]="emp.status === 'Away'">
+              [class.is-away]="emp.status === 'On Leave'">
           {{ emp.status | uppercase }}
         </span>
       </div>

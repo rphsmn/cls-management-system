@@ -176,3 +176,55 @@
   color: #94a3b8; 
   font-size: 14px; 
 }
+
+/* Others Card - Sub categories for Maternity/Paternity */
+.others-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.sub-category {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.sub-category:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sub-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.sub-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a5336;
+}
+
+.pending-tag.small {
+  font-size: 9px;
+  padding: 2px 6px;
+}
+
+/* Warning Card for employees < 1 year */
+.warning-card {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.warning-card .value {
+  color: #f59e0b;
+}
+
+/* Unavailable state for birthday leave not in birth month */
+.value.unavailable {
+  color: #94a3b8 !important;
+  font-size: 24px !important;
+}

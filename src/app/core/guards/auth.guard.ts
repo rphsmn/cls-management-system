@@ -1,23 +1,29 @@
 import { Injectable, inject } from '@angular/core';
 import { Router, UrlTree } from '@angular/router';
-import { AuthService } from '../services/auth';
+import { Auth, onAuthStateChanged } from '@angular/fire/auth';
+import { Observable, from } from 'rxjs';
+import { map, take } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class AuthGuard {
-  private authService = inject(AuthService);
+  private authService = inject(Auth);
   private router = inject(Router);
 
-  canActivate(): boolean | UrlTree {
-    // 1. Check Service State
-    const user = this.authService.currentUserSubject.value;
-    // 2. Check Storage as backup
-    const hasSession = localStorage.getItem('cls_user_session');
-
-    if (user || hasSession) {
-      return true; // Keep the user in the app
-    }
-
-    // Only redirect if there is absolutely no user found
-    return this.router.createUrlTree(['/login']);
+  canActivate(): Observable<boolean | UrlTree> {
+    // Use Firebase's onAuthStateChanged directly for reliable auth state
+    // This is more reliable than waiting for the full user profile to load
+    return new Observable<boolean | UrlTree>(observer => {
+      const unsubscribe = onAuthStateChanged(this.authService, fbUser => {
+        if (fbUser) {
+          observer.next(true);
+        } else {
+          observer.next(this.router.createUrlTree(['/login']));
+        }
+        observer.complete();
+      });
+      
+      // Cleanup on unsubscribe
+      return () => unsubscribe();
+    });
   }
 }

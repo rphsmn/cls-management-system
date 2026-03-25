@@ -19,11 +19,12 @@
 
 .col-emp { width: 18%; } .col-date { width: 12%; } .col-type { width: 14%; } .col-period { width: 16%; } .col-reason { width: 22%; } .col-progress { width: 18%; }
 
-.user-name { font-size: 14px; color: #1e293b; font-weight: 700; display: block; }
-.emp-id { font-size: 11px; color: #94a3b8; font-weight: 600; }
+.employee-info { display: flex; flex-direction: column; gap: 2px; }
+.user-name { font-size: 14px; color: #1e293b; font-weight: 700; }
+.emp-id { font-size: 11px; color: #94a3b8; font-weight: 600; font-family: monospace; }
 .period-word { color: #1a5336; font-weight: 800; font-size: 13px; display: block; }
 .period-sub { color: #94a3b8; font-size: 10px; font-weight: 500; }
-.type-pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 8px; font-size: 12px; font-weight: 600; color: #166534; }
+.type-pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 8px; font-size: 12px; font-weight: 600; color: #166534; white-space: nowrap; }
 
 .reason-text { font-size: 13px; line-height: 1.6; color: #64748b; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; max-height: 3.2em; }
 .reason-full { font-size: 13px; line-height: 1.6; color: #64748b; display: block; overflow: visible; }
@@ -48,5 +49,21 @@
 .btn-pager:disabled { opacity: 0.4; cursor: not-allowed; }
 .page-num { font-size: 12px; font-weight: 700; color: #64748b; }
 
-.empty-state { padding: 100px 0; text-align: center; }
-.empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+.empty-state { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  padding: 80px 20px; 
+  text-align: center; 
+  min-height: 500px; 
+  width: 100%;
+}
+.empty-icon { font-size: 64px; margin-bottom: 20px; opacity: 0.4; }
+.empty-state p { 
+  font-size: 16px; 
+  color: #64748b; 
+  font-weight: 500; 
+  max-width: 300px; 
+  line-height: 1.5;
+}

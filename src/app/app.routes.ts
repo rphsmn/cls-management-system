@@ -30,8 +30,8 @@ export const routes: Routes = [
   },
   {
     path: '',
-    component: MainLayoutComponent,
     canActivate: [AuthGuard],
+    component: MainLayoutComponent,
     children: [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'file-leave', component: FileLeaveComponent },
@@ -39,10 +39,9 @@ export const routes: Routes = [
       { path: 'approvals', component: ApprovalsComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'calendar', component: CalendarComponent },
-      { path: 'employees', component: EmployeeStatusComponent },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+      { path: 'employees', component: EmployeeStatusComponent }
     ]
   },
-  // Wildcard MUST stay at the very bottom
+  // Explicitly add login redirect for when not authenticated
   { path: '**', redirectTo: 'login' }
 ];

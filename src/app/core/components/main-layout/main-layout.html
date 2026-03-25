@@ -1,4 +1,4 @@
-<div class="main-app-shell" *ngIf="currentUser$ | async as currentUser">
+<div class="main-app-shell" *ngIf="currentUser$ | async as currentUser; else loadingOrError">
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="logo-dot"></div>
@@ -10,8 +10,8 @@
         <li class="section-header">Main</li>
         <li routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">Dashboard</li>
         <li routerLink="/calendar" routerLinkActive="active-link">Company Calendar</li> 
-        <li routerLink="/history" routerLinkActive="active-link">My Tracker</li>
-        <li routerLink="/file-leave" routerLinkActive="active-link">File Leave</li>
+        <li routerLink="/history" routerLinkActive="active-link">Leave Tracker</li>
+        <li routerLink="/file-leave" routerLinkActive="active-link" *ngIf="currentUser?.role !== 'MANAGING DIRECTOR'">File Leave</li>
 
         <ng-container *ngIf="hasAccess(currentUser.role)">
           <li class="section-header">Management</li>
@@ -45,3 +45,10 @@
     </div>
   </div>
 </div>
+
+<ng-template #loadingOrError>
+  <div class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+</ng-template>

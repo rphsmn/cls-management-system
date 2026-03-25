@@ -41,8 +41,8 @@
           <div class="holiday-pill" *ngIf="day.holiday" [className]="'holiday-pill type-' + day.holiday.type">
             <span class="holiday-name">{{ day.holiday.name }}</span>
             <div class="flag-row">
-              <span *ngIf="day.holiday.region === 'ph' || day.holiday.region === 'both'">🇵🇭</span>
-              <span *ngIf="day.holiday.region === 'au' || day.holiday.region === 'both'">🇦🇺</span>
+              <span *ngIf="day.holiday.region === 'ph' || day.holiday.region === 'ph/au'">🇵🇭</span>
+              <span *ngIf="day.holiday.region === 'au' || day.holiday.region === 'ph/au'">🇦🇺</span>
             </div>
           </div>
         </div>
@@ -128,8 +128,8 @@
 
       <div class="modal-footer">
         <button class="btn-secondary" (click)="showModal = false">Dismiss</button>
-        <button class="btn-primary" (click)="goToFiling(selectedDay.date)" *ngIf="!selectedDay.holiday || isHR">
-          {{ isHR ? 'Manage' : 'Request Leave' }}
+        <button class="btn-primary" (click)="goToFiling(selectedDay.date)">
+          Request Leave
         </button>
       </div>
     </div>

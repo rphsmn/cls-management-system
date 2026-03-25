@@ -1,4 +1,7 @@
 export function calculateWorkdays(period: string, holidays: any[] = []): number {
+  // Guard against undefined or null period
+  if (!period || typeof period !== 'string') return 1;
+  
   const sep = period.includes(' to ') ? ' to ' : ' - ';
   if (!period.includes(sep)) return 1;
 

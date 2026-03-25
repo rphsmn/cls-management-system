@@ -1,10 +1,22 @@
 <div class="toast-wrapper" *ngIf="showSuccessToast">
-  <div class="toast-container">
+  <div class="toast-container" [@slideDown]>
     <div class="toast-content">
       <div class="toast-icon">✓</div>
       <div class="toast-body">
         <strong>SUBMISSION SUCCESSFUL</strong>
         <span>Your request has been filed for review.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrapper" *ngIf="showErrorToast">
+  <div class="toast-container toast-error" [@slideDown]>
+    <div class="toast-content">
+      <div class="toast-icon">⚠️</div>
+      <div class="toast-body">
+        <strong>SUBMISSION FAILED</strong>
+        <span>{{ errorMessage }}</span>
       </div>
     </div>
   </div>
@@ -22,26 +34,80 @@
   </div>
 
   <div class="content-card">
-    <form (ngSubmit)="onSubmit()" #leaveForm="ngForm" class="leave-form">
+    <!-- Managing Director cannot file leaves at all -->
+    <div class="notice-banner info" *ngIf="!currentUser.canFileLeave">
+      <span class="notice-icon">ℹ️</span>
+      <span>As the Managing Director, you have full oversight of all leave requests. You don't need to file leave requests.</span>
+    </div>
+
+    <!-- Warning for employees less than 1 year or part-time -->
+    <div class="notice-banner warning" *ngIf="currentUser.canFileLeave && !currentUser.canFilePaidLeaves && !currentUser.isAdminOrSupervisor">
+      <span class="notice-icon">⚠️</span>
+      <span *ngIf="currentUser.isPartTime">As a part-time employee, only <strong>Leave Without Pay</strong> and <strong>Birthday Leave</strong> are available.</span>
+      <span *ngIf="!currentUser.isPartTime">You have not completed 1 year of service. Only <strong>Leave Without Pay</strong> and <strong>Birthday Leave</strong> are available.</span>
+    </div>
+
+    <!-- Leave form - hidden for Managing Director -->
+    <form (ngSubmit)="onSubmit()" #leaveForm="ngForm" class="leave-form" *ngIf="currentUser.canFileLeave">
       <div class="form-grid">
         <div class="form-group full-width">
           <div class="label-row">
             <label>Leave Type</label>
             <div class="balance-meta" *ngIf="leaveRequest.type">
-              <span class="bal available" [class.insufficient]="isOverBalance">
-                AVAILABLE: {{ currentUser.balances[leaveRequest.type].rem }}
-              </span>
-              <span class="bal pending">
-                PENDING: {{ currentUser.balances[leaveRequest.type].pen }}
-              </span>
+              <ng-container *ngIf="leaveRequest.type === LEAVE_TYPES.LEAVE_WITHOUT_PAY; else showBalance">
+                <span class="bal available">UNLIMITED</span>
+              </ng-container>
+              <ng-template #showBalance>
+                <span class="bal available" [class.insufficient]="isOverBalance">
+                  AVAILABLE: {{ currentUser.balances[leaveRequest.type]?.rem || 0 }}
+                </span>
+                <span class="bal pending">
+                  PENDING: {{ currentUser.balances[leaveRequest.type]?.pen || 0 }}
+                </span>
+              </ng-template>
             </div>
           </div>
-          <select name="type" [(ngModel)]="leaveRequest.type" (change)="calculateDays()" required>
+          
+          <!-- Leave type options for eligible employees (1+ year or admin/supervisor) -->
+          <select name="type" [(ngModel)]="leaveRequest.type" (change)="onLeaveTypeChange()" required 
+                  *ngIf="currentUser.canFilePaidLeaves || currentUser.isAdminOrSupervisor">
             <option value="" disabled>Select type of leave</option>
-            <option value="Paid Leave">Paid Leave</option>
-            <option value="Sick Leave">Sick Leave</option>
-            <option value="Birthday Leave" [disabled]="!currentUser.isBirthMonth">
+            
+            <!-- Paid Time Off -->
+            <option [value]="LEAVE_TYPES.PAID_TIME_OFF">
+              Paid Time Off
+            </option>
+            
+            <!-- Birthday Leave -->
+            <option [value]="LEAVE_TYPES.BIRTHDAY_LEAVE" 
+                    [disabled]="!currentUser.isBirthMonth">
               Birthday Leave {{ !currentUser.isBirthMonth ? '(Birth month only)' : '' }}
+            </option>
+            
+            <!-- Maternity Leave (female only, non part-time) -->
+            <option [value]="LEAVE_TYPES.MATERNITY_LEAVE" *ngIf="currentUser.isFemale && currentUser.canFileMaternityPaternityLeaves">
+              Maternity Leave
+            </option>
+            
+            <!-- Paternity Leave (male only, non part-time) -->
+            <option [value]="LEAVE_TYPES.PATERNITY_LEAVE" *ngIf="currentUser.isMale && currentUser.canFileMaternityPaternityLeaves">
+              Paternity Leave
+            </option>
+            
+            <!-- Leave Without Pay (always available) -->
+            <option [value]="LEAVE_TYPES.LEAVE_WITHOUT_PAY">
+              Leave Without Pay
+            </option>
+          </select>
+          
+          <!-- Leave Without Pay and Birthday Leave for employees < 1 year or part-time -->
+          <select name="type" [(ngModel)]="leaveRequest.type" (change)="onLeaveTypeChange()" required
+                  *ngIf="!currentUser.canFilePaidLeaves && !currentUser.isAdminOrSupervisor">
+            <option [value]="LEAVE_TYPES.BIRTHDAY_LEAVE" [disabled]="!currentUser.isBirthMonth">
+              Birthday Leave {{ !currentUser.isBirthMonth ? '(Birth month only)' : '' }}
+            </option>
+            <option [value]="LEAVE_TYPES.LEAVE_WITHOUT_PAY">
+              Leave Without Pay
             </option>
           </select>
         </div>
@@ -59,14 +125,14 @@
         </div>
 
         <div class="duration-summary full-width" *ngIf="totalDays > 0">
-          <div class="summary-content error" *ngIf="isOverBalance">
+          <div class="summary-content error" *ngIf="isOverBalance && leaveRequest.type !== LEAVE_TYPES.LEAVE_WITHOUT_PAY">
             <span class="summary-icon">⚠️</span>
             <span>Insufficient balance for this duration ({{totalDays}} days requested).</span>
           </div>
           
           <div class="summary-content error" *ngIf="isInsufficientNotice && !isOverBalance">
             <span class="summary-icon">⏳</span>
-            <span>Advance notice too short. Requires <strong>{{ noticeRequired }} days</strong>.</span>
+            <span>Advance notice too short. Requires <strong>{{ noticeRequired }} {{ noticeRequired === 1 ? 'day' : 'days' }}</strong>.</span>
           </div>
 
           <div class="summary-content" *ngIf="!isOverBalance && !isInsufficientNotice">
