@@ -1,0 +1,114 @@
+<main class="approvals-container" *ngIf="currentUser$ | async as currentUser">
+  <header class="content-header">
+    <div class="title-group">
+      <h1>Leave Approvals</h1>
+      <div class="status-indicator">
+        <span class="action-tag">ACTION REQUIRED</span>
+        <span class="sub-tag">Pending Employee Requests</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="filter-group">
+        <select [formControl]="monthControl" class="filter-select">
+          <option *ngFor="let m of months" [value]="m.v">{{ m.l }}</option>
+        </select>
+        <select [formControl]="yearControl" class="filter-select">
+          <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+        </select>
+      </div>
+
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" [formControl]="searchControl" placeholder="Search employee, ID, or type...">
+      </div>
+    </div>
+  </header>
+
+  <div class="card-full-width">
+    <ng-container *ngIf="allFilteredRequests$ | async as allReqs">
+      <ng-container *ngIf="allReqs.length > 0; else emptyApprovals">
+        <table class="approval-table">
+          <thead>
+            <tr>
+              <th class="col-emp">Employee</th>
+              <th class="col-type">Leave Type</th>
+              <th class="col-period">Period</th>
+              <th class="col-reason">Reason</th>
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody *ngIf="paginatedRequests$ | async as requests">
+            <tr *ngFor="let req of requests">
+              <td>
+                <div class="employee-info">
+                  <span class="user-name">{{ req.employeeName }}</span>
+                  <span class="emp-id">{{ req.companyId }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="type-pill">
+                  <span class="pill-icon">{{ getLeaveIcon(req.type) }}</span>
+                  {{ req.type }}
+                </div>
+              </td>
+              <td>
+                <div class="period-stack">
+                  <span class="period-word">{{ getFormattedPeriod(req.period) }}</span>
+                  <span class="period-sub">Filed: {{ req.dateFiled | date:'MMM d, y' }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="reason-container">
+                  <div [ngClass]="expandedReq === req ? 'reason-full' : 'reason-text'">
+                    "{{ req.reason }}"
+                  </div>
+                  <div class="reason-meta">
+                    <span class="see-more" *ngIf="req.reason?.length > 40" (click)="toggleReason(req)">
+                      {{ expandedReq === req ? 'Collapse ↑' : 'Read More ↓' }}
+                    </span>
+                    <div class="doc-actions" *ngIf="req.attachment">
+                      <button (click)="viewDocument(req.attachment)" class="doc-link-btn">👁️ View Doc</button>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn-approve" (click)="updateStatus(req, 'Approve')">APPROVE</button>
+                  <button class="btn-reject" (click)="updateStatus(req, 'Reject')">REJECT</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="pagination-footer">
+          <div class="pagination-left">
+            Showing <strong>{{ getStartRange(allReqs.length) }}</strong> - <strong>{{ getEndRange(allReqs.length) }}</strong> of <strong>{{ allReqs.length }}</strong>
+            <span class="rows-select">
+              Rows:
+              <select (change)="onItemsPerPageChange($event)">
+                <option value="10">10</option>
+                <option value="25">25</option>
+              </select>
+            </span>
+          </div>
+
+          <div class="pagination-controls" *ngIf="currentPage$ | async as curPage">
+            <button class="btn-pager" (click)="prevPage()" [disabled]="curPage === 1">Previous</button>
+            <span class="page-num">{{ curPage }} / {{ getTotalPages(allReqs.length) }}</span>
+            <button class="btn-pager" (click)="nextPage(allReqs.length)" [disabled]="curPage >= getTotalPages(allReqs.length)">Next</button>
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <ng-template #emptyApprovals>
+      <div class="empty-state">
+        <div class="empty-icon">🍃</div>
+        <p>No pending requests found for this selection.</p>
+      </div>
+    </ng-template>
+  </div>
+</main>

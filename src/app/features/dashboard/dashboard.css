@@ -1,0 +1,230 @@
+.dashboard-content-wrapper {
+  padding: 40px;
+  width: 100%;
+}
+
+.content-header { 
+  width: 100%; 
+  max-width: 1100px; 
+  margin: 0 auto 32px auto;
+}
+
+.dashboard-inner { 
+  width: 100%; 
+  max-width: 1100px; 
+  margin: 0 auto;
+}
+
+.title-section h1 { 
+  font-size: 28px; 
+  font-weight: 800; 
+  color: #1a5336; 
+  margin: 0; 
+}
+
+.sub-header { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  margin-top: 8px; 
+}
+
+.role-badge { 
+  background: #dcfce7; 
+  color: #166534; 
+  padding: 4px 10px; 
+  border-radius: 6px; 
+  font-size: 11px; 
+  font-weight: 700; 
+  text-transform: uppercase; 
+}
+
+.status-text { 
+  color: #64748b; 
+  font-size: 13px; 
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+}
+
+.stat-card h3 { 
+  font-size: 11px; 
+  color: #94a3b8; 
+  text-transform: uppercase; 
+  letter-spacing: 1px; 
+  margin: 0; 
+}
+
+.stat-card .value { 
+  font-size: 42px; 
+  font-weight: 800; 
+  color: #1a5336; 
+  margin: 8px 0; 
+}
+
+/* NEW: Footer for Available vs Locked */
+.stat-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #f8fafc;
+}
+
+.stat-label { 
+  font-size: 11px; 
+  color: #cbd5e1; 
+}
+
+.pending-tag {
+  background: #fef9c3;
+  color: #854d0e;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  border: 1px solid #fef08a;
+}
+
+/* Recent Activity Card */
+.recent-activity-card {
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+.section-header h2 { 
+  font-size: 18px; 
+  font-weight: 700; 
+  color: #1a5336; 
+  margin-bottom: 24px; 
+}
+
+.cls-table { 
+  width: 100%; 
+  border-collapse: collapse; 
+}
+
+.cls-table th { 
+  padding: 12px 16px; 
+  background: #fcfdfd; 
+  color: #94a3b8; 
+  font-size: 11px; 
+  font-weight: 700; 
+  text-transform: uppercase; 
+  border-bottom: 1px solid #f1f5f9; 
+  text-align: left;
+}
+
+.cls-table td { 
+  padding: 16px; 
+  border-bottom: 1px solid #f1f5f9; 
+  color: #334155; 
+  font-size: 14px; 
+}
+
+.type-tag { 
+  background: #f1f5f9; 
+  padding: 4px 10px; 
+  border-radius: 20px; 
+  font-weight: 600; 
+  color: #1a5336; 
+  font-size: 12px; 
+}
+
+/* Status Pills */
+.status-pill { 
+  padding: 4px 10px; 
+  border-radius: 6px; 
+  font-size: 10px; 
+  font-weight: 700; 
+  text-transform: uppercase; 
+}
+
+.status-pill.approved { background: #dcfce7; color: #166534; }
+.status-pill.rejected { background: #fee2e2; color: #991b1b; }
+.status-pill.pending { background: #fef9c3; color: #854d0e; }
+.status-pill.awaiting-hr-approval { background: #e0f2fe; color: #075985; }
+
+.empty-state { 
+  text-align: center; 
+  padding: 40px; 
+  color: #94a3b8; 
+  font-size: 14px; 
+}
+
+/* Others Card - Sub categories for Maternity/Paternity */
+.others-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.sub-category {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.sub-category:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sub-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.sub-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a5336;
+}
+
+.pending-tag.small {
+  font-size: 9px;
+  padding: 2px 6px;
+}
+
+/* Warning Card for employees < 1 year */
+.warning-card {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.warning-card .value {
+  color: #f59e0b;
+}
+
+/* Unavailable state for birthday leave not in birth month */
+.value.unavailable {
+  color: #94a3b8 !important;
+  font-size: 24px !important;
+}

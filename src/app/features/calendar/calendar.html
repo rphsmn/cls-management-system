@@ -1,0 +1,146 @@
+<div class="calendar-wrapper">
+  <header class="calendar-header">
+    <div class="title-section">
+      <div class="header-main">
+        <h1>Company Calendar <span class="date-display">{{ currentDate | date:'MMMM yyyy' }}</span></h1>
+        <div class="sync-indicator" *ngIf="isLoading">
+          <div class="pulse-dot"></div>
+          <span>Syncing holidays...</span>
+        </div>
+      </div>
+    </div>
+    <div class="nav-controls">
+      <button class="nav-btn" (click)="prevMonth()">‹</button>
+      <button class="today-btn" (click)="goToToday()">Today</button>
+      <button class="nav-btn" (click)="nextMonth()">›</button>
+      <select class="year-select" [value]="currentDate.getFullYear()" (change)="changeYear($event)">
+        <option *ngFor="let yr of years" [value]="yr">{{ yr }}</option>
+      </select>
+    </div>
+  </header>
+
+  <div class="calendar-layout">
+    <section class="calendar-card">
+      <div class="weekday-grid">
+        <div *ngFor="let day of weekdays" class="weekday-label">{{ day }}</div>
+      </div>
+      <div class="days-grid">
+        <div *ngFor="let day of days" 
+             class="day-cell" 
+             [class.empty]="day.empty"
+             [class.is-today]="day.isToday"
+             [class.is-past]="day.isPast"
+             (click)="selectDay(day)">
+          
+          <span class="day-number" *ngIf="!day.empty">{{ day.day }}</span>
+          
+          <div class="away-badge" *ngIf="!day.empty && day.awayCount > 0">
+            👥 {{ day.awayCount }} Away
+          </div>
+
+          <div class="birthday-pill" *ngIf="!day.empty && day.birthdays?.length > 0">
+            🎂 {{ day.birthdays.length }} Birthday{{ day.birthdays.length > 1 ? 's' : '' }}
+          </div>
+
+          <div class="holiday-pill" *ngIf="day.holiday" [className]="'holiday-pill type-' + day.holiday.type">
+            <span class="holiday-name">{{ day.holiday.name }}</span>
+            <div class="flag-row">
+              <span *ngIf="day.holiday.region === 'ph' || day.holiday.region === 'ph/au'">🇵🇭</span>
+              <span *ngIf="day.holiday.region === 'au' || day.holiday.region === 'ph/au'">🇦🇺</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="sidebar-info">
+      <div class="sidebar-card">
+        <h3>Holiday & Event Guide</h3>
+        <ul class="legend-list">
+          <li><span class="dot regular"></span> <div><span class="l-label">Public Holiday</span><span class="l-desc">Paid Day Off</span></div></li>
+          <li><span class="dot special-non"></span> <div><span class="l-label">Special Holiday</span><span class="l-desc">No Work • Observed</span></div></li>
+          <li><span class="dot special-work"></span> <div><span class="l-label">Special Day</span><span class="l-desc">Work as Usual</span></div></li>
+          <li><span class="dot company"></span> <div><span class="l-label">Company Event</span><span class="l-desc">Internal Sync</span></div></li>
+        </ul>
+      </div>
+      <div class="sidebar-card">
+        <h3>Regions</h3>
+        <ul class="legend-list">
+          <li><span class="flag-lg">🇵🇭</span> <span class="l-label">Philippines</span></li>
+          <li><span class="flag-lg">🇦🇺</span> <span class="l-label">Australia</span></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    
+    <div class="modal-hero" [className]="'modal-hero ' + (selectedDay.holiday?.type || 'work-day')">
+      <div class="hero-content">
+        <span class="hero-date">{{ selectedDay.date | date:'EEEE, MMMM d, yyyy' }}</span>
+        <h2 class="hero-title">{{ selectedDay.holiday?.name || 'Standard Work Day' }}</h2>
+        <div class="birthday-message" *ngIf="selectedDay.birthdays?.length > 0">
+          <span *ngFor="let b of selectedDay.birthdays; let last = last">
+            🎂 It's {{ b.name }}'s Birthday!{{ !last ? ' & ' : '' }}
+          </span>
+        </div>
+      </div>
+      <button (click)="showModal = false" class="close-x-white">✕</button>
+    </div>
+
+    <div class="modal-content">
+      <div class="notice-box" *ngIf="isNoticeWarning && !isHR">
+        <div class="notice-icon">⚠️</div>
+        <div class="notice-text">
+          <p class="notice-header">Short Notice Period</p>
+          <p class="notice-sub">This date is within the {{suggestedNoticeDays}}-day window.</p>
+        </div>
+      </div>
+
+      <div class="status-details">
+        <div class="status-row" *ngIf="selectedDay.holiday">
+          <span class="status-label">Type</span>
+          <span class="status-value">{{ (selectedDay.holiday.type | titlecase) }}</span>
+        </div>
+        <div class="status-row" *ngIf="selectedDay.awayCount > 0">
+          <span class="status-label">Team Availability</span>
+          <span class="status-value">{{ selectedDay.awayCount }} away</span>
+        </div>
+      </div>
+
+      <div class="hr-admin-zone" *ngIf="isHR">
+        <div class="hr-header-row">
+          <div class="hr-badge">HR ADMIN</div>
+          <span class="hr-action-title">Management</span>
+        </div>
+
+        <div class="hr-create-container" *ngIf="!selectedDay.holiday">
+          <label class="hr-field-label">Register Internal Event</label>
+          <div class="hr-input-wrapper">
+            <input type="text" [(ngModel)]="newEventName" placeholder="e.g. Transport Strike..." class="hr-styled-input">
+            <button class="hr-confirm-btn" (click)="addCompanyEvent()" [disabled]="!newEventName">Confirm</button>
+          </div>
+        </div>
+
+        <div class="hr-manage-container" *ngIf="selectedDay.holiday?.type === 'company-event'">
+          <div class="hr-status-card">
+            <div class="hr-status-info">
+              <span class="status-dot"></span>
+              <span>Active Company Event</span>
+            </div>
+            <button class="hr-danger-btn" (click)="removeCompanyEvent()">Delete Event</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="showModal = false">Dismiss</button>
+        <button class="btn-primary" (click)="goToFiling(selectedDay.date)">
+          Request Leave
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

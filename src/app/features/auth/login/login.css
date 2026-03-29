@@ -1,0 +1,165 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100vh;
+}
+
+.login-page-wrapper {
+  display: flex !important;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.branding-side {
+  flex: 1.2;
+  background-color: #1a5336;
+  color: white;
+  padding: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.brand-logo { 
+  position: absolute; 
+  top: 60px; 
+  font-weight: 800; 
+  color: #facc15; 
+  letter-spacing: 1px;
+}
+
+.brand-tagline h1 { font-size: 4rem; font-weight: 800; line-height: 1; margin-bottom: 24px; }
+.brand-tagline p { font-size: 1.1rem; opacity: 0.8; max-width: 440px; }
+.branding-footer { position: absolute; bottom: 40px; font-size: 12px; opacity: 0.6; }
+
+.form-side {
+  flex: 1;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.login-card { width: 100%; max-width: 400px; }
+.login-header h2 { font-size: 2.5rem; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+.login-header p { font-size: 14px; color: #64748b; margin-bottom: 32px; }
+
+.form-group { margin-bottom: 24px; }
+.form-group label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569; margin-bottom: 8px; }
+
+.input-wrapper { 
+  position: relative; 
+  display: flex; 
+  align-items: center; 
+}
+
+/* Fixed: person and lock icon visibility */
+.input-icon-svg {
+  position: absolute;
+  left: 16px;
+  width: 18px;
+  height: 18px;
+  stroke: #94a3b8 !important;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 16px 50px 16px 52px !important; 
+  background-color: #f8fafc;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: all 0.2s;
+  z-index: 1;
+}
+
+.input-wrapper input:focus {
+  outline: none;
+  background-color: white;
+  border-color: #1a5336;
+}
+
+/* Fixed: The Eye Icon visibility logic */
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8; /* Set a visible color */
+  z-index: 20; /* Ensure it sits on top of the input */
+  transition: color 0.2s;
+}
+
+.toggle-password:hover {
+  color: #1a5336;
+}
+
+.toggle-password svg {
+  width: 20px;
+  height: 20px;
+  display: block; /* Ensures the SVG renders */
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.remember-me { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b; cursor: pointer; }
+.forgot-link { color: #1a5336; font-weight: 700; text-decoration: none; font-size: 13px; }
+
+.error-alert {
+  background-color: #fef2f2;
+  border-left: 4px solid #ef4444;
+  color: #b91c1c;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.btn-login {
+  width: 100%;
+  padding: 16px;
+  background-color: #1a5336;
+  color: #facc15;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-login:hover:not(:disabled) {
+  background-color: #133c27;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 83, 54, 0.2);
+}
+
+.btn-login:disabled { background-color: #94a3b8; color: white; cursor: not-allowed; }
+
+.spinner-container { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.spinner { animation: rotate 2s linear infinite; width: 20px; height: 20px; }
+.spinner .path { stroke: #facc15; stroke-linecap: round; animation: dash 1.5s ease-in-out infinite; }
+
+@keyframes rotate { 100% { transform: rotate(360deg); } }
+@keyframes dash {
+  0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
+  50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
+  100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
+}

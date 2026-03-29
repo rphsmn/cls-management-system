@@ -1,0 +1,71 @@
+<div class="pulse-wrapper">
+  <header class="pulse-header">
+    <div class="title-area">
+      <h1>Company Pulse</h1>
+      <p>Live availability for {{ employees.length }} team members</p>
+    </div>
+    
+    <div class="filter-actions">
+      <div class="select-wrapper">
+        <select [(ngModel)]="selectedDept" class="dept-select">
+          <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+        </select>
+      </div>
+      
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" [(ngModel)]="searchQuery" placeholder="Search name or position...">
+      </div>
+    </div>
+  </header>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ workingToday }}</div>
+      <div class="stat-label">WORKING TODAY</div>
+      <p class="stat-subtext" *ngIf="workingToday > 0">Team productivity is active</p>
+      <div class="stat-bar working"></div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-value">{{ awayToday }}</div>
+      <div class="stat-label">AWAY / ON LEAVE</div>
+      <p class="stat-subtext">{{ awayToday === 0 ? 'All members present' : 'Current capacity reduced' }}</p>
+      <div class="stat-bar away" [class.active-away]="awayToday > 0"></div>
+    </div>
+  </div>
+
+  <div class="employee-grid">
+    <div *ngFor="let emp of filteredEmployees" class="emp-card">
+      <div class="card-top">
+        <div class="avatar-container">
+          <div class="avatar">{{ emp.initials }}</div>
+          <div class="online-indicator" *ngIf="emp.status === 'In Office'"></div>
+        </div>
+        <span class="status-badge" 
+              [class.in-office]="emp.status === 'In Office'" 
+              [class.upcoming]="emp.status === 'Upcoming Leave'"
+              [class.is-away]="emp.status === 'On Leave'">
+          {{ emp.status | uppercase }}
+        </span>
+      </div>
+
+      <div class="card-info">
+        <h3>{{ emp.name }}</h3>
+        <p class="dept">{{ emp.dept }}</p>
+      </div>
+
+      <div class="leave-details" *ngIf="emp.leaveType">
+        <div class="divider"></div>
+        <div class="leave-info-row">
+          <span class="leave-name">{{ emp.leaveType }}</span>
+          <span class="leave-date">{{ emp.leaveDate }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="filteredEmployees.length === 0">
+    <p>No team members found matching your filters.</p>
+  </div>
+</div>

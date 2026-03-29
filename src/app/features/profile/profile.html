@@ -1,0 +1,68 @@
+<div class="profile-page-container" *ngIf="currentUser$ | async as user">
+  <header class="page-header">
+    <div class="title-group">
+      <h1>My Profile</h1>
+      <div class="badge-row">
+        <span class="role-badge">{{ user.role }}</span>
+        <span class="id-text">{{ user.employeeId || 'N/A' }}</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="profile-grid">
+    <section class="info-card">
+      <div class="avatar-circle">{{ user.name.charAt(0) }}</div>
+      <div class="user-details">
+        <h2>{{ user.name }}</h2>
+        <p>{{ user.email }}</p>
+      </div>
+    </section>
+
+    <section class="info-card">
+      <div class="card-title">
+        <h3>Employment Details</h3>
+        <span class="verified">✓ Verified</span>
+      </div>
+      <div class="data-row"><label>Department</label><span>{{ user.department || user.dept || 'N/A' }}</span></div>
+      <div class="data-row"><label>Role</label><span>{{ user.role }}</span></div>
+      <div class="data-row"><label>Joined Date</label><span>{{ formatDate(user.joinedDate) }}</span></div>
+      <div class="data-row"><label>Years of Service</label><span>{{ yearsOfService }}</span></div>
+    </section>
+
+    <section class="info-card" *ngIf="user.birthday || user.gender">
+      <div class="card-title">
+        <h3>Personal Information</h3>
+        <span class="verified">✓ Verified</span>
+      </div>
+      <div class="data-row" *ngIf="user.birthday"><label>Birthday</label><span>{{ user.birthday }}</span></div>
+      <div class="data-row" *ngIf="user.gender"><label>Gender</label><span>{{ user.gender | titlecase }}</span></div>
+    </section>
+
+    <section class="info-card" *ngIf="user.tin || user.sss || user.philhealth || user.pagibig">
+      <div class="card-title">
+        <h3>Government IDs</h3>
+        <span class="verified">✓ Verified</span>
+      </div>
+      <div class="data-row" *ngIf="user.tin"><label>TIN</label><span>{{ user.tin }}</span></div>
+      <div class="data-row" *ngIf="user.sss"><label>SSS</label><span>{{ user.sss }}</span></div>
+      <div class="data-row" *ngIf="user.philhealth"><label>PhilHealth</label><span>{{ user.philhealth }}</span></div>
+      <div class="data-row" *ngIf="user.pagibig"><label>Pag-IBIG</label><span>{{ user.pagibig }}</span></div>
+    </section>
+
+    <section class="info-card">
+      <div class="card-title">
+        <h3>Leave Balance</h3>
+        <span class="verified">✓ Available</span>
+      </div>
+      <div class="data-row"><label>Birthday Leave</label><span>{{ user.birthdayLeave }} day(s)</span></div>
+      <div class="data-row"><label>Paid Time Off</label><span>{{ paidTimeOff }} day(s)</span></div>
+    </section>
+  </div>
+
+  <footer class="action-footer">
+    <p>Need to update your professional information?</p>
+    <a [href]="'mailto:hr@corlogics.com?subject=Update Request - ' + user.name" class="update-btn">
+      Request Info Update from HR
+    </a>
+  </footer>
+</div>
