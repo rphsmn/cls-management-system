@@ -196,6 +196,18 @@
   margin: 4px 0; 
 }
 
+.company-event-pill { 
+  background: #f0fdf4; 
+  color: #1a5336; 
+  font-size: 10px; 
+  font-weight: 800; 
+  padding: 4px 8px; 
+  border-radius: 6px; 
+  border: 1px solid #dcfce7; 
+  width: fit-content; 
+  margin: 4px 0; 
+}
+
 .holiday-pill { 
   font-size: 10px; 
   font-weight: 700; 
@@ -263,7 +275,7 @@
   align-items: center; 
   justify-content: center; 
   z-index: 1000; 
-  backdrop-filter: blur(2px); 
+  backdrop-filter: blur(2px);
 }
 
 .modal-card { 
@@ -272,10 +284,14 @@
   max-width: 480px; 
   border-radius: 28px; 
   overflow: hidden; 
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); 
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-.modal-hero { padding: 40px 32px; position: relative; color: white; }
+.modal-hero { 
+  padding: 40px 32px; 
+  position: relative; 
+  color: white;
+}
 .modal-hero.work-day { background: linear-gradient(135deg, #1a5336 0%, #2d7a50 100%); }
 .modal-hero.regular { background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%); }
 .modal-hero.special-non { background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); }
@@ -312,10 +328,20 @@
   height: 32px; 
   border-radius: 50%; 
   color: white; 
-  cursor: pointer; 
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
 }
 
-.modal-content { padding: 32px; }
+.close-x-white:hover { 
+  background: rgba(255,255,255,0.35);
+}
+
+.modal-content { 
+  padding: 32px;
+}
 
 /* Notice Box Fix */
 .notice-box {
@@ -356,7 +382,14 @@
   justify-content: space-between; 
   align-items: center; 
   padding: 12px 0; 
-  border-bottom: 1px solid #f1f5f9; 
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.status-row:hover { 
+  background: #f8fafc;
+  margin: 0 -16px;
+  padding: 12px 16px;
+  border-radius: 8px;
 }
 
 .status-label { color: #64748b; font-weight: 600; font-size: 14px; }
@@ -368,7 +401,7 @@
   padding: 24px; 
   background: #f8fafc; 
   border-radius: 20px; 
-  border: 1px solid #e2e8f0; 
+  border: 1px solid #e2e8f0;
 }
 
 .hr-header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
@@ -406,14 +439,14 @@
   border: 2px solid #e2e8f0; 
   border-radius: 12px; 
   font-size: 14px; 
-  font-family: inherit; 
-  transition: all 0.2s; 
+  font-family: inherit;
 }
 
 .hr-styled-input:focus { 
   border-color: #1a5336; 
   outline: none; 
-  background: white; 
+  background: white;
+  box-shadow: 0 0 0 4px rgba(26, 83, 54, 0.08);
 }
 
 .hr-confirm-btn { 
@@ -423,8 +456,11 @@
   padding: 0 20px; 
   border-radius: 12px; 
   font-weight: 700; 
-  cursor: pointer; 
-  transition: opacity 0.2s; 
+  cursor: pointer;
+}
+
+.hr-confirm-btn:hover:not(:disabled) { 
+  background: #15803d;
 }
 
 .hr-confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -438,7 +474,11 @@
   background: white; 
   padding: 12px 16px; 
   border-radius: 12px; 
-  border: 1px solid #dcfce7; 
+  border: 1px solid #dcfce7;
+}
+
+.hr-status-card:hover { 
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .hr-status-info { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #15803d; }
@@ -452,10 +492,13 @@
   border-radius: 8px; 
   font-size: 12px; 
   font-weight: 700; 
-  cursor: pointer; 
+  cursor: pointer;
 }
 
-.hr-danger-btn:hover { background: #ef4444; color: white; }
+.hr-danger-btn:hover { 
+  background: #ef4444; 
+  color: white;
+}
 
 /* Footer */
 .modal-footer { display: flex; gap: 12px; margin-top: 24px; }
@@ -468,7 +511,13 @@
   background: white; 
   font-weight: 700; 
   color: #64748b; 
-  cursor: pointer; 
+  cursor: pointer;
+}
+
+.btn-secondary:hover { 
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
 }
 
 .btn-primary { 
@@ -480,11 +529,187 @@
   font-weight: 700; 
   color: white; 
   cursor: pointer; 
-  box-shadow: 0 4px 14px rgba(26, 83, 54, 0.3); 
+  box-shadow: 0 4px 14px rgba(26, 83, 54, 0.3);
+}
+
+.btn-primary:hover { 
+  background: #15803d;
+  box-shadow: 0 6px 20px rgba(26, 83, 54, 0.4);
 }
 
 @keyframes pulse-animation {
   0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
   70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* Swal Custom Classes - Match Approvals Page */
+::ng-deep .swal-premium-popup { 
+  border-radius: 24px !important; 
+}
+
+::ng-deep .swal-confirm-mint { 
+  background-color: #1a5336 !important; 
+  color: #facc15 !important; 
+  padding: 14px 32px !important; 
+  border-radius: 12px !important; 
+  font-weight: 800 !important; 
+}
+
+::ng-deep .swal-confirm-danger { 
+  background-color: #dc2626 !important; 
+  color: white !important; 
+  padding: 14px 32px !important; 
+  border-radius: 12px !important; 
+  font-weight: 800 !important; 
+}
+
+::ng-deep .swal-cancel-outline { 
+  background-color: white !important; 
+  color: #64748b !important; 
+  border: 2px solid #e2e8f0 !important; 
+  padding: 14px 32px !important; 
+  border-radius: 12px !important; 
+}
+
+::ng-deep .swal-button-container { 
+  display: flex !important; 
+  gap: 15px !important; 
+}
+
+/* Custom Toast Styles */
+.custom-swal-toast {
+  border-radius: 14px !important;
+  padding: 16px 20px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #dcfce7 !important;
+  background: linear-gradient(90deg, #f0fdf4 0%, #ffffff 100%) !important;
+  animation: toastSlideIn 0.15s ease-out !important;
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.custom-swal-toast-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #1a5336 !important;
+  margin: 0 !important;
+}
+
+.swal2-toast-show {
+  animation: toastSlideIn 0.15s ease-out !important;
+}
+
+.swal2-toast-hide {
+  animation: toastSlideOut 0.1s ease-in !important;
+}
+
+@keyframes toastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+.swal2-icon {
+  animation: swalIconPop 0.15s ease-out !important;
+}
+
+@keyframes swalIconPop {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.swal2-backdrop-show {
+  animation: swalBackdropFadeIn 0.1s ease-out !important;
+}
+
+@keyframes swalBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Custom Delete Event Popup Styles */
+.custom-swal-popup-delete {
+  border-radius: 28px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  animation: swalSlideUp 0.15s ease-out !important;
+  border: 2px solid #fde68a !important;
+}
+
+.custom-swal-title-delete {
+  font-size: 28px !important;
+  font-weight: 800 !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+  padding: 32px 32px 0 !important;
+  background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%) !important;
+}
+
+.custom-swal-html-delete {
+  padding: 0 32px 32px !important;
+  background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%) !important;
+}
+
+.custom-swal-actions-delete {
+  margin: 0 !important;
+  padding: 24px 32px !important;
+  background: white !important;
+  border-top: 1px solid #fde68a !important;
+  gap: 12px !important;
+}
+
+.custom-swal-confirm-delete {
+  border-radius: 12px !important;
+  padding: 14px 28px !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  background: #dc2626 !important;
+  color: white !important;
+  border: none !important;
+  transition: background 0.15s ease, box-shadow 0.15s ease !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3) !important;
+}
+
+.custom-swal-confirm-delete:hover {
+  background: #b91c1c !important;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4) !important;
+}
+
+.custom-swal-cancel-delete {
+  border-radius: 12px !important;
+  padding: 14px 28px !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  background: #1a5336 !important;
+  color: white !important;
+  border: none !important;
+  transition: background 0.15s ease, box-shadow 0.15s ease !important;
+  box-shadow: 0 4px 14px rgba(26, 83, 54, 0.3) !important;
+}
+
+.custom-swal-cancel-delete:hover {
+  background: #15803d !important;
+  box-shadow: 0 6px 20px rgba(26, 83, 54, 0.4) !important;
 }

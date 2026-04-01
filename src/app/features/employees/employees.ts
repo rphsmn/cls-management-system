@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Firestore, collection, getDocs } from '@angular/fire/firestore';
+import { Firestore, collection, onSnapshot, Unsubscribe } from '@angular/fire/firestore';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
 
@@ -33,6 +33,7 @@ interface LeaveRequest {
 export class EmployeeStatusComponent implements OnInit, OnDestroy {
   private firestore = inject(Firestore);
   private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
   private subscription: Subscription | null = null;
 
   searchQuery: string = '';
@@ -47,6 +48,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
   awayToday = 0;
 
   ngOnInit() {
+    console.log('EmployeeStatusComponent: ngOnInit called');
     this.fetchData();
   }
 
@@ -57,53 +59,106 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
   }
 
   private async fetchData() {
+    console.log('EmployeeStatusComponent: fetchData called');
     this.isLoading = true;
     
     try {
-      // Fetch all users from Firestore
-      console.log('Fetching users from Firestore...');
-      const usersSnapshot = await getDocs(collection(this.firestore, 'users'));
-      console.log('Users fetched:', usersSnapshot.size);
-      const users = usersSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as any[];
+      // Initialize subscription container
+      this.subscription = new Subscription();
+      console.log('EmployeeStatusComponent: Subscription container initialized');
 
-      // Fetch all leave requests (no filter to avoid index requirement)
-      console.log('Fetching leave requests...');
-      const leaveSnapshot = await getDocs(collection(this.firestore, 'leaveRequests'));
-      console.log('Leave requests fetched:', leaveSnapshot.size);
-      // Filter locally instead of using 'in' query which requires composite index
-      this.leaveRequests = leaveSnapshot.docs
-        .map(doc => doc.data() as LeaveRequest)
-        .filter(req => req.status === 'Approved' || req.status === 'Awaiting HR Approval');
+      // Store users data to be shared across listeners
+      let usersData: any[] = [];
 
-      // Build employee list with status
-      this.employees = users.map(user => {
-        const initials = this.getInitials(user.name || 'Unknown');
-        const dept = user.department || user.dept || 'Unknown';
-        const statusInfo = this.getEmployeeStatus(user.uid, user.name);
-        
-        return {
-          id: user.id,
-          name: user.name || 'Unknown',
-          dept: dept,
-          initials: initials,
-          status: statusInfo.status || 'In Office',
-          leaveType: statusInfo.leaveType,
-          leaveDate: statusInfo.leaveDate
-        } as Employee;
+      // Set up real-time listener for users
+      const usersRef = collection(this.firestore, 'users');
+      console.log('EmployeeStatusComponent: Setting up users listener');
+      const unsubscribeUsers = onSnapshot(usersRef, (usersSnapshot) => {
+        console.log('EmployeeStatusComponent: Users snapshot received, size:', usersSnapshot.size);
+        usersData = usersSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as any[];
+        console.log('EmployeeStatusComponent: Users data:', usersData);
+        this.buildEmployeeList(usersData);
+      }, (error) => {
+        console.error('EmployeeStatusComponent: Users listener error:', error);
       });
+      
+      // Add users unsubscribe to subscription container
+      this.subscription.add(() => unsubscribeUsers());
+      console.log('EmployeeStatusComponent: Users listener added to subscription');
 
-      // Extract unique departments
-      const uniqueDepts = [...new Set(this.employees.map(e => e.dept))];
-      this.departments = ['All Departments', ...uniqueDepts.sort()];
-
-      this.calculateStats();
+      // Set up real-time listener for leave requests (independent of users listener)
+      const leaveRef = collection(this.firestore, 'leaveRequests');
+      console.log('EmployeeStatusComponent: Setting up leave requests listener');
+      const unsubscribeLeave = onSnapshot(leaveRef, (leaveSnapshot) => {
+        console.log('EmployeeStatusComponent: Leave requests snapshot received, size:', leaveSnapshot.size);
+        // Filter locally instead of using 'in' query which requires composite index
+        this.leaveRequests = leaveSnapshot.docs
+          .map(doc => doc.data() as LeaveRequest)
+          .filter(req => req.status === 'Approved' || req.status === 'Awaiting HR Approval');
+        console.log('EmployeeStatusComponent: Filtered leave requests:', this.leaveRequests);
+        this.buildEmployeeList(usersData);
+      }, (error) => {
+        console.error('EmployeeStatusComponent: Leave requests listener error:', error);
+      });
+      
+      // Add leave unsubscribe to subscription container
+      this.subscription.add(() => unsubscribeLeave());
+      console.log('EmployeeStatusComponent: Leave listener added to subscription');
     } catch (error) {
-      console.error('Error fetching employee data:', error);
-    } finally {
+      console.error('EmployeeStatusComponent: Error setting up real-time listeners:', error);
       this.isLoading = false;
+    }
+  }
+
+  private buildEmployeeList(users: any[]) {
+    console.log('EmployeeStatusComponent: buildEmployeeList called with users:', users);
+    console.log('EmployeeStatusComponent: Current isLoading state before build:', this.isLoading);
+    if (!users || users.length === 0) {
+      console.log('EmployeeStatusComponent: No users data available yet');
+      return;
+    }
+
+    // Build employee list with status
+    this.employees = users.map(user => {
+      const initials = this.getInitials(user.name || 'Unknown');
+      const dept = user.department || user.dept || 'Unknown';
+      const statusInfo = this.getEmployeeStatus(user.id, user.name);
+      
+      return {
+        id: user.id,
+        name: user.name || 'Unknown',
+        dept: dept,
+        initials: initials,
+        status: statusInfo.status || 'In Office',
+        leaveType: statusInfo.leaveType,
+        leaveDate: statusInfo.leaveDate
+      } as Employee;
+    });
+    console.log('EmployeeStatusComponent: Employees built:', this.employees);
+
+    // Extract unique departments
+    const uniqueDepts = [...new Set(this.employees.map(e => e.dept))];
+    this.departments = ['All Departments', ...uniqueDepts.sort()];
+    console.log('EmployeeStatusComponent: Departments:', this.departments);
+
+    this.calculateStats();
+    console.log('EmployeeStatusComponent: Stats calculated - workingToday:', this.workingToday, 'awayToday:', this.awayToday);
+    
+    // Only set isLoading to false if we have a reasonable number of users
+    // This prevents showing partial data when Firebase is still loading
+    if (users.length > 1) {
+      this.isLoading = false;
+      console.log('EmployeeStatusComponent: isLoading set to false (users.length > 1)');
+      console.log('EmployeeStatusComponent: Current isLoading state after setting to false:', this.isLoading);
+      // Manually trigger change detection to ensure UI updates
+      this.cdr.detectChanges();
+      console.log('EmployeeStatusComponent: Change detection triggered');
+    } else {
+      console.log('EmployeeStatusComponent: Keeping isLoading true - only', users.length, 'user(s) loaded so far');
+      console.log('EmployeeStatusComponent: Current isLoading state after keeping true:', this.isLoading);
     }
   }
 

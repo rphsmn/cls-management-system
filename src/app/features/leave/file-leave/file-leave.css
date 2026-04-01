@@ -36,6 +36,57 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #1a5336
 .btn-remove-file:hover { background: #fecdd3; transform: scale(1.1); }
 
 .form-actions { display: flex; justify-content: flex-end; gap: 16px; margin-top: 32px; padding-top: 24px; border-top: 1px solid #f1f5f9; }
+
+/* Notice Banners */
+/* Notice Banners - Updated for better page fit */
+.notice-banner {
+  display: flex;
+  align-items: center; /* Centered vertically */
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  width: 100%; /* Ensures it takes full container width */
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+/* Informational / Holiday Style */
+.notice-banner.info {
+  background: linear-gradient(90deg, #f0fdf4 0%, #ffffff 100%);
+  border: 1px solid #bbf7d0;
+  border-left: 5px solid #1a5336; /* Adds a professional accent bar */
+}
+
+/* Warning Style */
+.notice-banner.warning {
+  background: linear-gradient(90deg, #fffbeb 0%, #ffffff 100%);
+  border: 1px solid #fde68a;
+  border-left: 5px solid #d97706;
+}
+
+.notice-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notice-banner span {
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.6;
+  flex-grow: 1; /* Pushes content to fill space */
+}
+
+.notice-banner strong {
+  color: #1a5336;
+  font-weight: 700;
+  display: block; /* Puts the holiday name on its own line for emphasis */
+  margin-bottom: 2px;
+  font-size: 15px;
+}
 .btn-primary { background: #1a5336; color: white; border: none; padding: 14px 32px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; }
 .btn-primary:hover:not(:disabled) { background: #14422b; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26, 83, 54, 0.2); }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }

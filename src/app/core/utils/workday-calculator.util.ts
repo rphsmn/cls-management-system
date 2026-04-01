@@ -1,3 +1,11 @@
+// Helper function to format date as YYYY-MM-DD in local timezone
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function calculateWorkdays(period: string, holidays: any[] = []): number {
   // Guard against undefined or null period
   if (!period || typeof period !== 'string') return 1;
@@ -18,7 +26,7 @@ export function calculateWorkdays(period: string, holidays: any[] = []): number 
 
   while (current <= end) {
     const dayOfWeek = current.getDay(); // 0 = Sun, 6 = Sat
-    const dateStr = current.toISOString().split('T')[0];
+    const dateStr = formatLocalDate(current);
 
     // Check if it's a weekend
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;

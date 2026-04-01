@@ -141,6 +141,11 @@
           </div>
         </div>
 
+        <div class="notice-banner info full-width" *ngIf="holidaysInRange.length > 0">
+          <span class="notice-icon">🎉</span>
+          <span>Hey! Just a heads up - <strong>{{ holidaysInRange.join(', ') }}</strong> {{ holidaysInRange.length === 1 ? 'is' : 'are' }} coming up on your selected dates. Feel free to pick different days for your leave!</span>
+        </div>
+
         <div class="form-group full-width">
           <label>Reason for leave</label>
           <textarea name="reason" [(ngModel)]="leaveRequest.reason" placeholder="Please provide a brief reason..." rows="4" required></textarea>

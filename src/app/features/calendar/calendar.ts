@@ -122,8 +122,14 @@ export class CalendarComponent implements OnInit, OnDestroy {
       });
 
       this.newEventName = ''; // Clear input
-      this.showModal = false; // Close modal
       
+      // Close modal immediately
+      this.showModal = false;
+      
+      // Reload company events and regenerate calendar to show the new event
+      await this.loadCompanyEvents();
+      
+      // Show toast notification
       Swal.fire({
         toast: true,
         position: 'top-end',
@@ -133,7 +139,19 @@ export class CalendarComponent implements OnInit, OnDestroy {
         timer: 1500
       });
     } catch (error) {
-      Swal.fire('Error', 'Could not save event', 'error');
+      Swal.fire({
+        title: 'Error',
+        html: '<div style="color: #64748b; font-size: 14px;">Could not save event</div>',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#1a5336',
+        buttonsStyling: false,
+        customClass: {
+          popup: 'swal-premium-popup',
+          confirmButton: 'swal-confirm-mint',
+          actions: 'swal-button-container'
+        }
+      });
     }
   }
 
@@ -142,21 +160,62 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
     const result = await Swal.fire({
       title: 'Delete Event?',
-      text: `Are you sure you want to remove "${this.selectedDay.companyEvent.title}"?`,
+      html: `<div style="margin-top: 8px; color: #64748b; font-size: 14px;">Are you sure you want to remove <strong style="color: #1e293b;">"${this.selectedDay.companyEvent.title}"</strong>?</div>`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      confirmButtonText: 'Yes, delete it'
+      confirmButtonColor: '#dc2626',
+      confirmButtonText: '🗑️ Delete Event',
+      cancelButtonText: 'Cancel',
+      cancelButtonColor: '#1a5336',
+      reverseButtons: true,
+      buttonsStyling: false,
+      customClass: {
+        popup: 'swal-premium-popup',
+        confirmButton: 'swal-confirm-danger',
+        cancelButton: 'swal-cancel-outline',
+        actions: 'swal-button-container'
+      }
     });
 
     if (result.isConfirmed) {
       try {
         const eventId = this.selectedDay.companyEvent.id;
         await deleteDoc(doc(this.firestore, `company_events/${eventId}`));
+        
+        // Close modal immediately
         this.showModal = false;
-        Swal.fire('Deleted', 'Event removed successfully', 'success');
+        
+        // Reload company events and regenerate calendar to reflect the deletion
+        await this.loadCompanyEvents();
+        
+        // Show success notification
+        Swal.fire({
+          title: 'Deleted',
+          html: '<div style="color: #64748b; font-size: 14px;">Event removed successfully</div>',
+          icon: 'success',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#1a5336',
+          buttonsStyling: false,
+          customClass: {
+            popup: 'swal-premium-popup',
+            confirmButton: 'swal-confirm-mint',
+            actions: 'swal-button-container'
+          }
+        });
       } catch (error) {
-        Swal.fire('Error', 'Failed to delete event', 'error');
+        Swal.fire({
+          title: 'Error',
+          html: '<div style="color: #64748b; font-size: 14px;">Failed to delete event</div>',
+          icon: 'error',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#1a5336',
+          buttonsStyling: false,
+          customClass: {
+            popup: 'swal-premium-popup',
+            confirmButton: 'swal-confirm-mint',
+            actions: 'swal-button-container'
+          }
+        });
       }
     }
   }

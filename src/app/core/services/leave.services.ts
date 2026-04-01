@@ -96,6 +96,11 @@ export class LeaveService implements OnDestroy {
 
     const requestCollection = collection(this.firestore, 'leaveRequests');
     
+    // Debug: Log the user role being used
+    console.log('addRequest - User role:', user.role);
+    console.log('addRequest - User role type:', typeof user.role);
+    console.log('addRequest - User role length:', user.role?.length);
+    
     // We enrich the data here so the Dashboard knows who owns the request
     const enrichedRequest = {
       ...requestData,
@@ -110,6 +115,8 @@ export class LeaveService implements OnDestroy {
       targetReviewer: this.getInitialReviewer(user.role)
     };
 
+    console.log('addRequest - Enriched request:', enrichedRequest);
+
     return addDoc(requestCollection, enrichedRequest);
   }
 
@@ -121,6 +128,8 @@ export class LeaveService implements OnDestroy {
     const requestDoc = await getDoc(requestDocRef);
     const requestData = requestDoc.data();
     const employeeRole = (requestData?.['role'] || '').toUpperCase();
+    
+    console.log('updateRequestStatus called:', { requestId, newStatus, reviewerRole, employeeRole });
     
     const updateData: any = { status: newStatus };
 
@@ -165,14 +174,21 @@ export class LeaveService implements OnDestroy {
         updateData.targetReviewer = 'None';
       }
     } else if (newStatus === 'Rejected') {
+      // Include reviewer role in rejection status to track who rejected
+      updateData.status = `Rejected by ${reviewerRole}`;
       updateData.targetReviewer = 'None';
     }
+
+    console.log('updateRequestStatus - updateData:', updateData);
 
     return updateDoc(requestDocRef, updateData);
   }
 
   private getInitialReviewer(role: string): string {
-    const r = role.toUpperCase();
+    // Normalize: uppercase, trim, and collapse multiple spaces to single space
+    const r = role.toUpperCase().trim().replace(/\s+/g, ' ');
+    console.log('getInitialReviewer called with role:', role, '-> normalized:', r);
+    
     // Map to handle various case formats and role names from database
     const reviewerMap: { [key: string]: string } = {
       // OPERATIONS ADMIN SUPERVISOR and ACCOUNT SUPERVISOR go to ADMIN MANAGER, then to HR
@@ -181,6 +197,7 @@ export class LeaveService implements OnDestroy {
       // Operations Admin staff go to OPERATIONS ADMIN SUPERVISOR
       'ADMIN OPERATION OFFICER': 'Operations Admin Supervisor',
       'ADMIN OPERATION ASSISTANT': 'Operations Admin Supervisor',
+      'ADMIN COMPLIANCE OFFICER': 'Operations Admin Supervisor',
       // Accounts staff go to ACCOUNT SUPERVISOR
       'ACCOUNTING CLERK': 'Account Supervisor',
       'ACCOUNT RECEIVABLE SPECIALIST': 'Account Supervisor',
@@ -197,10 +214,19 @@ export class LeaveService implements OnDestroy {
       // Part-time employees go directly to HR
       'PART-TIME': 'HR'
     };
-    // Try exact match first, then uppercase match
-    if (reviewerMap[role]) return reviewerMap[role];
-    if (reviewerMap[r]) return reviewerMap[r];
+    
+    // Try uppercase match first (most common case from database)
+    if (reviewerMap[r]) {
+      console.log('Found match for uppercase role:', r, '-> reviewer:', reviewerMap[r]);
+      return reviewerMap[r];
+    }
+    // Try exact match as fallback
+    if (reviewerMap[role]) {
+      console.log('Found match for exact role:', role, '-> reviewer:', reviewerMap[role]);
+      return reviewerMap[role];
+    }
     // Default: go to HR
+    console.log('No match found, defaulting to HR');
     return 'HR';
   }
 }

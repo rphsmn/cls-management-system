@@ -42,6 +42,10 @@
             🎂 {{ day.birthdays.length }} Birthday{{ day.birthdays.length > 1 ? 's' : '' }}
           </div>
 
+          <div class="company-event-pill" *ngIf="!day.empty && day.companyEvent">
+            📅 {{ day.companyEvent.title }}
+          </div>
+
           <div class="holiday-pill" *ngIf="day.holiday" [className]="'holiday-pill type-' + day.holiday.type">
             <span class="holiday-name">{{ day.holiday.name }}</span>
             <div class="flag-row">
@@ -117,7 +121,7 @@
           <span class="hr-action-title">Management</span>
         </div>
 
-        <div class="hr-create-container" *ngIf="!selectedDay.holiday">
+        <div class="hr-create-container" *ngIf="!selectedDay.companyEvent">
           <label class="hr-field-label">Register Internal Event</label>
           <div class="hr-input-wrapper">
             <input type="text" [(ngModel)]="newEventName" placeholder="e.g. Transport Strike..." class="hr-styled-input">
@@ -125,7 +129,7 @@
           </div>
         </div>
 
-        <div class="hr-manage-container" *ngIf="selectedDay.holiday?.type === 'company-event'">
+        <div class="hr-manage-container" *ngIf="selectedDay.companyEvent">
           <div class="hr-status-card">
             <div class="hr-status-info">
               <span class="status-dot"></span>
@@ -138,7 +142,7 @@
 
       <div class="modal-footer">
         <button class="btn-secondary" (click)="showModal = false">Dismiss</button>
-        <button class="btn-primary" (click)="goToFiling(selectedDay.date)">
+        <button class="btn-primary" (click)="goToFiling(selectedDay.date)" *ngIf="!selectedDay.holiday">
           Request Leave
         </button>
       </div>

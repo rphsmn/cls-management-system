@@ -1,7 +1,7 @@
 <main class="dashboard-content-wrapper" *ngIf="currentUser$ | async as user">
   <header class="content-header">
     <div class="title-section">
-      <h1>{{ greeting }}, {{ user.name }}</h1>
+      <h1>{{ greeting }}, {{ user.name?.split(' ')[0] }}</h1>
       <div class="sub-header">
         <span class="role-badge">{{ user.role }}</span>
         <span class="status-text">{{ today | date:'fullDate' }}</span>

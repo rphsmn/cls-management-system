@@ -131,7 +131,7 @@ export class HistoryComponent implements OnDestroy {
     if (role === 'SENIOR IT DEVELOPER' || role === 'IT ASSISTANT' || role === 'IT DEVELOPER') return ['Admin Manager', 'HR'];
     
     // Operations Admin staff (2 steps): Ops Admin Supervisor → HR
-    if (role === 'ADMIN OPERATION OFFICER' || role === 'ADMIN OPERATION ASSISTANT') return ['Ops Admin', 'HR'];
+    if (role === 'ADMIN OPERATION OFFICER' || role === 'ADMIN OPERATION ASSISTANT' || role === 'ADMIN COMPLIANCE OFFICER') return ['Ops Admin', 'HR'];
     
     // Accounts staff (2 steps): Account Supervisor → HR
     if (role === 'ACCOUNTING CLERK' || role === 'ACCOUNT RECEIVABLE SPECIALIST' || role === 'ACCOUNT PAYABLES SPECIALIST') return ['Acct Sup', 'HR'];
@@ -152,6 +152,7 @@ export class HistoryComponent implements OnDestroy {
   getStepStatus(req: any, index: number): string {
     const status = req.status;
     const role = (req.role || '').toUpperCase();
+    const steps = this.getSteps(req);
     
     // For Part-Time employees (1 step): HR only
     if (role === 'PART-TIME') {
@@ -163,19 +164,23 @@ export class HistoryComponent implements OnDestroy {
     }
     
     // For Operations Admin staff (2 steps): Ops Admin Supervisor → HR
-    if (role === 'ADMIN OPERATION OFFICER' || role === 'ADMIN OPERATION ASSISTANT') {
+    if (role === 'ADMIN OPERATION OFFICER' || role === 'ADMIN OPERATION ASSISTANT' || role === 'ADMIN COMPLIANCE OFFICER') {
       if (index === 0) {
-        // Only mark as completed when status is explicitly Approved by Ops Admin Supervisor
-        // Awaiting HR Approval means it's still pending HR review
-        if (status === 'Approved') return 'completed';
-        if (status === 'Rejected' && !status.includes('HR')) return 'rejected';
+        // First step (Ops Admin Supervisor): completed when Approved, Awaiting HR Approval, or Rejected by HR
+        // Awaiting HR Approval means Ops Admin Supervisor already approved
+        // Rejected by HR means Ops Admin Supervisor already approved (HR rejected later)
+        if (status === 'Approved' || status === 'Awaiting HR Approval' || 
+            (status.includes('Rejected') && (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER')))) return 'completed';
+        // Rejected by Ops Admin Supervisor (not HR)
+        if (status === 'Rejected' && !status.includes('HR') && !status.includes('HUMAN RESOURCE OFFICER')) return 'rejected';
         return 'pending';
       }
       if (index === 1) {
-        // HR step: completed only when status is Approved (final)
+        // Second step (HR): completed only when status is Approved (final)
         // Pending when awaiting HR approval
         if (status === 'Approved') return 'completed';
-        if (status.includes('Rejected')) return 'rejected';
+        // Rejected by HR specifically
+        if (status.includes('Rejected') && (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER'))) return 'rejected';
         return status === 'Awaiting HR Approval' ? 'pending' : '';
       }
     }
@@ -183,16 +188,20 @@ export class HistoryComponent implements OnDestroy {
     // For Accounts staff (2 steps): Account Supervisor → HR
     if (role === 'ACCOUNTING CLERK' || role === 'ACCOUNT RECEIVABLE SPECIALIST' || role === 'ACCOUNT PAYABLES SPECIALIST') {
       if (index === 0) {
-        // Only mark as completed when status is explicitly Approved by Acct Supervisor
-        // Awaiting HR Approval means it's still pending HR review
-        if (status === 'Approved') return 'completed';
-        if (status === 'Rejected' && !status.includes('HR')) return 'rejected';
+        // First step (Account Supervisor): completed when Approved, Awaiting HR Approval, or Rejected by HR
+        // Awaiting HR Approval means Account Supervisor already approved
+        // Rejected by HR means Account Supervisor already approved (HR rejected later)
+        if (status === 'Approved' || status === 'Awaiting HR Approval' || 
+            (status.includes('Rejected') && (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER')))) return 'completed';
+        // Rejected by Account Supervisor (not HR)
+        if (status === 'Rejected' && !status.includes('HR') && !status.includes('HUMAN RESOURCE OFFICER')) return 'rejected';
         return 'pending';
       }
       if (index === 1) {
-        // HR step: completed only when status is Approved (final)
+        // Second step (HR): completed only when status is Approved (final)
         if (status === 'Approved') return 'completed';
-        if (status.includes('Rejected')) return 'rejected';
+        // Rejected by HR specifically
+        if (status.includes('Rejected') && (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER'))) return 'rejected';
         return status === 'Awaiting HR Approval' ? 'pending' : '';
       }
     }
@@ -201,16 +210,20 @@ export class HistoryComponent implements OnDestroy {
     if (role === 'OPERATIONS ADMIN SUPERVISOR' || role === 'ACCOUNT SUPERVISOR' || 
         role === 'SENIOR IT DEVELOPER' || role === 'IT ASSISTANT' || role === 'IT DEVELOPER') {
       if (index === 0) {
-        // Only mark as completed when status is explicitly Approved by Admin Manager
-        // Awaiting HR Approval means it's still pending HR review
-        if (status === 'Approved') return 'completed';
-        if (status.includes('Rejected') && !status.includes('HR')) return 'rejected';
+        // First step (Admin Manager): completed when Approved, Awaiting HR Approval, or Rejected by HR
+        // Awaiting HR Approval means Admin Manager already approved
+        // Rejected by HR means Admin Manager already approved (HR rejected later)
+        if (status === 'Approved' || status === 'Awaiting HR Approval' || 
+            (status.includes('Rejected') && (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER')))) return 'completed';
+        // Rejected by Admin Manager (not HR)
+        if (status.includes('Rejected') && !status.includes('HR') && !status.includes('HUMAN RESOURCE OFFICER')) return 'rejected';
         return 'pending';
       }
       if (index === 1) {
-        // HR step: completed only when status is Approved (final)
+        // Second step (HR): completed only when status is Approved (final)
         if (status === 'Approved') return 'completed';
-        if (status.includes('Rejected')) return 'rejected';
+        // Rejected by HR specifically
+        if (status.includes('Rejected') && (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER'))) return 'rejected';
         return status === 'Awaiting HR Approval' ? 'pending' : '';
       }
     }
@@ -241,6 +254,7 @@ export class HistoryComponent implements OnDestroy {
 
   getStepIcon(req: any, index: number): string {
     const stat = this.getStepStatus(req, index);
+    console.log('getStepIcon - req:', req.employeeName, 'index:', index, 'status:', req.status, 'stepStatus:', stat);
     if (stat === 'completed') return '✓';
     if (stat === 'rejected') return '✕';
     return '...';

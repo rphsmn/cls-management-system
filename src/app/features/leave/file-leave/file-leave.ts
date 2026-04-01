@@ -2,11 +2,13 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { AuthService, calculatePaidTimeOff, hasCompletedOneYear, isPartTimeEmployee, canFilePaidLeave, canFileMaternityPaternity, LEAVE_TYPES } from '../../../core/services/auth';
 import { LeaveService } from '../../../core/services/leave.services';
 import { calculateWorkdays } from '../../../core/utils/workday-calculator.util';
-import { Observable, combineLatest, map, take } from 'rxjs';
+import { Observable, combineLatest, map, take, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-file-leave',
@@ -32,12 +34,15 @@ export class FileLeaveComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+  private http = inject(HttpClient);
 
   // Expose LEAVE_TYPES to template
   LEAVE_TYPES = LEAVE_TYPES;
   
-  // Cache holiday list to avoid repeated localStorage parsing
-  private holidayList: string[] = [];
+  // Cache holiday list to avoid repeated API calls
+  private holidayList: any[] = [];
+  private holidaysLoaded = false;
+  holidaysInRange: string[] = [];
   
   liveCredits$: Observable<any>;
   minDate: string = new Date().toISOString().split('T')[0];
@@ -65,8 +70,8 @@ export class FileLeaveComponent implements OnInit {
   };
 
   constructor() {
-    // Initialize holiday list once to avoid repeated localStorage parsing
-    this.holidayList = JSON.parse(localStorage.getItem('company_holidays') || '[]');
+    // Fetch holidays from API for consistency with calendar component
+    this.fetchHolidays();
     
     this.liveCredits$ = combineLatest([
       this.authService.currentUser$,
@@ -144,6 +149,52 @@ export class FileLeaveComponent implements OnInit {
     );
   }
 
+  private fetchHolidays() {
+    if (this.holidaysLoaded) return;
+    
+    const currentYear = new Date().getFullYear();
+    console.log('Fetching holidays for year:', currentYear);
+    forkJoin([
+      this.http.get<any[]>(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/PH`).pipe(catchError(() => of([]))),
+      this.http.get<any[]>(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/AU`).pipe(catchError(() => of([])))
+    ]).subscribe(([phData, auData]) => {
+      console.log('Received PH holidays:', phData.length, 'AU holidays:', auData.length);
+      const processedPH = phData.map(h => ({ date: h.date, name: h.name, region: 'ph', type: this.mapHolidayType(h.name) }));
+      const processedAU = auData.map(h => ({ date: h.date, name: h.name, region: 'au', type: this.mapHolidayType(h.name) }));
+      
+      // Deduplicate holidays - if same date appears in both PH and AU (like Christmas),
+      // merge them into a single entry with both regions
+      const holidayMap = new Map<string, any>();
+      
+      processedPH.forEach(h => {
+        holidayMap.set(h.date, { ...h, region: 'ph/au' });
+      });
+      
+      processedAU.forEach(h => {
+        if (holidayMap.has(h.date)) {
+          // Date already exists (e.g., Christmas) - mark as shared
+          const existing = holidayMap.get(h.date);
+          existing.region = 'ph/au';
+          existing.name = h.name; // Keep the name (same for both countries)
+        } else {
+          holidayMap.set(h.date, h);
+        }
+      });
+      
+      this.holidayList = Array.from(holidayMap.values());
+      this.holidaysLoaded = true;
+      console.log('Holidays loaded:', this.holidayList.length, 'holidays');
+      console.log('Sample holiday dates:', this.holidayList.slice(0, 5).map(h => h.date));
+    });
+  }
+
+  private mapHolidayType(name: string): string {
+    const lower = name.toLowerCase();
+    if (lower.includes('edsa')) return 'special-work';
+    if (lower.includes('ninoy') || lower.includes('chinese')) return 'special-non';
+    return 'regular';
+  }
+
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       if (params['date']) {
@@ -182,8 +233,51 @@ export class FileLeaveComponent implements OnInit {
         this.noticeRequired = 0;
         this.isInsufficientNotice = false;
       }
+      
+      // Update holidays in range for display
+      this.holidaysInRange = this.getHolidaysInRange();
+      
       this.checkBalance();
     }
+  }
+
+  // Helper function to format date as YYYY-MM-DD in local timezone
+  private formatLocalDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Check if selected dates include holidays and return holiday names
+  private getHolidaysInRange(): string[] {
+    if (!this.leaveRequest.startDate || !this.leaveRequest.endDate) return [];
+    
+    console.log('Checking holidays in range:', this.leaveRequest.startDate, 'to', this.leaveRequest.endDate);
+    console.log('Holiday list loaded:', this.holidaysLoaded, 'Count:', this.holidayList.length);
+    console.log('Start date type:', typeof this.leaveRequest.startDate, 'Value:', this.leaveRequest.startDate);
+    
+    const start = new Date(this.leaveRequest.startDate);
+    const end = new Date(this.leaveRequest.endDate);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    
+    const holidays: string[] = [];
+    const current = new Date(start);
+    while (current <= end) {
+      const dateStr = this.formatLocalDate(current);
+      console.log('Checking date:', dateStr, 'against holiday list');
+      const holiday = this.holidayList.find((h: any) => 
+        h.date === dateStr && (h.type === 'regular' || h.type === 'special-non')
+      );
+      if (holiday && !holidays.includes(holiday.name)) {
+        console.log('Found holiday:', holiday.name, 'on', dateStr);
+        holidays.push(holiday.name);
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    console.log('Holidays found:', holidays);
+    return holidays;
   }
   
   onLeaveTypeChange() {
@@ -245,6 +339,22 @@ export class FileLeaveComponent implements OnInit {
     if (this.totalDays <= 0) {
       this.showErrorToast = true;
       this.errorMessage = 'Please select valid leave dates.';
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.showErrorToast = false;
+        this.cdr.detectChanges();
+      }, 3000);
+      return;
+    }
+    
+    // Check if selected dates include holidays
+    const holidaysInRange = this.getHolidaysInRange();
+    if (holidaysInRange.length > 0) {
+      this.showErrorToast = true;
+      const holidayList = holidaysInRange.length === 1 
+        ? holidaysInRange[0] 
+        : holidaysInRange.slice(0, -1).join(', ') + ' and ' + holidaysInRange[holidaysInRange.length - 1];
+      this.errorMessage = `Hey! Just a heads up - ${holidayList} ${holidaysInRange.length === 1 ? 'is' : 'are'} coming up on your selected dates. Feel free to pick different days for your leave!`;
       this.cdr.detectChanges();
       setTimeout(() => {
         this.showErrorToast = false;

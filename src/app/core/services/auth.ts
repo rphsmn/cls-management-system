@@ -332,6 +332,54 @@ export class AuthService implements OnDestroy {
     }
   }
 
+  /**
+   * Force refresh user profile from Firestore (bypasses cache)
+   * Useful when user data has been updated in Firestore
+   */
+  async refreshUserProfile(): Promise<void> {
+    const fbUser = this.currentUser;
+    if (!fbUser) return;
+    
+    // Clear cache to force fresh data
+    clearUserProfileCache();
+    
+    // Re-fetch user profile
+    const usersRef = collection(this.firestore, 'users');
+    const q = query(usersRef, where('email', '==', fbUser.email));
+    const snapshot = await getDocs(q);
+    
+    if (!snapshot.empty) {
+      const userDoc = snapshot.docs[0].data();
+      const docId = snapshot.docs[0].id;
+      
+      const transformedUser: User = {
+        uid: fbUser.uid,
+        id: docId,
+        employeeId: userDoc['employeeId'] || undefined,
+        name: userDoc['name'] || '',
+        role: userDoc['role'] || '',
+        department: userDoc['department'] || userDoc['dept'] || '',
+        email: userDoc['email'] || fbUser.email || '',
+        birthday: userDoc['birthday'] || undefined,
+        joinedDate: userDoc['joinedDate'] || undefined,
+        gender: userDoc['gender'] || undefined,
+        birthdayLeave: userDoc['birthdayLeave'] || userDoc['birthdayleave'] || 1,
+        tin: userDoc['tin'] || undefined,
+        sss: userDoc['sss'] || undefined,
+        philhealth: userDoc['philhealth'] || undefined,
+        pagibig: userDoc['pagibig'] || undefined
+      };
+      
+      // Update cache and subject
+      userProfileCache = {
+        user: transformedUser,
+        email: fbUser.email,
+        timestamp: Date.now()
+      };
+      this.currentUserSubject.next(transformedUser);
+    }
+  }
+
   async deductCredits(userUid: string, leaveType: string, period: string) {
     const userProfile = this.currentUser; // Uses the getter
     if (!userProfile) return;

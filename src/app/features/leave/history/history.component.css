@@ -42,8 +42,8 @@
 .connector { width: 12px; height: 3px; background: #e2e8f0; margin-bottom: 14px; border-radius: 2px; flex-shrink: 0; }
 
 .step.completed .icon-circle { background: #1a5336; border-color: #1a5336; color: #facc15; }
-.step.rejected .icon-circle { background: #fef2f2; border-color: #ef4444; color: #ef4444; }
 .step.pending .icon-circle { border-color: #facc15; color: #854d0e; background: #fefce8; }
+.step.rejected .icon-circle { background: #fef2f2; border-color: #ef4444; color: #ef4444; }
 .connector.active { background: #1a5336; }
 .connector.rejected { background: #ef4444; }
 
