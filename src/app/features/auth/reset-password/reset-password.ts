@@ -60,7 +60,6 @@ export class ResetPasswordComponent {
         this.isLoading = false;
         this.isSuccess = true;
       } catch (error: any) {
-        console.error('Password reset error:', error);
         this.isLoading = false;
         
         // Handle specific Firebase auth errors

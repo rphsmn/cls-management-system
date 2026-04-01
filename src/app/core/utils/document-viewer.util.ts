@@ -10,7 +10,6 @@
  */
 export function openDocument(attachment: any, title: string = 'Document'): void {
   if (!attachment?.data) {
-    console.warn('No attachment data provided');
     return;
   }
 
@@ -18,7 +17,6 @@ export function openDocument(attachment: any, title: string = 'Document'): void 
   const newWindow = window.open('', '_blank');
   
   if (!newWindow) {
-    console.error('Failed to open new window. Pop-up blocker may be active.');
     alert('Please allow pop-ups to view documents.');
     return;
   }

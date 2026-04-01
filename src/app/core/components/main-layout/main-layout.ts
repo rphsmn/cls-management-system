@@ -35,7 +35,7 @@ export class MainLayoutComponent {
       this.showLogoutModal = false;
       this.router.navigate(['/login']);
     } catch (error) {
-      console.error('Logout failed:', error);
+      // Logout failed silently
     }
   }
 

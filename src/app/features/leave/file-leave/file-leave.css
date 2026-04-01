@@ -42,10 +42,10 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #1a5336
 .notice-banner {
   display: flex;
   align-items: center; /* Centered vertically */
-  gap: 16px;
-  padding: 20px 24px;
-  border-radius: 12px;
-  margin-bottom: 24px;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin-bottom: 20px;
   width: 100%; /* Ensures it takes full container width */
   box-sizing: border-box;
   transition: all 0.3s ease;
@@ -66,7 +66,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #1a5336
 }
 
 .notice-icon {
-  font-size: 22px;
+  font-size: 20px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -83,9 +83,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #1a5336
 .notice-banner strong {
   color: #1a5336;
   font-weight: 700;
-  display: block; /* Puts the holiday name on its own line for emphasis */
-  margin-bottom: 2px;
-  font-size: 15px;
+  font-size: 14px;
 }
 .btn-primary { background: #1a5336; color: white; border: none; padding: 14px 32px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; }
 .btn-primary:hover:not(:disabled) { background: #14422b; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26, 83, 54, 0.2); }

@@ -254,7 +254,6 @@ export class HistoryComponent implements OnDestroy {
 
   getStepIcon(req: any, index: number): string {
     const stat = this.getStepStatus(req, index);
-    console.log('getStepIcon - req:', req.employeeName, 'index:', index, 'status:', req.status, 'stepStatus:', stat);
     if (stat === 'completed') return '✓';
     if (stat === 'rejected') return '✕';
     return '...';

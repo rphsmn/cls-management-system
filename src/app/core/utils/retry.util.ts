@@ -145,7 +145,6 @@ export async function withRetry<T>(
       
       // Calculate delay and wait
       const delay = calculateDelay(attempt, config);
-      console.warn(`Retry attempt ${attempt + 1}/${config.maxRetries} after ${delay}ms`, error);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }

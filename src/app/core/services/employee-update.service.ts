@@ -111,12 +111,10 @@ export class EmployeeUpdateService {
         // Update the document
         await updateDoc(docRef, updateData);
         results.success++;
-        console.log(`Updated employee: ${employee.employeeId} - ${updateData.name}`);
       } catch (error) {
         const errorMsg = `Error updating ${employee.employeeId}: ${error}`;
         results.errors.push(errorMsg);
         results.failed++;
-        console.error(errorMsg);
       }
     }
 
@@ -144,21 +142,8 @@ CLS-ADM00037	Reantaso	Domingo	Nayve	23-Feb-01	05-1693313-7	100255321611	12132489
 CLS-ACC00023	Solano	Dorothy	Bitoy	20-Feb-97	34-7125538-4	182512680942	121211553461	342-788-123-0000
 CLS-ADM00051	Morales	Ranilyn	Noleal	12-Aug-01	05-1906568-8	100255896800	121363601558	687-499-306-0000`;
 
-    console.log('Parsing employee data...');
     const employees = this.parseEmployeeData(employeeDataString);
-    console.log(`Found ${employees.length} employees to update`);
-
-    console.log('Updating Firestore...');
     const results = await this.updateEmployeeData(employees);
-
-    console.log('\n=== Update Results ===');
-    console.log(`Successfully updated: ${results.success}`);
-    console.log(`Failed: ${results.failed}`);
-    
-    if (results.errors.length > 0) {
-      console.log('\nErrors:');
-      results.errors.forEach(err => console.log(`  - ${err}`));
-    }
 
     return results;
   }

@@ -76,7 +76,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
       this.companyEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       this.loadEmployeeBirthdays();
     } catch (error) {
-      console.error('Error loading company events:', error);
+      // Error loading company events
     }
   }
 
@@ -99,7 +99,6 @@ export class CalendarComponent implements OnInit, OnDestroy {
         });
       this.generateCalendar();
     } catch (error) {
-      console.error('Error loading birthdays:', error);
       this.generateCalendar();
     }
   }

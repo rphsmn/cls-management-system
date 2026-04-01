@@ -153,12 +153,12 @@ export class FileLeaveComponent implements OnInit {
     if (this.holidaysLoaded) return;
     
     const currentYear = new Date().getFullYear();
-    console.log('Fetching holidays for year:', currentYear);
+
     forkJoin([
       this.http.get<any[]>(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/PH`).pipe(catchError(() => of([]))),
       this.http.get<any[]>(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/AU`).pipe(catchError(() => of([])))
     ]).subscribe(([phData, auData]) => {
-      console.log('Received PH holidays:', phData.length, 'AU holidays:', auData.length);
+
       const processedPH = phData.map(h => ({ date: h.date, name: h.name, region: 'ph', type: this.mapHolidayType(h.name) }));
       const processedAU = auData.map(h => ({ date: h.date, name: h.name, region: 'au', type: this.mapHolidayType(h.name) }));
       
@@ -183,8 +183,7 @@ export class FileLeaveComponent implements OnInit {
       
       this.holidayList = Array.from(holidayMap.values());
       this.holidaysLoaded = true;
-      console.log('Holidays loaded:', this.holidayList.length, 'holidays');
-      console.log('Sample holiday dates:', this.holidayList.slice(0, 5).map(h => h.date));
+
     });
   }
 
@@ -253,9 +252,7 @@ export class FileLeaveComponent implements OnInit {
   private getHolidaysInRange(): string[] {
     if (!this.leaveRequest.startDate || !this.leaveRequest.endDate) return [];
     
-    console.log('Checking holidays in range:', this.leaveRequest.startDate, 'to', this.leaveRequest.endDate);
-    console.log('Holiday list loaded:', this.holidaysLoaded, 'Count:', this.holidayList.length);
-    console.log('Start date type:', typeof this.leaveRequest.startDate, 'Value:', this.leaveRequest.startDate);
+
     
     const start = new Date(this.leaveRequest.startDate);
     const end = new Date(this.leaveRequest.endDate);
@@ -266,17 +263,17 @@ export class FileLeaveComponent implements OnInit {
     const current = new Date(start);
     while (current <= end) {
       const dateStr = this.formatLocalDate(current);
-      console.log('Checking date:', dateStr, 'against holiday list');
+
       const holiday = this.holidayList.find((h: any) => 
         h.date === dateStr && (h.type === 'regular' || h.type === 'special-non')
       );
       if (holiday && !holidays.includes(holiday.name)) {
-        console.log('Found holiday:', holiday.name, 'on', dateStr);
+
         holidays.push(holiday.name);
       }
       current.setDate(current.getDate() + 1);
     }
-    console.log('Holidays found:', holidays);
+
     return holidays;
   }
   
@@ -347,20 +344,19 @@ export class FileLeaveComponent implements OnInit {
       return;
     }
     
-    // Check if selected dates include holidays
+    // Check if selected dates include holidays - just inform, don't restrict
     const holidaysInRange = this.getHolidaysInRange();
     if (holidaysInRange.length > 0) {
-      this.showErrorToast = true;
       const holidayList = holidaysInRange.length === 1 
         ? holidaysInRange[0] 
         : holidaysInRange.slice(0, -1).join(', ') + ' and ' + holidaysInRange[holidaysInRange.length - 1];
-      this.errorMessage = `Hey! Just a heads up - ${holidayList} ${holidaysInRange.length === 1 ? 'is' : 'are'} coming up on your selected dates. Feel free to pick different days for your leave!`;
+      this.errorMessage = `Note: ${holidayList} ${holidaysInRange.length === 1 ? 'is' : 'are'} included in your selected dates. You can still proceed with your leave request.`;
+      this.showErrorToast = true;
       this.cdr.detectChanges();
       setTimeout(() => {
         this.showErrorToast = false;
         this.cdr.detectChanges();
       }, 3000);
-      return;
     }
     
     // Check for insufficient notice (applies to both Paid Time Off and Leave Without Pay)

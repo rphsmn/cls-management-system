@@ -96,10 +96,7 @@ export class LeaveService implements OnDestroy {
 
     const requestCollection = collection(this.firestore, 'leaveRequests');
     
-    // Debug: Log the user role being used
-    console.log('addRequest - User role:', user.role);
-    console.log('addRequest - User role type:', typeof user.role);
-    console.log('addRequest - User role length:', user.role?.length);
+
     
     // We enrich the data here so the Dashboard knows who owns the request
     const enrichedRequest = {
@@ -115,7 +112,7 @@ export class LeaveService implements OnDestroy {
       targetReviewer: this.getInitialReviewer(user.role)
     };
 
-    console.log('addRequest - Enriched request:', enrichedRequest);
+
 
     return addDoc(requestCollection, enrichedRequest);
   }
@@ -129,7 +126,7 @@ export class LeaveService implements OnDestroy {
     const requestData = requestDoc.data();
     const employeeRole = (requestData?.['role'] || '').toUpperCase();
     
-    console.log('updateRequestStatus called:', { requestId, newStatus, reviewerRole, employeeRole });
+
     
     const updateData: any = { status: newStatus };
 
@@ -179,7 +176,7 @@ export class LeaveService implements OnDestroy {
       updateData.targetReviewer = 'None';
     }
 
-    console.log('updateRequestStatus - updateData:', updateData);
+
 
     return updateDoc(requestDocRef, updateData);
   }
@@ -187,7 +184,7 @@ export class LeaveService implements OnDestroy {
   private getInitialReviewer(role: string): string {
     // Normalize: uppercase, trim, and collapse multiple spaces to single space
     const r = role.toUpperCase().trim().replace(/\s+/g, ' ');
-    console.log('getInitialReviewer called with role:', role, '-> normalized:', r);
+
     
     // Map to handle various case formats and role names from database
     const reviewerMap: { [key: string]: string } = {
@@ -226,7 +223,7 @@ export class LeaveService implements OnDestroy {
       return reviewerMap[role];
     }
     // Default: go to HR
-    console.log('No match found, defaulting to HR');
+
     return 'HR';
   }
 }

@@ -43,11 +43,7 @@ export class ConnectionService implements OnDestroy {
     this.onlineSubscription = network$.subscribe(isOnline => {
       this.updateConnectionState({ isOnline });
       
-      if (!isOnline) {
-        console.warn('Network connection lost. API calls may fail.');
-      } else {
-        console.log('Network connection restored.');
-      }
+
     });
   }
 
@@ -67,9 +63,7 @@ export class ConnectionService implements OnDestroy {
   updateFirestoreConnection(isConnected: boolean): void {
     this.updateConnectionState({ isFirestoreConnected: isConnected });
     
-    if (!isConnected) {
-      console.warn('Firestore connection lost. Real-time updates may be delayed.');
-    }
+
   }
 
   /**
