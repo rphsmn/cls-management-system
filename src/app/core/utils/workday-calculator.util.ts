@@ -36,7 +36,8 @@ export function calculateWorkdays(period: string, holidays: any[] = []): number 
       h.date === dateStr && (h.type === 'regular' || h.type === 'special-non')
     );
 
-    if (!isWeekend && !isHoliday) {
+    // Count as workday if not a weekend (holidays are now allowed for leave filing)
+    if (!isWeekend) {
       workdayCount++;
     }
 

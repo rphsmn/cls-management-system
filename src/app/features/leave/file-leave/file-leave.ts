@@ -53,6 +53,7 @@ export class FileLeaveComponent implements OnInit {
   showSuccessToast = false;
   showErrorToast = false;
   errorMessage = '';
+  successMessage = '';
   fileName = '';
   
   leaveRequest: {
@@ -346,17 +347,12 @@ export class FileLeaveComponent implements OnInit {
     
     // Check if selected dates include holidays - just inform, don't restrict
     const holidaysInRange = this.getHolidaysInRange();
+    let holidayNotice = '';
     if (holidaysInRange.length > 0) {
       const holidayList = holidaysInRange.length === 1 
         ? holidaysInRange[0] 
         : holidaysInRange.slice(0, -1).join(', ') + ' and ' + holidaysInRange[holidaysInRange.length - 1];
-      this.errorMessage = `Note: ${holidayList} ${holidaysInRange.length === 1 ? 'is' : 'are'} included in your selected dates. You can still proceed with your leave request.`;
-      this.showErrorToast = true;
-      this.cdr.detectChanges();
-      setTimeout(() => {
-        this.showErrorToast = false;
-        this.cdr.detectChanges();
-      }, 3000);
+      holidayNotice = ` Note: ${holidayList} ${holidaysInRange.length === 1 ? 'is' : 'are'} included in your selected dates.`;
     }
     
     // Check for insufficient notice (applies to both Paid Time Off and Leave Without Pay)
@@ -384,6 +380,7 @@ export class FileLeaveComponent implements OnInit {
     }
     
     await this.leaveService.addRequest(this.leaveRequest);
+    this.successMessage = `Your request has been filed for review.${holidayNotice}`;
     this.showSuccessToast = true;
     this.cdr.detectChanges();
     setTimeout(() => {
