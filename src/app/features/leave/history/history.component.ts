@@ -29,11 +29,11 @@ export class HistoryComponent implements OnDestroy {
   private holidayList: string[] = [];
 
   searchControl = new FormControl('', { nonNullable: true });
-  monthControl = new FormControl(new Date().getMonth(), { nonNullable: true });
-  yearControl = new FormControl(new Date().getFullYear(), { nonNullable: true });
+  monthControl = new FormControl(-1, { nonNullable: true }); // Default to 'All' months
+  yearControl = new FormControl(-1, { nonNullable: true }); // Default to 'All' years
 
-  months = [{ v: 0, l: 'Jan' }, { v: 1, l: 'Feb' }, { v: 2, l: 'Mar' }, { v: 3, l: 'Apr' }, { v: 4, l: 'May' }, { v: 5, l: 'Jun' }, { v: 6, l: 'Jul' }, { v: 7, l: 'Aug' }, { v: 8, l: 'Sep' }, { v: 9, l: 'Oct' }, { v: 10, l: 'Nov' }, { v: 11, l: 'Dec' }];
-  years = [2024, 2025, 2026];
+  months = [{ v: -1, l: 'All Months' }, { v: 0, l: 'Jan' }, { v: 1, l: 'Feb' }, { v: 2, l: 'Mar' }, { v: 3, l: 'Apr' }, { v: 4, l: 'May' }, { v: 5, l: 'Jun' }, { v: 6, l: 'Jul' }, { v: 7, l: 'Aug' }, { v: 8, l: 'Sep' }, { v: 9, l: 'Oct' }, { v: 10, l: 'Nov' }, { v: 11, l: 'Dec' }];
+  years: number[] = [-1]; // Will be populated dynamically from leave data
   expandedReq: any = null;
 
   constructor() {
@@ -65,16 +65,72 @@ export class HistoryComponent implements OnDestroy {
     ]).pipe(
       map(([user, requests, term, selMonth, selYear]) => {
         if (!user || !requests) return [];
+        
+        // Convert string values to numbers (HTML select returns strings)
+        const monthNum = typeof selMonth === 'string' ? parseInt(selMonth, 10) : selMonth;
+        const yearNum = typeof selYear === 'string' ? parseInt(selYear, 10) : selYear;
+        
+        // Debug: Log filter values
+        console.log('=== FILTER DEBUG ===');
+        console.log('Selected Month:', selMonth, '-> Converted:', monthNum, '(type:', typeof monthNum, ')');
+        console.log('Selected Year:', selYear, '-> Converted:', yearNum, '(type:', typeof yearNum, ')');
+        console.log('Search Term:', term);
+        console.log('Total Requests:', requests.length);
+        
+        // Dynamically generate years from leave data
+        const yearSet = new Set<number>();
+        requests.forEach(req => {
+          if (req.period) {
+            const startDate = this.parseISODate(req.period.split(' to ')[0]);
+            if (startDate) {
+              yearSet.add(startDate.getFullYear());
+            }
+          }
+        });
+        // Sort years in descending order and add 'All' option at the beginning
+        const sortedYears = Array.from(yearSet).sort((a, b) => b - a);
+        this.years = [-1, ...sortedYears];
+        
+        console.log('Available Years:', this.years);
+        
         const userRoleUpper = user.role.toUpperCase();
-        return requests.filter(req => {
+        const filteredRequests = requests.filter(req => {
           if (!req.period) return false; // Skip requests without period
           // HR, Admin Manager, and Managing Director can see all requests, others only see their own
           const canSee = (userRoleUpper === 'HR' || userRoleUpper === 'ADMIN MANAGER' || 
                          userRoleUpper === 'HUMAN RESOURCE OFFICER' || userRoleUpper === 'MANAGING DIRECTOR') || req.uid === user.uid;
           const matchesSearch = req.employeeName?.toLowerCase().includes(term.toLowerCase()) || req.type?.toLowerCase().includes(term.toLowerCase());
-          const start = new Date(req.period.split(' to ')[0]);
-          return canSee && matchesSearch && start.getMonth() === selMonth && start.getFullYear() === selYear;
+          const start = this.parseISODate(req.period.split(' to ')[0]);
+          
+          if (!start) return false; // Skip requests with invalid dates
+          
+          // Debug: Log each request's date info
+          if (monthNum !== -1) {
+            console.log('Request:', {
+              period: req.period,
+              parsedStart: start,
+              startMonth: start.getMonth(),
+              startYear: start.getFullYear(),
+              selMonth: monthNum,
+              selYear: yearNum,
+              matchesMonth: start.getMonth() === monthNum && (yearNum === -1 || start.getFullYear() === yearNum)
+            });
+          }
+          
+          // Simplified filtering logic:
+          // - If month is -1 (All), show all regardless of year
+          // - If month is specific and year is -1 (All), show that month across all years
+          // - If both are specific, show that exact month/year combination
+          const matchesMonth = monthNum === -1 || 
+            (start.getMonth() === monthNum && (yearNum === -1 || start.getFullYear() === yearNum));
+          
+          return canSee && matchesSearch && matchesMonth;
         });
+        
+        console.log('Filtered Requests:', filteredRequests.length);
+        console.log('=== END FILTER DEBUG ===');
+        
+        return filteredRequests;
       }),
       shareReplay({ bufferSize: 1, refCount: true })
     );
@@ -89,10 +145,23 @@ export class HistoryComponent implements OnDestroy {
     // Cleanup if needed
   }
 
+  // Helper to parse ISO date strings (YYYY-MM-DD) correctly without timezone issues
+  private parseISODate(dateString: string): Date | null {
+    if (!dateString) return null;
+    const parts = dateString.split('-');
+    if (parts.length !== 3) return null;
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+    const day = parseInt(parts[2], 10);
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+    return new Date(year, month, day);
+  }
+
   // --- RESTORED HELPER METHODS FOR HTML ---
   getFormattedPeriod(period: string): string {
     const diff = calculateWorkdays(period, this.holidayList);
-    const start = new Date(period.split(' to ')[0]);
+    const start = this.parseISODate(period.split(' to ')[0]);
+    if (!start) return 'Invalid date';
     return `${diff} ${diff === 1 ? 'Day' : 'Days'} (${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
   }
 
@@ -275,8 +344,25 @@ export class HistoryComponent implements OnDestroy {
     if (t.includes('Sick')) return '🤒';
     if (t.includes('Birthday')) return '🎂';
     if (t.includes('Without Pay')) return '⏰';
+    if (t.includes('Maternity')) return '🤱';
+    if (t.includes('Paternity')) return '👶';
     return '💰'; 
   }
   toggleReason(r: any) { this.expandedReq = this.expandedReq === r ? null : r; }
   viewDocument(att: any) { window.open()?.document.write(`<iframe src="${att.data}" style="width:100%;height:100%;"></iframe>`); }
+  
+  // Reset all filters to default values
+  resetFilters(): void {
+    this.searchControl.setValue('');
+    this.monthControl.setValue(-1);
+    this.yearControl.setValue(-1);
+    this.currentPageSubject.next(1);
+  }
+  
+  // Check if any filter is active
+  hasActiveFilters(): boolean {
+    return this.searchControl.value !== '' || 
+           this.monthControl.value !== -1 || 
+           this.yearControl.value !== -1;
+  }
 }

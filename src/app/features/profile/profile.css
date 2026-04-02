@@ -63,13 +63,125 @@
   border: 1px solid #e2e8f0;
 }
 
-.update-btn {
+.email-options-container {
+  position: relative;
   display: inline-block;
+  margin-top: 12px;
+}
+
+.update-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: #facc15;
   color: #1a5336;
   padding: 12px 24px;
   border-radius: 8px;
   text-decoration: none;
   font-weight: 700;
-  margin-top: 12px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.update-btn:hover {
+  background: #fde047;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.email-options-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  min-width: 250px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.email-options-header {
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.email-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: #1e293b;
+  transition: background-color 0.2s;
+  border: none;
+  background: none;
+  width: 100%;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.email-option:hover {
+  background: #f1f5f9;
+}
+
+.email-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.email-label {
+  font-weight: 500;
+}
+
+.email-option.gmail:hover {
+  background: #fef3c7;
+}
+
+.email-option.yahoo:hover {
+  background: #dbeafe;
+}
+
+.email-option.outlook:hover {
+  background: #e0e7ff;
+}
+
+.email-option.default:hover {
+  background: #f1f5f9;
+}
+
+.email-option.copy:hover {
+  background: #dcfce7;
+}
+
+.email-option-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 4px 0;
+}
+
+@media (max-width: 768px) {
+  .email-options-dropdown {
+    left: 0;
+    right: 0;
+    transform: none;
+    min-width: auto;
+  }
 }

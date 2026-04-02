@@ -18,6 +18,10 @@ export class ProfileComponent implements OnInit {
   yearsOfService = 'N/A';
   paidTimeOff = 0;
   private currentUser: User | null = null;
+  
+  // Email options state
+  showEmailOptions = false;
+  emailCopied = false;
 
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
@@ -69,5 +73,43 @@ export class ProfileComponent implements OnInit {
     } catch {
       return dateStr;
     }
+  }
+  
+  toggleEmailOptions(): void {
+    this.showEmailOptions = !this.showEmailOptions;
+    this.emailCopied = false;
+  }
+  
+  getGmailComposeUrl(): string {
+    const subject = encodeURIComponent(`Update Request - ${this.currentUser?.name || 'Employee'}`);
+    const body = encodeURIComponent(`Hello HR,\n\nI would like to request an update to my professional information.\n\nEmployee: ${this.currentUser?.name || 'N/A'}\nEmployee ID: ${this.currentUser?.employeeId || 'N/A'}\nDepartment: ${this.currentUser?.department || this.currentUser?.dept || 'N/A'}\n\nPlease let me know what information needs to be updated.\n\nThank you.`);
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=neptunorosalie25@gmail.com&su=${subject}&body=${body}`;
+  }
+  
+  getYahooComposeUrl(): string {
+    const subject = encodeURIComponent(`Update Request - ${this.currentUser?.name || 'Employee'}`);
+    const body = encodeURIComponent(`Hello HR,\n\nI would like to request an update to my professional information.\n\nEmployee: ${this.currentUser?.name || 'N/A'}\nEmployee ID: ${this.currentUser?.employeeId || 'N/A'}\nDepartment: ${this.currentUser?.department || this.currentUser?.dept || 'N/A'}\n\nPlease let me know what information needs to be updated.\n\nThank you.`);
+    return `https://compose.mail.yahoo.com/?to=neptunorosalie25@gmail.com&subject=${subject}&body=${body}`;
+  }
+  
+  getOutlookWebComposeUrl(): string {
+    const subject = encodeURIComponent(`Update Request - ${this.currentUser?.name || 'Employee'}`);
+    const body = encodeURIComponent(`Hello HR,\n\nI would like to request an update to my professional information.\n\nEmployee: ${this.currentUser?.name || 'N/A'}\nEmployee ID: ${this.currentUser?.employeeId || 'N/A'}\nDepartment: ${this.currentUser?.department || this.currentUser?.dept || 'N/A'}\n\nPlease let me know what information needs to be updated.\n\nThank you.`);
+    return `https://outlook.live.com/owa/?path=/mail/action/compose&to=neptunorosalie25@gmail.com&subject=${subject}&body=${body}`;
+  }
+  
+  getMailtoUrl(): string {
+    const subject = encodeURIComponent(`Update Request - ${this.currentUser?.name || 'Employee'}`);
+    const body = encodeURIComponent(`Hello HR,\n\nI would like to request an update to my professional information.\n\nEmployee: ${this.currentUser?.name || 'N/A'}\nEmployee ID: ${this.currentUser?.employeeId || 'N/A'}\nDepartment: ${this.currentUser?.department || this.currentUser?.dept || 'N/A'}\n\nPlease let me know what information needs to be updated.\n\nThank you.`);
+    return `mailto:neptunorosalie25@gmail.com?subject=${subject}&body=${body}`;
+  }
+  
+  copyHrEmail(): void {
+    navigator.clipboard.writeText('neptunorosalie25@gmail.com').then(() => {
+      this.emailCopied = true;
+      setTimeout(() => {
+        this.emailCopied = false;
+      }, 2000);
+    });
   }
 }

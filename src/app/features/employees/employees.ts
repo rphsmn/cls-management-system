@@ -16,9 +16,9 @@ interface Employee {
 }
 
 interface LeaveRequest {
-  uid: string;
-  startDate: string;
-  endDate: string;
+  uid?: string;
+  employeeId?: string;
+  period: string;
   leaveType: string;
   status: string;
 }
@@ -74,9 +74,18 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
           id: doc.id,
           ...doc.data()
         })) as any[];
+        console.log('[EmployeeStatus] Users loaded:', usersData.length, usersData);
+        
+        // Log the first user to see its structure
+        if (usersData.length > 0) {
+          console.log('[EmployeeStatus] Sample user structure:', usersData[0]);
+          console.log('[EmployeeStatus] Sample user id:', usersData[0].id);
+          console.log('[EmployeeStatus] Sample user uid:', usersData[0].uid);
+        }
+        
         this.buildEmployeeList(usersData);
       }, (error) => {
-        // Users listener error
+        console.error('[EmployeeStatus] Users listener error:', error);
       });
       
       // Add users unsubscribe to subscription container
@@ -86,31 +95,45 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
       const leaveRef = collection(this.firestore, 'leaveRequests');
       const unsubscribeLeave = onSnapshot(leaveRef, (leaveSnapshot) => {
         // Filter locally instead of using 'in' query which requires composite index
-        this.leaveRequests = leaveSnapshot.docs
-          .map(doc => doc.data() as LeaveRequest)
+        const allRequests: any[] = leaveSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('[EmployeeStatus] ALL leave requests (before filter):', allRequests.length, allRequests);
+        
+        this.leaveRequests = allRequests
           .filter(req => req.status === 'Approved' || req.status === 'Awaiting HR Approval');
+        console.log('[EmployeeStatus] Filtered leave requests (Approved/Awaiting HR):', this.leaveRequests.length, this.leaveRequests);
+        
+        // Log the first request to see its structure
+        if (this.leaveRequests.length > 0) {
+          console.log('[EmployeeStatus] Sample leave request structure:', this.leaveRequests[0]);
+          console.log('[EmployeeStatus] Sample request uid:', this.leaveRequests[0].uid);
+        }
+        
         this.buildEmployeeList(usersData);
       }, (error) => {
-        // Leave requests listener error
+        console.error('[EmployeeStatus] Leave requests listener error:', error);
       });
       
       // Add leave unsubscribe to subscription container
       this.subscription.add(() => unsubscribeLeave());
     } catch (error) {
+      console.error('[EmployeeStatus] fetchData error:', error);
       this.isLoading = false;
     }
   }
 
   private buildEmployeeList(users: any[]) {
     if (!users || users.length === 0) {
+      console.log('[EmployeeStatus] No users to build employee list');
       return;
     }
+
+    console.log('[EmployeeStatus] Building employee list with', users.length, 'users');
 
     // Build employee list with status
     this.employees = users.map(user => {
       const initials = this.getInitials(user.name || 'Unknown');
       const dept = user.department || user.dept || 'Unknown';
-      const statusInfo = this.getEmployeeStatus(user.id, user.name);
+      const statusInfo = this.getEmployeeStatus(user.id, user.name, user.employeeId);
       
       return {
         id: user.id,
@@ -123,11 +146,14 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
       } as Employee;
     });
 
+    console.log('[EmployeeStatus] Final employee list:', this.employees);
+
     // Extract unique departments
     const uniqueDepts = [...new Set(this.employees.map(e => e.dept))];
     this.departments = ['All Departments', ...uniqueDepts.sort()];
 
     this.calculateStats();
+    console.log('[EmployeeStatus] Stats - Working:', this.workingToday, 'Away:', this.awayToday);
     
     // Only set isLoading to false if we have a reasonable number of users
     // This prevents showing partial data when Firebase is still loading
@@ -146,26 +172,47 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
     return name.substring(0, 2).toUpperCase();
   }
 
-  private getEmployeeStatus(uid: string, name: string): Partial<Employee> {
+  private getEmployeeStatus(userId: string, name: string, employeeId?: string): Partial<Employee> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const userRequests = this.leaveRequests.filter(r => r.uid === uid);
+    console.log(`[EmployeeStatus] Filtering for userId: ${userId}, employeeId: ${employeeId}`);
+    console.log(`[EmployeeStatus] Available leave request uids:`, this.leaveRequests.map(r => r.uid));
+    console.log(`[EmployeeStatus] Available leave request employeeIds:`, this.leaveRequests.map(r => r.employeeId));
+    
+    // Match on employeeId if available, otherwise fall back to uid
+    const userRequests = this.leaveRequests.filter(r => {
+      if (employeeId && r.employeeId) {
+        return r.employeeId === employeeId;
+      }
+      return r.uid === userId;
+    });
+    console.log(`[EmployeeStatus] Checking status for ${name} (${userId}, employeeId: ${employeeId}):`, userRequests);
     
     for (const request of userRequests) {
-      const startDate = new Date(request.startDate);
-      const endDate = new Date(request.endDate);
+      // Parse the period field (format: "2026-03-23 to 2026-05-24")
+      if (!request.period) {
+        console.log(`[EmployeeStatus] Request has no period field:`, request);
+        continue;
+      }
+      
+      const sep = request.period.includes(' to ') ? ' to ' : ' - ';
+      const parts = request.period.split(sep);
+      const startDate = new Date(parts[0]);
+      const endDate = parts[1] ? new Date(parts[1]) : startDate;
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(0, 0, 0, 0);
 
+      console.log(`[EmployeeStatus] ${name} - Period: ${request.period}, Start: ${startDate.toISOString()}, End: ${endDate.toISOString()}, Today: ${today.toISOString()}`);
+      console.log(`[EmployeeStatus] ${name} - Comparison: today >= startDate (${today >= startDate}), today <= endDate (${today <= endDate})`);
+
       if (today >= startDate && today <= endDate) {
         // Employee is currently on leave
+        console.log(`[EmployeeStatus] ${name} is ON LEAVE`);
         return {
           status: 'On Leave',
           leaveType: request.leaveType || 'Leave',
-          leaveDate: request.startDate === request.endDate 
-            ? request.startDate 
-            : `${request.startDate} to ${request.endDate}`
+          leaveDate: request.period
         };
       }
 
@@ -174,17 +221,17 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
       threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
       
       if (startDate > today && startDate <= threeDaysFromNow) {
+        console.log(`[EmployeeStatus] ${name} has UPCOMING LEAVE`);
         return {
           status: 'Upcoming Leave',
           leaveType: request.leaveType || 'Leave',
-          leaveDate: request.startDate === request.endDate 
-            ? request.startDate 
-            : `${request.startDate} to ${request.endDate}`
+          leaveDate: request.period
         };
       }
     }
 
     // No leave found - employee is in office
+    console.log(`[EmployeeStatus] ${name} is IN OFFICE`);
     return { status: 'In Office' };
   }
 

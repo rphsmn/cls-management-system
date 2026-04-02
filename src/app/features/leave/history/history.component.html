@@ -14,16 +14,23 @@
 
     <div class="header-actions">
       <div class="filter-group">
-        <select [formControl]="monthControl" class="filter-select">
+        <select [formControl]="monthControl" class="filter-select" aria-label="Filter by month">
           <option *ngFor="let m of months" [value]="m.v">{{ m.l }}</option>
         </select>
-        <select [formControl]="yearControl" class="filter-select">
-          <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+        <select [formControl]="yearControl" class="filter-select" aria-label="Filter by year">
+          <option *ngFor="let y of years" [value]="y">{{ y === -1 ? 'All Years' : y }}</option>
         </select>
+        <button 
+          *ngIf="hasActiveFilters()" 
+          class="reset-filters-btn" 
+          (click)="resetFilters()"
+          aria-label="Reset all filters">
+          ✕ Reset
+        </button>
       </div>
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input type="text" [formControl]="searchControl" placeholder="Search employee, ID, or type...">
+        <input type="text" [formControl]="searchControl" placeholder="Search employee, ID, or type..." aria-label="Search leave records">
       </div>
     </div>
   </header>

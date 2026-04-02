@@ -6,11 +6,34 @@
 .sub-tag { color: #94a3b8; font-size: 12px; }
 
 .header-actions { display: flex; align-items: center; gap: 15px; }
-.filter-group { display: flex; gap: 8px; }
+.filter-group { display: flex; gap: 8px; align-items: center; }
 .filter-select { padding: 10px 14px; border-radius: 10px; border: 1.5px solid #eef2f6; background: white; color: #1e293b; font-size: 13px; font-weight: 600; outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 14px; padding-right: 34px; }
+.filter-select:focus { border-color: #1a5336; box-shadow: 0 0 0 3px rgba(26, 83, 54, 0.1); }
+
+.reset-filters-btn { 
+  padding: 10px 16px; 
+  border-radius: 10px; 
+  border: 1.5px solid #fee2e2; 
+  background: #fef2f2; 
+  color: #dc2626; 
+  font-size: 12px; 
+  font-weight: 700; 
+  cursor: pointer; 
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.reset-filters-btn:hover { 
+  background: #fee2e2; 
+  border-color: #fecaca;
+  transform: translateY(-1px);
+}
+.reset-filters-btn:active { 
+  transform: translateY(0);
+}
 
 .search-box { display: flex; align-items: center; background: #ffffff; border-radius: 10px; padding: 10px 18px; border: 1.5px solid #eef2f6; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
 .search-box input { border: none; background: transparent; outline: none; padding-left: 12px; color: #1e293b; font-size: 14px; width: 250px; }
+.search-box:focus-within { border-color: #1a5336; box-shadow: 0 0 0 3px rgba(26, 83, 54, 0.1); }
 
 .card-full-width { background: white; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 10px 25px rgba(0,0,0,0.03); overflow: hidden; min-height: 700px; display: flex; flex-direction: column; }
 .history-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
