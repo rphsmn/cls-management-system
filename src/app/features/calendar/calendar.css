@@ -132,9 +132,9 @@
 }
 
 .day-cell.is-past { 
-  background-color: #f8fafc; 
+  background-color: #e2e8f0; 
   cursor: not-allowed; 
-  opacity: 0.6; 
+  opacity: 0.5; 
   pointer-events: none; 
 }
 
