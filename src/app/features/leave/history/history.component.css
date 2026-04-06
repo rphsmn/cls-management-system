@@ -70,6 +70,25 @@
 .connector.active { background: #1a5336; }
 .connector.rejected { background: #ef4444; }
 
+.cancel-request-btn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #dc2626;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-request-btn:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
 .pagination-footer { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; background: #fafbfc; border-top: 1px solid #f1f5f9; }
 .btn-pager { background: white; border: 1.5px solid #e2e8f0; color: #1a5336; padding: 8px 18px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
 .btn-pager:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -92,4 +111,38 @@
   font-weight: 500; 
   max-width: 300px; 
   line-height: 1.5;
+}
+
+/* Custom Swal Modal Styles - Cor Logic Aesthetic */
+::ng-deep .swal-premium-popup { 
+  border-radius: 24px !important; 
+}
+
+::ng-deep .swal-confirm-mint { 
+  background-color: #1a5336 !important; 
+  color: white !important; 
+  padding: 14px 32px !important; 
+  border-radius: 12px !important; 
+  font-weight: 800 !important; 
+}
+
+::ng-deep .swal-confirm-danger { 
+  background-color: #dc2626 !important; 
+  color: white !important; 
+  padding: 14px 32px !important; 
+  border-radius: 12px !important; 
+  font-weight: 800 !important; 
+}
+
+::ng-deep .swal-cancel-outline { 
+  background-color: white !important; 
+  color: #64748b !important; 
+  border: 2px solid #e2e8f0 !important; 
+  padding: 14px 32px !important; 
+  border-radius: 12px !important; 
+}
+
+::ng-deep .swal-button-container { 
+  display: flex !important; 
+  gap: 15px !important; 
 }

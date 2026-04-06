@@ -292,7 +292,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
           awayCount, 
           isToday: today.toDateString() === dateObj.toDateString(), 
           isPast: dateObj < today,
-          birthdays: dayBirthdays
+          birthdays: this.isHR ? dayBirthdays : [] // Only HR can see birthdays
         });
       }
       // Force change detection by reassigning days array

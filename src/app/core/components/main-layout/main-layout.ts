@@ -2,7 +2,8 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
-import { Observable } from 'rxjs';
+import { ConnectionService } from '../../../core/services/connection.service';
+import { Observable, map } from 'rxjs';
 
 @Component({
   selector: 'app-main-layout',
@@ -13,6 +14,7 @@ import { Observable } from 'rxjs';
 })
 export class MainLayoutComponent {
   private authService = inject(AuthService);
+  private connectionService = inject(ConnectionService);
   private router = inject(Router);
 
   showLogoutModal = false;
@@ -20,6 +22,11 @@ export class MainLayoutComponent {
   // Using the observables from AuthService
   currentUser$ = this.authService.currentUser$;
   isLoading$ = this.authService.isLoading$;
+  
+  // Connection state for offline indicator
+  isOnline$: Observable<boolean> = this.connectionService.connectionState$.pipe(
+    map(state => state.isOnline)
+  );
 
   confirmLogout() { 
     this.showLogoutModal = true; 

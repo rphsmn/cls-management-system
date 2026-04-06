@@ -116,6 +116,12 @@
                       </div>
                     </ng-container>
                   </div>
+                  <button 
+                    *ngIf="canCancel(req)" 
+                    class="cancel-request-btn"
+                    (click)="cancelRequest(req)">
+                    ✕ Cancel
+                  </button>
                 </td>
               </tr>
             </tbody>

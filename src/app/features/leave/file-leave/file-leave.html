@@ -170,8 +170,8 @@
       <div class="form-actions">
         <button type="button" class="btn-secondary" routerLink="/calendar">Back to Calendar</button>
         <button type="submit" class="btn-primary" 
-                [disabled]="!leaveForm.valid || totalDays <= 0 || isOverBalance || isInsufficientNotice">
-          Submit Request
+                [disabled]="!leaveForm.valid || totalDays <= 0 || isOverBalance || isInsufficientNotice || isSubmitting">
+          {{ isSubmitting ? 'Submitting...' : 'Submit Request' }}
         </button>
       </div>
     </form>

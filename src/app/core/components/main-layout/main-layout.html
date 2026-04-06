@@ -1,4 +1,9 @@
 <div class="main-app-shell" *ngIf="currentUser$ | async as currentUser; else loadingOrError">
+  <!-- Offline Banner -->
+  <div class="offline-banner" *ngIf="!(isOnline$ | async)">
+    <span class="offline-icon">📡</span>
+    <span>You're offline. Some features may be unavailable.</span>
+  </div>
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="logo-dot"></div>

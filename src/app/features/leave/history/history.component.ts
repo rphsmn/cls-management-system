@@ -96,6 +96,7 @@ export class HistoryComponent implements OnDestroy {
         const userRoleUpper = user.role.toUpperCase();
         const filteredRequests = requests.filter(req => {
           if (!req.period) return false; // Skip requests without period
+          if (req.status === 'Cancelled') return false; // Skip cancelled requests
           // HR, Admin Manager, and Managing Director can see all requests, others only see their own
           const canSee = (userRoleUpper === 'HR' || userRoleUpper === 'ADMIN MANAGER' || 
                          userRoleUpper === 'HUMAN RESOURCE OFFICER' || userRoleUpper === 'MANAGING DIRECTOR') || req.uid === user.uid;
@@ -172,6 +173,55 @@ export class HistoryComponent implements OnDestroy {
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
     return date.toDateString() === yesterday.toDateString() ? 'Yesterday' : '';
+  }
+
+  async cancelRequest(req: any) {
+    const result = await import('sweetalert2').then(m => m.default.fire({
+      title: '<div style="color: #1a5336; font-weight: 800; font-size: 24px; margin-bottom: 10px;">Cancel Request?</div>',
+      html: '<div style="font-size: 15px; color: #64748b;">Are you sure you want to cancel this leave request?<br><br><strong>This action cannot be undone.</strong></div>',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Cancel',
+      cancelButtonText: 'No, Keep It',
+      reverseButtons: true,
+      buttonsStyling: false,
+      customClass: {
+        popup: 'swal-premium-popup',
+        confirmButton: 'swal-confirm-danger',
+        cancelButton: 'swal-cancel-outline',
+        actions: 'swal-button-container'
+      }
+    }));
+
+    if (result.isConfirmed) {
+      try {
+        await this.leaveService.cancelRequest(req.id);
+        import('sweetalert2').then(m => m.default.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Request cancelled',
+          showConfirmButton: false,
+          timer: 2000
+        }));
+      } catch (error) {
+        import('sweetalert2').then(m => m.default.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: 'Failed to cancel request',
+          showConfirmButton: false,
+          timer: 2000
+        }));
+      }
+    }
+  }
+
+  canCancel(req: any): boolean {
+    // Can cancel if status is Pending or Awaiting HR Approval OR Awaiting Admin Manager Approval
+    return req.status === 'Pending' || 
+           req.status === 'Awaiting HR Approval' || 
+           req.status === 'Awaiting Admin Manager Approval';
   }
 
   getSteps(req: any): string[] {

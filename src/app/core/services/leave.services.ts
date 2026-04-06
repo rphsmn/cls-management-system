@@ -181,6 +181,16 @@ export class LeaveService implements OnDestroy {
     return updateDoc(requestDocRef, updateData);
   }
 
+  // Cancel a pending request
+  async cancelRequest(requestId: string) {
+    const requestDocRef = doc(this.firestore, `leaveRequests/${requestId}`);
+    return updateDoc(requestDocRef, {
+      status: 'Cancelled',
+      targetReviewer: 'None',
+      dateCancelled: new Date().toISOString()
+    });
+  }
+
   private getInitialReviewer(role: string): string {
     // Normalize: uppercase, trim, and collapse multiple spaces to single space
     const r = role.toUpperCase().trim().replace(/\s+/g, ' ');

@@ -47,6 +47,7 @@ export class FileLeaveComponent implements OnInit {
   liveCredits$: Observable<any>;
   minDate: string = new Date().toISOString().split('T')[0];
   totalDays: number = 0;
+  isSubmitting: boolean = false;
   isOverBalance: boolean = false;
   isInsufficientNotice: boolean = false;
   noticeRequired: number = 0;
@@ -195,6 +196,42 @@ export class FileLeaveComponent implements OnInit {
     return 'regular';
   }
 
+  private async checkForDuplicateRequest(): Promise<boolean> {
+    const user = this.authService.currentUser;
+    if (!user || !this.leaveRequest.startDate || !this.leaveRequest.endDate) {
+      return false;
+    }
+    
+    const requestStart = new Date(this.leaveRequest.startDate);
+    const requestEnd = new Date(this.leaveRequest.endDate);
+    
+    // Get all existing requests for this user
+    const allRequests = await this.leaveService.requests$.pipe(
+      take(1)
+    ).toPromise() || [];
+    
+    const myRequests = allRequests.filter(req => 
+      req.uid === user.uid && 
+      (req.status === 'Pending' || req.status === 'Awaiting HR Approval' || req.status === 'Awaiting Admin Manager Approval')
+    );
+    
+    for (const req of myRequests) {
+      if (!req.period) continue;
+      
+      const sep = req.period.includes(' to ') ? ' to ' : ' - ';
+      const dates = req.period.split(sep);
+      const existingStart = new Date(dates[0].trim());
+      const existingEnd = dates[1] ? new Date(dates[1].trim()) : existingStart;
+      
+      // Check if dates overlap
+      if (requestStart <= existingEnd && requestEnd >= existingStart) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       if (params['date']) {
@@ -334,6 +371,11 @@ export class FileLeaveComponent implements OnInit {
   }
 
   async onSubmit() {
+    // Prevent duplicate submissions
+    if (this.isSubmitting) {
+      return;
+    }
+    
     if (this.totalDays <= 0) {
       this.showErrorToast = true;
       this.errorMessage = 'Please select valid leave dates.';
@@ -367,6 +409,19 @@ export class FileLeaveComponent implements OnInit {
       return;
     }
     
+    // Check for duplicate/overlapping requests
+    const hasDuplicate = await this.checkForDuplicateRequest();
+    if (hasDuplicate) {
+      this.showErrorToast = true;
+      this.errorMessage = 'You already have a pending request for these dates.';
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.showErrorToast = false;
+        this.cdr.detectChanges();
+      }, 3000);
+      return;
+    }
+    
     // Check for over-balance (Leave Without Pay has no balance check)
     if (this.leaveRequest.type !== LEAVE_TYPES.LEAVE_WITHOUT_PAY && this.isOverBalance) {
       this.showErrorToast = true;
@@ -379,14 +434,31 @@ export class FileLeaveComponent implements OnInit {
       return;
     }
     
-    await this.leaveService.addRequest(this.leaveRequest);
-    this.successMessage = `Your request has been filed for review.${holidayNotice}`;
-    this.showSuccessToast = true;
+    // Set submitting state to prevent duplicate submissions
+    this.isSubmitting = true;
     this.cdr.detectChanges();
-    setTimeout(() => {
-      this.showSuccessToast = false;
+    
+    try {
+      await this.leaveService.addRequest(this.leaveRequest);
+      this.successMessage = `Your request has been filed for review.${holidayNotice}`;
+      this.showSuccessToast = true;
       this.cdr.detectChanges();
-      this.router.navigate(['/history']);
-    }, 2000);
+      setTimeout(() => {
+        this.showSuccessToast = false;
+        this.cdr.detectChanges();
+        this.router.navigate(['/history']);
+      }, 2000);
+    } catch (error) {
+      this.showErrorToast = true;
+      this.errorMessage = 'Failed to submit request. Please try again.';
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.showErrorToast = false;
+        this.cdr.detectChanges();
+      }, 3000);
+    } finally {
+      this.isSubmitting = false;
+      this.cdr.detectChanges();
+    }
   }
 }
