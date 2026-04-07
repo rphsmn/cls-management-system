@@ -128,9 +128,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         // Check if employee is part-time
         const isPartTime = isPartTimeEmployee(user.department);
         
-        // Calculate Paid Time Off dynamically based on joinedDate and role
-        // Part-time employees get 0 PTO
-        const paidTimeOffTotal = isPartTime ? 0 : calculatePaidTimeOff(user.joinedDate, user.role);
+        // Calculate Paid Time Off - use stored leaveBalance if available, otherwise calculate dynamically
+        // Note: leaveBalance is stored in Firestore, calculated based on years of service + 1 extra
+        const paidTimeOffTotal = isPartTime ? 0 : (user.leaveBalance || calculatePaidTimeOff(user.joinedDate, user.role));
         const hasOneYearCompleted = hasCompletedOneYear(user.joinedDate);
         
         // Check if it's birth month for birthday leave availability

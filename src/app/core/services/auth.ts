@@ -24,6 +24,7 @@ export interface User {
   joinedDate?: string; // ISO date string for calculating years of service
   gender?: 'male' | 'female'; // For maternity/paternity leave visibility
   birthdayLeave: number;
+  leaveBalance?: number; // Stored leave balance (years of service + 1 extra)
   // Government IDs
   tin?: string; // Tax Identification Number
   sss?: string; // Social Security System
@@ -66,19 +67,30 @@ export function calculatePaidTimeOff(joinedDate: string | undefined, role: strin
   const today = new Date();
   const yearsOfService = (today.getTime() - joinDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
   
-  // Years of Service Credit Entitlement
+  // Years of Service Credit Entitlement (BASE - without extra)
   // Upon 1 yr. in Service: 5 Days
   // 2nd Year of Service: 7 Days
   // 4 Years and above: 8 Days
+  let baseCredits = 0;
   if (yearsOfService >= 4) {
-    return 8;
+    baseCredits = 8;
   } else if (yearsOfService >= 2) {
-    return 7;
+    baseCredits = 7;
   } else if (yearsOfService >= 1) {
-    return 5;
+    baseCredits = 5;
   }
   
-  return 0; // Less than 1 year - no PTO credits
+  // Add 1 extra credit for all employees (regardless of years of service)
+  // This means: 1yr = 5+1=6, 2yr+ = 7+1=8, 4yr+ = 8+1=9
+  // Admin Manager and Account Supervisor also get 1 extra (making it 10+1=11, but we'll cap at 10)
+  let totalCredits = baseCredits + 1;
+  
+  // Cap at 10 for Admin Manager and Account Supervisor
+  if (role === 'ADMIN MANAGER' || role === 'ACCOUNT SUPERVISOR') {
+    totalCredits = Math.min(totalCredits, 10);
+  }
+  
+  return totalCredits;
 }
 
 // Check if employee has completed 1 year of service
