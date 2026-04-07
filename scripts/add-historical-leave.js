@@ -8,21 +8,22 @@
  * Usage: node scripts/add-historical-leave.js
  */
 
-const { initializeApp, cert } = require('firebase-admin/app');
-const { getFirestore, collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where } = require('firebase-admin/firestore');
+const { initializeApp } = require('firebase/app');
+const { getFirestore, collection, addDoc, updateDoc, doc, getDocs, query, where } = require('firebase/firestore');
 
-// Firebase Admin SDK configuration
-// Note: You need to download the service account key from Firebase Console
-// Go to Project Settings > Service Accounts > Generate New Private Key
-// Save the JSON file and update the path below
-const serviceAccount = require('./service-account-key.json');
+// Firebase config from environment.prod.ts (production)
+const firebaseConfig = {
+  apiKey: "AIzaSyDhvTtu2a_CC3DdkIfA49qJWr5-cYpKvU0",
+  authDomain: "cor-logic-hris.firebaseapp.com",
+  projectId: "cor-logic-hris",
+  storageBucket: "cor-logic-hris.firebasestorage.app",
+  messagingSenderId: "611895985104",
+  appId: "1:611895985104:web:13747d65663a005a61afd5"
+};
 
-// Initialize Firebase Admin SDK
-initializeApp({
-  credential: cert(serviceAccount)
-});
-
-const db = getFirestore();
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 async function addHistoricalLeave() {
   console.log('\n========================================');
@@ -48,10 +49,15 @@ async function addHistoricalLeave() {
     console.log(`  Name: ${userData.name}`);
     console.log(`  Email: ${userData.email}`);
     console.log(`  Role: ${userData.role}`);
-    console.log(`  Department: ${userData.department}`);
+    console.log(`  Department: ${userData.dept}`);
     console.log(`  Employee ID: ${userData.employeeId}`);
-    console.log(`  UID: ${userData.uid}`);
-    console.log(`  Current Leave Credits: ${userData.paidTimeoff || 0}`);
+    console.log(`  UID: mi4AhoCxkoWX24WspMGqGoTSpFk2`);
+    console.log(`  Current Leave Credits (leaveBalance): ${userData.leaveBalance || 0}`);
+
+    // Check if leave balance already looks updated (should be 3 if someone already updated it)
+    if (userData.leaveBalance === 3) {
+      console.log('\n⚠️ Leave balance appears to already be 3. Checking if leave request exists...');
+    }
 
     // Step 1: Create the leave request
     const leaveRequest = {
@@ -63,11 +69,12 @@ async function addHistoricalLeave() {
       reason: 'Holiday leave',
       
       // Employee info (matching what would be stored from the app)
-      uid: userData.uid,
+      // Using Firebase UID from email-uid-mapping.json
+      uid: 'mi4AhoCxkoWX24WspMGqGoTSpFk2',
       employeeName: userData.name,
       employeeId: userData.employeeId || userData.id,
       role: userData.role,
-      department: userData.department,
+      department: userData.dept || 'HR',
       
       // Status - already approved by Admin Manager since it's historical
       // For HR employees: Admin Manager approves (1 step), then it's final
@@ -92,19 +99,26 @@ async function addHistoricalLeave() {
     console.log(`  Reason: Holiday leave`);
     console.log(`  Status: Approved`);
 
-    // Step 2: Update leave credits (6 - 3 = 3)
-    // The user had 6 credits, using 3 leaves them with 3
+    // Step 2: Update leave credits (should be 3 after 3 days used)
+    // Using leaveBalance field instead of paidTimeoff
     const newLeaveCredits = 3;
     
     const userRef = doc(db, 'users', userDocId);
-    await updateDoc(userRef, {
-      paidTimeoff: newLeaveCredits
-    });
+    
+    // Only update if different from current (avoid redundant writes)
+    if (userData.leaveBalance !== newLeaveCredits) {
+      await updateDoc(userRef, {
+        leaveBalance: newLeaveCredits,
+        leaveBalanceNote: 'Updated to reflect historical leave usage (3 days used)'
+      });
 
-    console.log('\n✓ Updated leave credits:');
-    console.log(`  Previous: 6`);
-    console.log(`  New: ${newLeaveCredits}`);
-    console.log(`  Reason: Used 3 credits for April 6, 2026 leave`);
+      console.log('\n✓ Updated leave credits:');
+      console.log(`  Previous: ${userData.leaveBalance}`);
+      console.log(`  New: ${newLeaveCredits}`);
+      console.log(`  Reason: Used 3 credits for April 6, 2026 leave`);
+    } else {
+      console.log('\n✓ Leave credits already at 3 - no update needed');
+    }
 
     console.log('\n========================================');
     console.log('SUCCESS: Historical leave added!');
@@ -118,11 +132,6 @@ async function addHistoricalLeave() {
 
   } catch (error) {
     console.error('Error:', error.message);
-    console.log('\nIf you get an error about service-account-key.json:');
-    console.log('1. Go to Firebase Console > Project Settings > Service Accounts');
-    console.log('2. Click "Generate New Private Key"');
-    console.log('3. Save the JSON file as "service-account-key.json" in the scripts folder');
-    console.log('4. Run this script again\n');
   }
 }
 

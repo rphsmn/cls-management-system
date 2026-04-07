@@ -119,6 +119,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const calculateDays = (reqList: any[]) => {
           return reqList.reduce((sum, req) => {
             if (req.daysRequested) return sum + req.daysRequested;
+            if (req.noOfDays) return sum + req.noOfDays;
             if (req.period) return sum + calculateWorkdays(req.period, this.holidayList);
             return sum + 1;
           }, 0);
