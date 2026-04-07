@@ -128,9 +128,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
         // Check if employee is part-time
         const isPartTime = isPartTimeEmployee(user.department);
         
-        // Calculate Paid Time Off - use stored leaveBalance if available, otherwise calculate dynamically
-        // Note: leaveBalance is stored in Firestore, calculated based on years of service + 1 extra
-        const paidTimeOffTotal = isPartTime ? 0 : (user.leaveBalance || calculatePaidTimeOff(user.joinedDate, user.role));
+        // Calculate Paid Time Off - ALWAYS calculate dynamically from leaveRequests collection
+        // This ensures the balance always reflects what's in Firestore
+        const calculatedTotal = calculatePaidTimeOff(user.joinedDate, user.role);
+        const paidTimeOffTotal = isPartTime ? 0 : calculatedTotal;
         const hasOneYearCompleted = hasCompletedOneYear(user.joinedDate);
         
         // Check if it's birth month for birthday leave availability
@@ -152,6 +153,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const birthdayLeaveUsed = calculateDays(myRequests.filter(r => r.type === LEAVE_TYPES.BIRTHDAY_LEAVE && r.status === 'Approved'));
         const birthdayLeavePending = calculateDays(myRequests.filter(r => r.type === LEAVE_TYPES.BIRTHDAY_LEAVE && (r.status === 'Pending' || r.status === 'Awaiting HR Approval')));
         
+        const sickLeaveUsed = calculateDays(myRequests.filter(r => r.type === LEAVE_TYPES.SICK_LEAVE && r.status === 'Approved'));
+        const sickLeavePending = calculateDays(myRequests.filter(r => r.type === LEAVE_TYPES.SICK_LEAVE && (r.status === 'Pending' || r.status === 'Awaiting HR Approval')));
+        
         const maternityLeaveUsed = calculateDays(myRequests.filter(r => r.type === LEAVE_TYPES.MATERNITY_LEAVE && r.status === 'Approved'));
         const maternityLeavePending = calculateDays(myRequests.filter(r => r.type === LEAVE_TYPES.MATERNITY_LEAVE && (r.status === 'Pending' || r.status === 'Awaiting HR Approval')));
         
@@ -161,7 +165,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return {
           ...user,
           isPartTime,
-          // Dynamic Paid Time Off (calculated, not stored)
+          // Paid Time Off - ALWAYS calculate dynamically from leaveRequests
+          // This ensures the balance reflects what's currently in Firestore leaveRequests
           paidTimeOff: {
             total: paidTimeOffTotal,
             used: paidTimeOffUsed,
@@ -175,6 +180,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
             pending: birthdayLeavePending,
             remaining: (user.birthdayLeave || 1) - birthdayLeaveUsed,
             isAvailable: isBirthMonth
+          },
+          // Sick Leave (default 10 days, can be overridden per employee)
+          sickLeave: {
+            total: user.sickLeave || 10,
+            used: sickLeaveUsed,
+            pending: sickLeavePending,
+            remaining: (user.sickLeave || 10) - sickLeaveUsed
           },
           // Others: Maternity/Paternity (based on gender and non part-time)
           others: {

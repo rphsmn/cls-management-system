@@ -3,6 +3,7 @@ import {
   Firestore, 
   collection, 
   query, 
+  where,
   orderBy,
   limit,
   getDocs, 
@@ -170,6 +171,10 @@ export class LeaveService implements OnDestroy {
         // HR approved → final approval
         updateData.targetReviewer = 'None';
       }
+
+      // Deduct leave balance when leave is finally approved
+      // Only deduct for Paid Time Off (not Leave Without Pay, birthday, etc.)
+      await this.deductLeaveBalance(requestData);
     } else if (newStatus === 'Rejected') {
       // Include reviewer role in rejection status to track who rejected
       updateData.status = `Rejected by ${reviewerRole}`;
@@ -198,6 +203,51 @@ export class LeaveService implements OnDestroy {
       previousStatus: currentData?.['status'] || null,
       previousTargetReviewer: currentData?.['targetReviewer'] || null
     });
+  }
+
+  // Deduct leave balance when leave is approved
+  private async deductLeaveBalance(requestData: any) {
+    if (!requestData) return;
+    
+    const leaveType = requestData['type'] || '';
+    
+    // Only deduct for Paid Time Off
+    if (leaveType !== 'Paid Time Off') return;
+    
+    // Get the number of days to deduct
+    const noOfDays = requestData['noOfDays'] || 1;
+    const employeeId = requestData['employeeId'];
+    
+    if (!employeeId) {
+      console.log('Cannot deduct leave: no employeeId found');
+      return;
+    }
+    
+    // Find the employee's user document
+    const usersRef = collection(this.firestore, 'users');
+    const userQuery = query(usersRef, where('employeeId', '==', employeeId));
+    const userSnapshot = await getDocs(userQuery);
+    
+    if (userSnapshot.empty) {
+      console.log(`Cannot deduct leave: employee not found with ID ${employeeId}`);
+      return;
+    }
+    
+    const userDoc = userSnapshot.docs[0];
+    const userData = userDoc.data();
+    const currentBalance = userData['leaveBalance'] || 0;
+    
+    // Calculate new balance
+    const newBalance = Math.max(0, currentBalance - noOfDays);
+    
+    // Update the user's leave balance
+    const userRef = doc(this.firestore, 'users', userDoc.id);
+    await updateDoc(userRef, {
+      leaveBalance: newBalance,
+      leaveBalanceNote: `Deducted ${noOfDays} day(s) for approved leave. Previous: ${currentBalance}, New: ${newBalance}`
+    });
+    
+    console.log(`Deducted ${noOfDays} leave credit(s) for employee ${employeeId}. Balance: ${currentBalance} -> ${newBalance}`);
   }
 
   private getInitialReviewer(role: string): string {

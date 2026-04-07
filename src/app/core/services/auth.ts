@@ -24,6 +24,7 @@ export interface User {
   joinedDate?: string; // ISO date string for calculating years of service
   gender?: 'male' | 'female'; // For maternity/paternity leave visibility
   birthdayLeave: number;
+  sickLeave?: number; // Sick leave balance (default to a fixed number like 10)
   leaveBalance?: number; // Stored leave balance (years of service + 1 extra)
   // Government IDs
   tin?: string; // Tax Identification Number
@@ -37,6 +38,7 @@ export interface User {
 // Constants for leave types
 export const LEAVE_TYPES = {
   PAID_TIME_OFF: 'Paid Time Off',
+  SICK_LEAVE: 'Sick Leave',
   BIRTHDAY_LEAVE: 'Birthday Leave',
   MATERNITY_LEAVE: 'Maternity Leave',
   PATERNITY_LEAVE: 'Paternity Leave',
@@ -153,6 +155,16 @@ export function canFileMaternityPaternity(department: string | undefined, gender
   if (!gender) return false;
   const g = gender.toLowerCase().trim();
   return g === 'male' || g === 'female';
+}
+
+// Check if employee can file Sick Leave
+// All employees can file Sick Leave (no 1 year requirement), except Managing Director
+export function canFileSickLeave(role: string): boolean {
+  // Managing Director cannot file leaves at all
+  if (role.toUpperCase() === 'MANAGING DIRECTOR') {
+    return false;
+  }
+  return true;
 }
 
 // Cache for user profile to avoid repeated Firestore queries
@@ -273,6 +285,8 @@ export class AuthService implements OnDestroy {
                 joinedDate: userDoc['joinedDate'] || undefined,
                 gender: userDoc['gender'] || undefined,
                 birthdayLeave: userDoc['birthdayLeave'] || userDoc['birthdayleave'] || 1,
+                sickLeave: userDoc['sickLeave'] !== undefined ? userDoc['sickLeave'] : 10, // Default 10 days sick leave
+                leaveBalance: userDoc['leaveBalance'] !== undefined ? userDoc['leaveBalance'] : undefined,
                 // Government IDs
                 tin: userDoc['tin'] || undefined,
                 sss: userDoc['sss'] || undefined,
@@ -381,6 +395,8 @@ export class AuthService implements OnDestroy {
         joinedDate: userDoc['joinedDate'] || undefined,
         gender: userDoc['gender'] || undefined,
         birthdayLeave: userDoc['birthdayLeave'] || userDoc['birthdayleave'] || 1,
+        sickLeave: userDoc['sickLeave'] !== undefined ? userDoc['sickLeave'] : 10,
+        leaveBalance: userDoc['leaveBalance'] !== undefined ? userDoc['leaveBalance'] : undefined,
         tin: userDoc['tin'] || undefined,
         sss: userDoc['sss'] || undefined,
         philhealth: userDoc['philhealth'] || undefined,

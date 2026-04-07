@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { AuthService, calculatePaidTimeOff, hasCompletedOneYear, isPartTimeEmployee, canFilePaidLeave, canFileMaternityPaternity, LEAVE_TYPES } from '../../../core/services/auth';
+import { AuthService, calculatePaidTimeOff, hasCompletedOneYear, isPartTimeEmployee, canFilePaidLeave, canFileMaternityPaternity, canFileSickLeave, LEAVE_TYPES } from '../../../core/services/auth';
 import { LeaveService } from '../../../core/services/leave.services';
 import { calculateWorkdays } from '../../../core/utils/workday-calculator.util';
 import { Observable, combineLatest, map, take, forkJoin, of } from 'rxjs';
@@ -105,6 +105,7 @@ export class FileLeaveComponent implements OnInit {
         // Determine leave filing eligibility
         const canFilePaidLeaves = canFilePaidLeave(user.joinedDate, user.department, user.role);
         const canFileMaternityPaternityLeaves = canFileMaternityPaternity(user.department, user.gender);
+        const canFileSickLeaves = canFileSickLeave(user.role);
         
         return {
           ...user,
@@ -135,11 +136,17 @@ export class FileLeaveComponent implements OnInit {
               rem: Infinity, // Unlimited
               pen: 0,
               total: Infinity
+            },
+            [LEAVE_TYPES.SICK_LEAVE]: {
+              rem: (user.sickLeave || 10) - calc(LEAVE_TYPES.SICK_LEAVE, 'approved'),
+              pen: calc(LEAVE_TYPES.SICK_LEAVE, 'pending'),
+              total: user.sickLeave || 10
             }
           },
           // Additional flags
           canFilePaidLeaves,
           canFileMaternityPaternityLeaves,
+          canFileSickLeaves,
           isBirthMonth,
           // Managing Director cannot file leaves at all
           canFileLeave: !['MANAGING DIRECTOR'].includes(user.role.toUpperCase()),
@@ -348,8 +355,8 @@ export class FileLeaveComponent implements OnInit {
     start.setHours(0, 0, 0, 0);
     const noticeDiff = Math.ceil((start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-    // Leave Without Pay requires the same advance notice policy as Paid Time Off
-    if (this.leaveRequest.type === LEAVE_TYPES.LEAVE_WITHOUT_PAY) {
+    // Sick Leave and Leave Without Pay require advance notice
+    if (this.leaveRequest.type === LEAVE_TYPES.SICK_LEAVE || this.leaveRequest.type === LEAVE_TYPES.LEAVE_WITHOUT_PAY) {
       this.noticeRequired = this.totalDays <= 2 ? 3 : (this.totalDays === 3 ? 5 : 7);
       this.isInsufficientNotice = noticeDiff < this.noticeRequired;
     }

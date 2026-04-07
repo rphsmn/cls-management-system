@@ -79,6 +79,18 @@
         </div>
       </div>
 
+      <!-- Sick Leave Card -->
+      <div class="stat-card">
+        <h3>Sick Leave</h3>
+        <p class="value">{{ user.sickLeave?.remaining || 0 }}</p>
+        <div class="stat-footer">
+          <span class="stat-label">of {{ user.sickLeave?.total || 10 }} days</span>
+          <span class="pending-tag" *ngIf="user.sickLeave?.pending > 0">
+            {{ user.sickLeave.pending }} Pending
+          </span>
+        </div>
+      </div>
+
       <!-- Others Card (Maternity/Paternity) -->
       <div class="stat-card others-card" *ngIf="user.others?.maternity?.isVisible || user.others?.paternity?.isVisible">
         <h3>Others</h3>

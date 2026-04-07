@@ -84,6 +84,11 @@
               Birthday Leave {{ !currentUser.isBirthMonth ? '(Birth month only)' : '' }}
             </option>
             
+            <!-- Sick Leave (1+ year employees or admin/supervisor) -->
+            <option [value]="LEAVE_TYPES.SICK_LEAVE">
+              Sick Leave
+            </option>
+            
             <!-- Maternity Leave (female only, non part-time) -->
             <option [value]="LEAVE_TYPES.MATERNITY_LEAVE" *ngIf="currentUser.isFemale && currentUser.canFileMaternityPaternityLeaves">
               Maternity Leave
@@ -105,6 +110,9 @@
                   *ngIf="!currentUser.canFilePaidLeaves && !currentUser.isAdminOrSupervisor">
             <option [value]="LEAVE_TYPES.BIRTHDAY_LEAVE" [disabled]="!currentUser.isBirthMonth">
               Birthday Leave {{ !currentUser.isBirthMonth ? '(Birth month only)' : '' }}
+            </option>
+            <option [value]="LEAVE_TYPES.SICK_LEAVE">
+              Sick Leave
             </option>
             <option [value]="LEAVE_TYPES.LEAVE_WITHOUT_PAY">
               Leave Without Pay

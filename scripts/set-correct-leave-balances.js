@@ -27,7 +27,7 @@ const db = getFirestore();
 
 // Special cases - manually set total and calculate remaining
 const SPECIAL_CASES = {
-  'neptunorosalie25@gmail.com': { total: 6, used: 3, name: 'Rosalie Gñotob Neptuno' },
+  'neptunorosalie25@gmail.com': { total: 6, used: 2, name: 'Rosalie Gñotob Neptuno' }, // Leave Without Pay doesn't affect balance
   'rizajane.amoncio@yahoo.com': { total: 10, name: 'Riza Jane Alegre Amoncio' },
   'olympiab.oreste@gmail.com': { total: 10, name: 'Olympia Ballon Oreste' }
 };
@@ -121,15 +121,7 @@ async function setCorrectLeaveBalances() {
       if (specialCase) {
         // Special case: manually set total
         totalCredits = specialCase.total;
-        
-        // Get used count - for Rosalie we know it's 3
-        if (email === 'neptunorosalie25@gmail.com') {
-          usedCredits = 3;
-        } else {
-          // For Riza and Olympia, we'll set total but won't calculate used yet
-          // They should have used some leaves, let's assume 0 for now
-          usedCredits = 0;
-        }
+        usedCredits = specialCase.used || 0;
         
         remaining = totalCredits - usedCredits;
         
