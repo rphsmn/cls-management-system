@@ -44,7 +44,7 @@
     </div>
 
     <div class="employee-grid">
-      <div *ngFor="let emp of filteredEmployees" class="emp-card">
+      <div *ngFor="let emp of filteredEmployees" class="emp-card" [class.has-action]="isAdminOrHR" (click)="isAdminOrHR && toggleAbsentStatus(emp)">
         <div class="card-top">
           <div class="avatar-container">
             <div class="avatar">{{ emp.initials }}</div>
@@ -53,7 +53,8 @@
           <span class="status-badge" 
                 [class.in-office]="emp.status === 'In Office'" 
                 [class.upcoming]="emp.status === 'Upcoming Leave'"
-                [class.is-away]="emp.status === 'On Leave'">
+                [class.is-away]="emp.status === 'On Leave'"
+                [class.is-absent]="emp.status === 'Absent'">
             {{ emp.status | uppercase }}
           </span>
         </div>
@@ -63,7 +64,7 @@
           <p class="dept">{{ emp.dept }}</p>
         </div>
 
-        <div class="leave-details" *ngIf="emp.leaveType">
+        <div class="leave-details" *ngIf="emp.leaveType || emp.absentReason">
           <div class="divider"></div>
           <div class="leave-info-row">
             <span class="leave-name">{{ emp.leaveType }}</span>

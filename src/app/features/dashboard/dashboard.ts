@@ -221,13 +221,68 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    const hour = new Date().getHours();
-    if (hour < 12) this.greeting = 'Good Morning';
-    else if (hour < 18) this.greeting = 'Good Afternoon';
-    else this.greeting = 'Good Evening';
+    this.setGreeting();
     
     // Check for birthday and show greeting popup
     this.checkBirthday();
+  }
+  
+  private setGreeting() {
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const user = this.authService.currentUser;
+    const role = user?.role || '';
+    
+    // Check if user is Developer, HR, or Admin Manager (7am-4pm shift)
+    const isDevOrSpecialRole = ['DEVELOPER', 'HR', 'ADMIN MANAGER'].includes(role);
+    
+    // Non-devs: 6am-3pm, Dev/HR/Admin: 7am-4pm
+    const shiftStart = isDevOrSpecialRole ? 7 : 6;
+    const shiftEnd = isDevOrSpecialRole ? 16 : 15;
+    
+    // Weekend check
+    if (day === 0 || day === 6) {
+      this.greeting = 'Enjoy your weekend';
+      return;
+    }
+    
+    // Time-based contextual greetings (designed to flow with name)
+    if (hour < shiftStart) {
+      // Before shift starts
+      if (day === 1) {
+        this.greeting = 'Happy Monday';
+      } else {
+        this.greeting = isDevOrSpecialRole ? 'Coffee first' : 'Early start';
+      }
+    } else if (hour >= shiftStart && hour < 12) {
+      // Morning (start of shift to lunch)
+      if (hour === shiftStart) {
+        this.greeting = 'Time to kick off';
+      } else {
+        this.greeting = 'Keep up the momentum';
+      }
+    } else if (hour >= 12 && hour < 13) {
+      // Lunch time
+      this.greeting = 'Time to recharge';
+    } else if (hour >= 13 && hour < shiftEnd) {
+      // Afternoon (after lunch to end of shift)
+      if (hour === shiftEnd - 1) {
+        this.greeting = 'Great work today';
+      } else {
+        this.greeting = isDevOrSpecialRole ? 'Hope your afternoon is going smoothly' : 'Hope your afternoon is productive';
+      }
+    } else if (hour >= shiftEnd && hour < 22) {
+      // After hours
+      if (day === 5) {
+        this.greeting = 'Happy Friday';
+      } else {
+        this.greeting = 'Work-life balance is key';
+      }
+    } else {
+      // Late night (10pm-4:59am)
+      this.greeting = 'Still working';
+    }
   }
   
   private checkBirthday() {

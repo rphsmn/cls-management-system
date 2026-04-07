@@ -17,7 +17,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   passwordVisible = false;
   isLoading = false;
   errorMessage: string | null = null;
-  
+  greeting: string = '';
+
   private destroy$ = new Subject<void>();
   private isSubmitting = false;
 
@@ -34,6 +35,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
   
   ngOnInit() {
+    // Set time-based greeting
+    this.greeting = this.getGreeting();
+    
     // Force reset all state when component initializes (e.g., navigating back to login)
     this.resetFormState();
     
@@ -77,6 +81,30 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.passwordVisible = !this.passwordVisible;
   }
 
+  private getGreeting(): string {
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    
+    // Time-based greetings
+    if (hour >= 5 && hour < 12) {
+      // Morning (5am-11:59am)
+      if (day === 1) return 'Happy Monday!';
+      return 'Good morning';
+    } else if (hour >= 12 && hour < 18) {
+      // Afternoon (12pm-5:59pm)
+      if (day === 5) return 'Almost Friday!';
+      return 'Good afternoon';
+    } else if (hour >= 18 && hour < 22) {
+      // Evening (6pm-9:59pm)
+      if (day === 5) return 'Happy Friday!'; // Friday evening
+      return 'Good evening';
+    } else {
+      // Late night (10pm-4:59am)
+      return 'Still working?';
+    }
+  }
+
   async onSubmit() {
     // Prevent multiple simultaneous submissions
     if (this.loginForm.invalid || this.isLoading || this.isSubmitting) {
@@ -87,10 +115,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.isSubmitting = true;
     this.errorMessage = null;
 
-    const { employeeId, password } = this.loginForm.value;
+    const { employeeId, password, rememberMe } = this.loginForm.value;
     
     try {
-      const success = await this.authService.login(employeeId, password);
+      const success = await this.authService.login(employeeId, password, rememberMe);
 
       if (success) {
         // Wait for loading to complete before navigating

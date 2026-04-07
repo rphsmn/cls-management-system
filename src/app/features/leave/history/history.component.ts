@@ -1,7 +1,7 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
-import { Observable, combineLatest, BehaviorSubject, startWith, map, tap, debounceTime, shareReplay, Subscription } from 'rxjs';
+import { Observable, combineLatest, BehaviorSubject, startWith, map, tap, debounceTime, shareReplay, Subscription, take } from 'rxjs';
 import { AuthService, User } from '../../../core/services/auth';
 import { LeaveService } from '../../../core/services/leave.services';
 import { calculateWorkdays } from '../../../core/utils/workday-calculator.util';
@@ -31,10 +31,18 @@ export class HistoryComponent implements OnDestroy {
   searchControl = new FormControl('', { nonNullable: true });
   monthControl = new FormControl(-1, { nonNullable: true }); // Default to 'All' months
   yearControl = new FormControl(-1, { nonNullable: true }); // Default to 'All' years
+  statusControl = new FormControl('all', { nonNullable: true }); // Filter by status: all, active, cancelled
+
+  statusOptions = [
+    { v: 'all', l: 'All Requests' },
+    { v: 'active', l: 'Active' },
+    { v: 'cancelled', l: 'Cancelled' }
+  ];
 
   months = [{ v: -1, l: 'All Months' }, { v: 0, l: 'Jan' }, { v: 1, l: 'Feb' }, { v: 2, l: 'Mar' }, { v: 3, l: 'Apr' }, { v: 4, l: 'May' }, { v: 5, l: 'Jun' }, { v: 6, l: 'Jul' }, { v: 7, l: 'Aug' }, { v: 8, l: 'Sep' }, { v: 9, l: 'Oct' }, { v: 10, l: 'Nov' }, { v: 11, l: 'Dec' }];
   years: number[] = [-1]; // Will be populated dynamically from leave data
   expandedReq: any = null;
+  expandedCancellationReason: any = null;
 
   constructor() {
     // Load holidays once
@@ -61,9 +69,14 @@ export class HistoryComponent implements OnDestroy {
         startWith(this.yearControl.value), 
         debounceTime(200),
         tap(() => this.currentPageSubject.next(1))
+      ),
+      this.statusControl.valueChanges.pipe(
+        startWith(this.statusControl.value),
+        debounceTime(200),
+        tap(() => this.currentPageSubject.next(1))
       )
     ]).pipe(
-      map(([user, requests, term, selMonth, selYear]) => {
+      map(([user, requests, term, selMonth, selYear, selStatus]) => {
         if (!user || !requests) return [];
         
         // Convert string values to numbers (HTML select returns strings)
@@ -96,7 +109,12 @@ export class HistoryComponent implements OnDestroy {
         const userRoleUpper = user.role.toUpperCase();
         const filteredRequests = requests.filter(req => {
           if (!req.period) return false; // Skip requests without period
-          if (req.status === 'Cancelled') return false; // Skip cancelled requests
+          
+          // Status filter logic
+          const isCancelled = req.status === 'Cancelled';
+          if (selStatus === 'active' && isCancelled) return false; // Skip cancelled when showing active
+          if (selStatus === 'cancelled' && !isCancelled) return false; // Skip non-cancelled when showing cancelled
+          
           // HR, Admin Manager, and Managing Director can see all requests, others only see their own
           const canSee = (userRoleUpper === 'HR' || userRoleUpper === 'ADMIN MANAGER' || 
                          userRoleUpper === 'HUMAN RESOURCE OFFICER' || userRoleUpper === 'MANAGING DIRECTOR') || req.uid === user.uid;
@@ -176,12 +194,17 @@ export class HistoryComponent implements OnDestroy {
   }
 
   async cancelRequest(req: any) {
-    const result = await import('sweetalert2').then(m => m.default.fire({
+    const { value: reason } = await import('sweetalert2').then(m => m.default.fire({
       title: '<div style="color: #1a5336; font-weight: 800; font-size: 24px; margin-bottom: 10px;">Cancel Request?</div>',
-      html: '<div style="font-size: 15px; color: #64748b;">Are you sure you want to cancel this leave request?<br><br><strong>This action cannot be undone.</strong></div>',
+      html: '<div style="font-size: 15px; color: #64748b;">Please provide a reason for cancelling this leave request.<br><span style="font-size: 12px; color: #94a3b8;">(This will be recorded for documentation)</span></div>',
       icon: 'warning',
+      input: 'text',
+      inputPlaceholder: 'Enter cancellation reason...',
+      inputValidator: (value: string) => {
+        return !value.trim() ? 'Please enter a reason for cancellation' : null;
+      },
       showCancelButton: true,
-      confirmButtonText: 'Yes, Cancel',
+      confirmButtonText: 'Yes, Cancel Request',
       cancelButtonText: 'No, Keep It',
       reverseButtons: true,
       buttonsStyling: false,
@@ -193,9 +216,11 @@ export class HistoryComponent implements OnDestroy {
       }
     }));
 
-    if (result.isConfirmed) {
+    if (reason) { // User provided a reason and clicked confirm
       try {
-        await this.leaveService.cancelRequest(req.id);
+        const currentUser = await this.authService.currentUser$.pipe(take(1)).toPromise() as any;
+        const cancelledBy = currentUser?.name || 'Employee';
+        await this.leaveService.cancelRequest(req.id, cancelledBy, reason);
         import('sweetalert2').then(m => m.default.fire({
           toast: true,
           position: 'top-end',
@@ -378,6 +403,64 @@ export class HistoryComponent implements OnDestroy {
     return '...';
   }
 
+  // Check if request is cancelled
+  isCancelled(req: any): boolean {
+    return req.status === 'Cancelled';
+  }
+
+  // Get cancellation info display text
+  getCancellationInfo(req: any): string {
+    if (!this.isCancelled(req)) return '';
+    const cancelledBy = req.cancelledBy || 'Employee';
+    const date = req.dateCancelled ? new Date(req.dateCancelled).toLocaleDateString() : '';
+    return `Cancelled by ${cancelledBy}${date ? ' on ' + date : ''}`;
+  }
+
+  // Get the last step that was approved before cancellation
+  getLastApprovedStep(req: any): string {
+    if (!this.isCancelled(req)) return '';
+    const status = req.status;
+    const targetReviewer = req.targetReviewer || '';
+    const previousStatus = req.previousStatus || '';
+    const previousTargetReviewer = req.previousTargetReviewer || '';
+    
+    // First check previous fields (newer cancelled requests)
+    if (previousTargetReviewer || previousStatus) {
+      if (previousTargetReviewer === 'HR' || previousStatus === 'Awaiting HR Approval') {
+        return 'Last at: HR Review (approved by Ops Admin)';
+      }
+      if (previousTargetReviewer === 'Admin Manager' || previousStatus === 'Awaiting Admin Manager Approval') {
+        return 'Last at: Admin Manager Review';
+      }
+    }
+    
+    // Fallback: check current/remaining fields (older cancelled requests)
+    // If it was awaiting HR approval
+    if (targetReviewer === 'HR' || status === 'Awaiting HR Approval') {
+      return 'Last at: HR Review (approved by Ops Admin)';
+    }
+    // If it was at Admin Manager step
+    if (targetReviewer === 'Admin Manager' || status === 'Awaiting Admin Manager Approval') {
+      return 'Last at: Admin Manager Review';
+    }
+    // If it was pending at Ops Admin
+    if (status === 'Pending' || targetReviewer === 'Ops Admin' || 
+        targetReviewer === 'Operations Admin Supervisor' || targetReviewer === 'Operations Admin') {
+      return 'Last at: Pending (not yet reviewed)';
+    }
+    // If approved (final status before cancelled)
+    if (status === 'Approved') {
+      return 'Last at: Fully Approved';
+    }
+    return '';
+  }
+
+  // Get cancellation reason
+  getCancellationReason(req: any): string {
+    if (!this.isCancelled(req)) return '';
+    return req.cancellationReason || 'No reason provided';
+  }
+
   getStartRange(total: number) { return total === 0 ? 0 : (this.currentPageSubject.value - 1) * this.itemsPerPage + 1; }
   getEndRange(total: number) { return Math.min(this.currentPageSubject.value * this.itemsPerPage, total); }
   getTotalPages(total: number) { return Math.ceil(total / this.itemsPerPage) || 1; }
@@ -399,6 +482,15 @@ export class HistoryComponent implements OnDestroy {
     return '💰'; 
   }
   toggleReason(r: any) { this.expandedReq = this.expandedReq === r ? null : r; }
+  // Toggle cancellation reason expansion using request ID
+  toggleCancellationReason(req: any) {
+    const reqId = req.id || req.$id;
+    if (this.expandedCancellationReason === reqId) {
+      this.expandedCancellationReason = null;
+    } else {
+      this.expandedCancellationReason = reqId;
+    }
+  }
   viewDocument(att: any) { window.open()?.document.write(`<iframe src="${att.data}" style="width:100%;height:100%;"></iframe>`); }
   
   // Reset all filters to default values
@@ -406,6 +498,7 @@ export class HistoryComponent implements OnDestroy {
     this.searchControl.setValue('');
     this.monthControl.setValue(-1);
     this.yearControl.setValue(-1);
+    this.statusControl.setValue('all');
     this.currentPageSubject.next(1);
   }
   
@@ -413,6 +506,7 @@ export class HistoryComponent implements OnDestroy {
   hasActiveFilters(): boolean {
     return this.searchControl.value !== '' || 
            this.monthControl.value !== -1 || 
-           this.yearControl.value !== -1;
+           this.yearControl.value !== -1 ||
+           this.statusControl.value !== 'all';
   }
 }

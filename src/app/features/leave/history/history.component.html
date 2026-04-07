@@ -20,6 +20,9 @@
         <select [formControl]="yearControl" class="filter-select" aria-label="Filter by year">
           <option *ngFor="let y of years" [value]="y">{{ y === -1 ? 'All Years' : y }}</option>
         </select>
+        <select [formControl]="statusControl" class="filter-select" aria-label="Filter by status">
+          <option *ngFor="let s of statusOptions" [value]="s.v">{{ s.l }}</option>
+        </select>
         <button 
           *ngIf="hasActiveFilters()" 
           class="reset-filters-btn" 
@@ -98,7 +101,7 @@
                 </td>
 
                 <td>
-                  <div class="progress-track">
+                  <div class="progress-track" *ngIf="!isCancelled(req)">
                     <div class="step completed">
                       <div class="icon-circle">✓</div>
                       <span class="step-label">Filed</span>
@@ -115,6 +118,26 @@
                         <span class="step-label">{{ abbreviateRole(stepName) }}</span>
                       </div>
                     </ng-container>
+                  </div>
+                  <div class="cancelled-info" *ngIf="isCancelled(req)">
+                    <div class="cancelled-badge">
+                      <span class="cancel-icon">✕</span>
+                      <div class="cancel-details">
+                        <span class="cancel-text">{{ getCancellationInfo(req) }}</span>
+                        <span class="last-step" *ngIf="getLastApprovedStep(req)">{{ getLastApprovedStep(req) }}</span>
+                      </div>
+                    </div>
+                    <div class="cancel-reason" *ngIf="getCancellationReason(req)">
+                      <div class="reason-header" (click)="toggleCancellationReason(req)" [class.clickable]="getCancellationReason(req).length > 50">
+                        <span class="reason-label">Reason:</span>
+                        <span class="see-more" *ngIf="getCancellationReason(req).length > 50">
+                          {{ (req.id || req.$id) === expandedCancellationReason ? 'Collapse ↑' : 'Read More ↓' }}
+                        </span>
+                      </div>
+                      <div [ngClass]="(req.id || req.$id) === expandedCancellationReason ? 'reason-full' : 'reason-text'">
+                        "{{ getCancellationReason(req) }}"
+                      </div>
+                    </div>
                   </div>
                   <button 
                     *ngIf="canCancel(req)" 

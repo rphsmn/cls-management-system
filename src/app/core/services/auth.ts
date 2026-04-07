@@ -1,5 +1,5 @@
 import { Injectable, inject, OnDestroy, NgZone } from '@angular/core';
-import { Auth, user, User as FirebaseUser, signOut, signInWithEmailAndPassword } from '@angular/fire/auth';
+import { Auth, user, User as FirebaseUser, signOut, signInWithEmailAndPassword, setPersistence, browserSessionPersistence, browserLocalPersistence } from '@angular/fire/auth';
 import { Firestore, collection, query, where, getDocs, doc, docData, updateDoc } from '@angular/fire/firestore';
 import { BehaviorSubject, Observable, of, from, Subscription } from 'rxjs';
 import { switchMap, map, catchError } from 'rxjs/operators';
@@ -299,7 +299,12 @@ export class AuthService implements OnDestroy {
     }
   }
 
-  async login(email: string, pass: string): Promise<boolean> {
+  async login(email: string, pass: string, rememberMe: boolean = false): Promise<boolean> {
+    // Set persistence before signing in
+    // LOCAL = persists until explicitly logged out (Remember Me checked)
+    // SESSION = persists only for current session/tab (Remember Me unchecked)
+    await setPersistence(this.auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+    
     // Immediately set loading to true to show authenticating state
     this.isLoadingSubject.next(true);
     

@@ -182,12 +182,21 @@ export class LeaveService implements OnDestroy {
   }
 
   // Cancel a pending request
-  async cancelRequest(requestId: string) {
+  async cancelRequest(requestId: string, cancelledBy: string = 'Employee', cancellationReason: string = '') {
     const requestDocRef = doc(this.firestore, `leaveRequests/${requestId}`);
+    // Get the current document to preserve previous status
+    const docSnap = await getDoc(requestDocRef);
+    const currentData = docSnap.exists() ? docSnap.data() : {};
+    
     return updateDoc(requestDocRef, {
       status: 'Cancelled',
       targetReviewer: 'None',
-      dateCancelled: new Date().toISOString()
+      dateCancelled: new Date().toISOString(),
+      cancelledBy: cancelledBy,
+      cancellationReason: cancellationReason,
+      // Save previous state for audit trail
+      previousStatus: currentData?.['status'] || null,
+      previousTargetReviewer: currentData?.['targetReviewer'] || null
     });
   }
 

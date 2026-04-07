@@ -1,18 +1,20 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Firestore, collection, onSnapshot, Unsubscribe } from '@angular/fire/firestore';
+import { Firestore, collection, onSnapshot, Unsubscribe, doc, updateDoc } from '@angular/fire/firestore';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
+import Swal from 'sweetalert2';
 
 interface Employee {
   id: string;
   name: string;
   dept: string;
   initials: string;
-  status: 'In Office' | 'On Leave' | 'Upcoming Leave';
+  status: 'In Office' | 'On Leave' | 'Upcoming Leave' | 'Absent';
   leaveType?: string;
   leaveDate?: string;
+  absentReason?: string;
 }
 
 interface LeaveRequest {
@@ -46,6 +48,142 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
 
   workingToday = 0;
   awayToday = 0;
+
+  // Current user for checking permissions
+  get currentUser() {
+    return this.authService.currentUser;
+  }
+
+  // Check if current user is HR or Admin Manager (can mark employees as absent)
+  get isAdminOrHR(): boolean {
+    const role = this.currentUser?.role?.toUpperCase() || '';
+    return ['ADMIN MANAGER', 'HR', 'HUMAN RESOURCE OFFICER'].includes(role);
+  }
+
+  // Set an employee as Absent (manually marked by HR/Admin)
+  async setEmployeeAbsent(employee: Employee) {
+    if (!this.isAdminOrHR) {
+      Swal.fire({
+        title: 'Access Denied',
+        text: 'Only HR and Admin Manager can mark employees as Absent.',
+        icon: 'error'
+      });
+      return;
+    }
+
+    // Show confirmation dialog with reason input
+    const result = await Swal.fire({
+      title: 'Mark as Absent',
+      html: `
+        <div style="text-align: left; margin-bottom: 16px;">
+          <p>Mark <strong>${employee.name}</strong> as Absent?</p>
+          <p style="font-size: 13px; color: #666;">This will mark them as absent in the AWAY / ON LEAVE section.</p>
+        </div>
+        <div style="text-align: left;">
+          <label for="absent-reason" style="display: block; margin-bottom: 6px; font-weight: 500;">Reason (optional):</label>
+          <textarea id="absent-reason" class="swal2-textarea" placeholder="e.g., No prior leave filed, sudden illness, emergency..."></textarea>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Mark Absent',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#dc2626',
+      preConfirm: () => {
+        const reasonInput = document.getElementById('absent-reason') as HTMLTextAreaElement;
+        return reasonInput?.value || '';
+      }
+    });
+
+    if (!result.isConfirmed || result.isDismissed) {
+      return;
+    }
+
+    const reason = result.value || '';
+
+    try {
+      // Update the user document in Firestore
+      const userDocRef = doc(this.firestore, 'users', employee.id);
+      await updateDoc(userDocRef, {
+        manuallyAbsent: true,
+        absentDate: new Date().toISOString().split('T')[0],
+        absentReason: reason,
+        markedAbsentBy: this.currentUser?.name,
+        markedAbsentAt: new Date().toISOString()
+      });
+
+      Swal.fire({
+        title: 'Marked Absent',
+        text: `${employee.name} has been marked as Absent.`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('[EmployeeStatus] Error marking absent:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to mark employee as Absent. Please try again.',
+        icon: 'error'
+      });
+    }
+  }
+
+  // Toggle absent status - set or remove based on current status
+  async toggleAbsentStatus(employee: Employee) {
+    if (!this.isAdminOrHR) return;
+    
+    if (employee.status === 'Absent') {
+      await this.removeAbsentStatus(employee);
+    } else {
+      await this.setEmployeeAbsent(employee);
+    }
+  }
+
+  // Remove Absent status from an employee
+  async removeAbsentStatus(employee: Employee) {
+    if (!this.isAdminOrHR) {
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Remove Absent Status',
+      html: `<p>Remove Absent status from <strong>${employee.name}</strong>?</p>`,
+      showCancelButton: true,
+      confirmButtonText: 'Remove',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#16a34a'
+    });
+
+    if (!result.isConfirmed || result.isDismissed) {
+      return;
+    }
+
+    try {
+      const userDocRef = doc(this.firestore, 'users', employee.id);
+      await updateDoc(userDocRef, {
+        manuallyAbsent: false,
+        absentDate: null,
+        absentReason: null,
+        markedAbsentBy: null,
+        markedAbsentAt: null
+      });
+
+      Swal.fire({
+        title: 'Status Removed',
+        text: `${employee.name} is no longer marked as Absent.`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('[EmployeeStatus] Error removing absent status:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to remove Absent status. Please try again.',
+        icon: 'error'
+      });
+    }
+  }
 
   ngOnInit() {
     this.fetchData();
@@ -133,7 +271,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
     this.employees = users.map(user => {
       const initials = this.getInitials(user.name || 'Unknown');
       const dept = user.department || user.dept || 'Unknown';
-      const statusInfo = this.getEmployeeStatus(user.id, user.name, user.employeeId);
+      const statusInfo = this.getEmployeeStatus(user);
       
       return {
         id: user.id,
@@ -172,13 +310,35 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
     return name.substring(0, 2).toUpperCase();
   }
 
-  private getEmployeeStatus(userId: string, name: string, employeeId?: string): Partial<Employee> {
+  private getEmployeeStatus(user: any): Partial<Employee> {
+    const userId = user.id;
+    const name = user.name;
+    const employeeId = user.employeeId;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     console.log(`[EmployeeStatus] Filtering for userId: ${userId}, employeeId: ${employeeId}`);
     console.log(`[EmployeeStatus] Available leave request uids:`, this.leaveRequests.map(r => r.uid));
     console.log(`[EmployeeStatus] Available leave request employeeIds:`, this.leaveRequests.map(r => r.employeeId));
+    
+    // Check if manually marked as absent FIRST (takes priority over other statuses)
+    if (user.manuallyAbsent === true) {
+      const absentDate = user.absentDate ? new Date(user.absentDate) : null;
+      // Check if absent date is today or in the past (within last 3 days for tolerance)
+      if (absentDate) {
+        const threeDaysAgo = new Date(today);
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+        if (absentDate >= threeDaysAgo) {
+          console.log(`[EmployeeStatus] ${name} is MANUALLY ABSENT`);
+          return {
+            status: 'Absent',
+            leaveType: user.absentReason || 'Absent (No Leave Filed)',
+            leaveDate: user.absentDate,
+            absentReason: user.absentReason
+          };
+        }
+      }
+    }
     
     // Match on employeeId if available, otherwise fall back to uid
     const userRequests = this.leaveRequests.filter(r => {
@@ -237,7 +397,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
 
   calculateStats() {
     this.workingToday = this.employees.filter(e => e.status === 'In Office').length;
-    this.awayToday = this.employees.filter(e => e.status === 'On Leave' || e.status === 'Upcoming Leave').length;
+    this.awayToday = this.employees.filter(e => e.status === 'On Leave' || e.status === 'Upcoming Leave' || e.status === 'Absent').length;
   }
 
   get filteredEmployees() {
