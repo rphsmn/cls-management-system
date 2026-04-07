@@ -17,31 +17,31 @@ export const routes: Routes = [
   { 
     path: 'login', 
     component: LoginComponent, 
-    title: 'Login | COR LOGICS' 
+    title: 'CLS HRIS | Login' 
   },
   { 
     path: 'forgot-password', 
     component: ForgotPasswordComponent, 
-    title: 'Forgot Password | COR LOGICS' 
+    title: 'CLS HRIS | Forgot Password' 
   },
   { 
     path: 'reset-password', 
     component: ResetPasswordComponent, 
-    title: 'Reset Password | COR LOGICS' 
+    title: 'CLS HRIS | Reset Password' 
   },
   {
     path: '',
     canActivate: [AuthGuard],
     component: MainLayoutComponent,
     children: [
-      { path: 'dashboard', component: DashboardComponent },
-      { path: 'file-leave', component: FileLeaveComponent },
-      { path: 'history', component: HistoryComponent },
-      { path: 'approvals', component: ApprovalsComponent },
-      { path: 'profile', component: ProfileComponent },
-      { path: 'calendar', component: CalendarComponent },
-      { path: 'employees', component: EmployeeStatusComponent },
-      { path: 'admin/employee-update', component: EmployeeUpdateComponent }
+      { path: 'dashboard', component: DashboardComponent, title: 'CLS HRIS | Dashboard' },
+      { path: 'file-leave', component: FileLeaveComponent, title: 'CLS HRIS | File Leave' },
+      { path: 'history', component: HistoryComponent, title: 'CLS HRIS | Leave History' },
+      { path: 'approvals', component: ApprovalsComponent, title: 'CLS HRIS | Approvals' },
+      { path: 'profile', component: ProfileComponent, title: 'CLS HRIS | Profile' },
+      { path: 'calendar', component: CalendarComponent, title: 'CLS HRIS | Calendar' },
+      { path: 'employees', component: EmployeeStatusComponent, title: 'CLS HRIS | Employees' },
+      { path: 'admin/employee-update', component: EmployeeUpdateComponent, title: 'CLS HRIS | Employee Update' }
     ]
   },
   // Explicitly add login redirect for when not authenticated
