@@ -37,7 +37,7 @@
       
       <div class="stat-card">
         <div class="stat-value">{{ awayToday }}</div>
-        <div class="stat-label">AWAY / ON LEAVE</div>
+        <div class="stat-label">ABSENT / ON LEAVE</div>
         <p class="stat-subtext">{{ awayToday === 0 ? 'All members present' : 'Current capacity reduced' }}</p>
         <div class="stat-bar away" [class.active-away]="awayToday > 0"></div>
       </div>

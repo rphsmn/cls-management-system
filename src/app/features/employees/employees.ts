@@ -1,7 +1,14 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Firestore, collection, onSnapshot, Unsubscribe, doc, updateDoc } from '@angular/fire/firestore';
+import {
+  Firestore,
+  collection,
+  onSnapshot,
+  Unsubscribe,
+  doc,
+  updateDoc,
+} from '@angular/fire/firestore';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
 import Swal from 'sweetalert2';
@@ -30,7 +37,7 @@ interface LeaveRequest {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './employees.html',
-  styleUrls: ['./employees.css']
+  styleUrls: ['./employees.css'],
 })
 export class EmployeeStatusComponent implements OnInit, OnDestroy {
   private firestore = inject(Firestore);
@@ -40,7 +47,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
 
   searchQuery: string = '';
   selectedDept: string = 'All Departments';
-  
+
   employees: Employee[] = [];
   leaveRequests: LeaveRequest[] = [];
   departments: string[] = ['All Departments'];
@@ -66,7 +73,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
       Swal.fire({
         title: 'Access Denied',
         text: 'Only HR and Admin Manager can mark employees as Absent.',
-        icon: 'error'
+        icon: 'error',
       });
       return;
     }
@@ -91,7 +98,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
       preConfirm: () => {
         const reasonInput = document.getElementById('absent-reason') as HTMLTextAreaElement;
         return reasonInput?.value || '';
-      }
+      },
     });
 
     if (!result.isConfirmed || result.isDismissed) {
@@ -108,7 +115,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
         absentDate: new Date().toISOString().split('T')[0],
         absentReason: reason,
         markedAbsentBy: this.currentUser?.name,
-        markedAbsentAt: new Date().toISOString()
+        markedAbsentAt: new Date().toISOString(),
       });
 
       Swal.fire({
@@ -116,14 +123,14 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
         text: `${employee.name} has been marked as Absent.`,
         icon: 'success',
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
       });
     } catch (error) {
       console.error('[EmployeeStatus] Error marking absent:', error);
       Swal.fire({
         title: 'Error',
         text: 'Failed to mark employee as Absent. Please try again.',
-        icon: 'error'
+        icon: 'error',
       });
     }
   }
@@ -131,7 +138,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
   // Toggle absent status - set or remove based on current status
   async toggleAbsentStatus(employee: Employee) {
     if (!this.isAdminOrHR) return;
-    
+
     if (employee.status === 'Absent') {
       await this.removeAbsentStatus(employee);
     } else {
@@ -151,7 +158,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
       showCancelButton: true,
       confirmButtonText: 'Remove',
       cancelButtonText: 'Cancel',
-      confirmButtonColor: '#16a34a'
+      confirmButtonColor: '#16a34a',
     });
 
     if (!result.isConfirmed || result.isDismissed) {
@@ -165,7 +172,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
         absentDate: null,
         absentReason: null,
         markedAbsentBy: null,
-        markedAbsentAt: null
+        markedAbsentAt: null,
       });
 
       Swal.fire({
@@ -173,14 +180,14 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
         text: `${employee.name} is no longer marked as Absent.`,
         icon: 'success',
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
       });
     } catch (error) {
       console.error('[EmployeeStatus] Error removing absent status:', error);
       Swal.fire({
         title: 'Error',
         text: 'Failed to remove Absent status. Please try again.',
-        icon: 'error'
+        icon: 'error',
       });
     }
   }
@@ -197,7 +204,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
 
   private async fetchData() {
     this.isLoading = true;
-    
+
     try {
       // Initialize subscription container
       this.subscription = new Subscription();
@@ -207,50 +214,46 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
 
       // Set up real-time listener for users
       const usersRef = collection(this.firestore, 'users');
-      const unsubscribeUsers = onSnapshot(usersRef, (usersSnapshot) => {
-        usersData = usersSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as any[];
-        console.log('[EmployeeStatus] Users loaded:', usersData.length, usersData);
-        
-        // Log the first user to see its structure
-        if (usersData.length > 0) {
-          console.log('[EmployeeStatus] Sample user structure:', usersData[0]);
-          console.log('[EmployeeStatus] Sample user id:', usersData[0].id);
-          console.log('[EmployeeStatus] Sample user uid:', usersData[0].uid);
-        }
-        
-        this.buildEmployeeList(usersData);
-      }, (error) => {
-        console.error('[EmployeeStatus] Users listener error:', error);
-      });
-      
+      const unsubscribeUsers = onSnapshot(
+        usersRef,
+        (usersSnapshot) => {
+          usersData = usersSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as any[];
+
+          this.buildEmployeeList(usersData);
+        },
+        (error) => {
+          console.error('[EmployeeStatus] Users listener error:', error);
+        },
+      );
+
       // Add users unsubscribe to subscription container
       this.subscription.add(() => unsubscribeUsers());
 
       // Set up real-time listener for leave requests (independent of users listener)
       const leaveRef = collection(this.firestore, 'leaveRequests');
-      const unsubscribeLeave = onSnapshot(leaveRef, (leaveSnapshot) => {
-        // Filter locally instead of using 'in' query which requires composite index
-        const allRequests: any[] = leaveSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log('[EmployeeStatus] ALL leave requests (before filter):', allRequests.length, allRequests);
-        
-        this.leaveRequests = allRequests
-          .filter(req => req.status === 'Approved' || req.status === 'Awaiting HR Approval');
-        console.log('[EmployeeStatus] Filtered leave requests (Approved/Awaiting HR):', this.leaveRequests.length, this.leaveRequests);
-        
-        // Log the first request to see its structure
-        if (this.leaveRequests.length > 0) {
-          console.log('[EmployeeStatus] Sample leave request structure:', this.leaveRequests[0]);
-          console.log('[EmployeeStatus] Sample request uid:', this.leaveRequests[0].uid);
-        }
-        
-        this.buildEmployeeList(usersData);
-      }, (error) => {
-        console.error('[EmployeeStatus] Leave requests listener error:', error);
-      });
-      
+      const unsubscribeLeave = onSnapshot(
+        leaveRef,
+        (leaveSnapshot) => {
+          // Filter locally instead of using 'in' query which requires composite index
+          const allRequests: any[] = leaveSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+
+          this.leaveRequests = allRequests.filter(
+            (req) => req.status === 'Approved' || req.status === 'Awaiting HR Approval',
+          );
+
+          this.buildEmployeeList(usersData);
+        },
+        (error) => {
+          console.error('[EmployeeStatus] Leave requests listener error:', error);
+        },
+      );
+
       // Add leave unsubscribe to subscription container
       this.subscription.add(() => unsubscribeLeave());
     } catch (error) {
@@ -261,18 +264,15 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
 
   private buildEmployeeList(users: any[]) {
     if (!users || users.length === 0) {
-      console.log('[EmployeeStatus] No users to build employee list');
       return;
     }
 
-    console.log('[EmployeeStatus] Building employee list with', users.length, 'users');
-
     // Build employee list with status
-    this.employees = users.map(user => {
+    this.employees = users.map((user) => {
       const initials = this.getInitials(user.name || 'Unknown');
       const dept = user.department || user.dept || 'Unknown';
       const statusInfo = this.getEmployeeStatus(user);
-      
+
       return {
         id: user.id,
         name: user.name || 'Unknown',
@@ -280,19 +280,16 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
         initials: initials,
         status: statusInfo.status || 'In Office',
         leaveType: statusInfo.leaveType,
-        leaveDate: statusInfo.leaveDate
+        leaveDate: statusInfo.leaveDate,
       } as Employee;
     });
 
-    console.log('[EmployeeStatus] Final employee list:', this.employees);
-
     // Extract unique departments
-    const uniqueDepts = [...new Set(this.employees.map(e => e.dept))];
+    const uniqueDepts = [...new Set(this.employees.map((e) => e.dept))];
     this.departments = ['All Departments', ...uniqueDepts.sort()];
 
     this.calculateStats();
-    console.log('[EmployeeStatus] Stats - Working:', this.workingToday, 'Away:', this.awayToday);
-    
+
     // Only set isLoading to false if we have a reasonable number of users
     // This prevents showing partial data when Firebase is still loading
     if (users.length > 1) {
@@ -316,11 +313,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
     const employeeId = user.employeeId;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    console.log(`[EmployeeStatus] Filtering for userId: ${userId}, employeeId: ${employeeId}`);
-    console.log(`[EmployeeStatus] Available leave request uids:`, this.leaveRequests.map(r => r.uid));
-    console.log(`[EmployeeStatus] Available leave request employeeIds:`, this.leaveRequests.map(r => r.employeeId));
-    
+
     // Check if manually marked as absent FIRST (takes priority over other statuses)
     if (user.manuallyAbsent === true) {
       const absentDate = user.absentDate ? new Date(user.absentDate) : null;
@@ -329,33 +322,30 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
         const threeDaysAgo = new Date(today);
         threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
         if (absentDate >= threeDaysAgo) {
-          console.log(`[EmployeeStatus] ${name} is MANUALLY ABSENT`);
           return {
             status: 'Absent',
             leaveType: user.absentReason || 'Absent (No Leave Filed)',
             leaveDate: user.absentDate,
-            absentReason: user.absentReason
+            absentReason: user.absentReason,
           };
         }
       }
     }
-    
+
     // Match on employeeId if available, otherwise fall back to uid
-    const userRequests = this.leaveRequests.filter(r => {
+    const userRequests = this.leaveRequests.filter((r) => {
       if (employeeId && r.employeeId) {
         return r.employeeId === employeeId;
       }
       return r.uid === userId;
     });
-    console.log(`[EmployeeStatus] Checking status for ${name} (${userId}, employeeId: ${employeeId}):`, userRequests);
-    
+
     for (const request of userRequests) {
       // Parse the period field (format: "2026-03-23 to 2026-05-24")
       if (!request.period) {
-        console.log(`[EmployeeStatus] Request has no period field:`, request);
         continue;
       }
-      
+
       const sep = request.period.includes(' to ') ? ' to ' : ' - ';
       const parts = request.period.split(sep);
       const startDate = new Date(parts[0]);
@@ -363,47 +353,44 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(0, 0, 0, 0);
 
-      console.log(`[EmployeeStatus] ${name} - Period: ${request.period}, Start: ${startDate.toISOString()}, End: ${endDate.toISOString()}, Today: ${today.toISOString()}`);
-      console.log(`[EmployeeStatus] ${name} - Comparison: today >= startDate (${today >= startDate}), today <= endDate (${today <= endDate})`);
-
       if (today >= startDate && today <= endDate) {
         // Employee is currently on leave
-        console.log(`[EmployeeStatus] ${name} is ON LEAVE`);
         return {
           status: 'On Leave',
           leaveType: request.leaveType || 'Leave',
-          leaveDate: request.period
+          leaveDate: request.period,
         };
       }
 
       // Check for upcoming leave (within next 3 days)
       const threeDaysFromNow = new Date(today);
       threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
-      
+
       if (startDate > today && startDate <= threeDaysFromNow) {
-        console.log(`[EmployeeStatus] ${name} has UPCOMING LEAVE`);
         return {
           status: 'Upcoming Leave',
           leaveType: request.leaveType || 'Leave',
-          leaveDate: request.period
+          leaveDate: request.period,
         };
       }
     }
 
     // No leave found - employee is in office
-    console.log(`[EmployeeStatus] ${name} is IN OFFICE`);
     return { status: 'In Office' };
   }
 
   calculateStats() {
-    this.workingToday = this.employees.filter(e => e.status === 'In Office').length;
-    this.awayToday = this.employees.filter(e => e.status === 'On Leave' || e.status === 'Upcoming Leave' || e.status === 'Absent').length;
+    this.workingToday = this.employees.filter((e) => e.status === 'In Office').length;
+    this.awayToday = this.employees.filter(
+      (e) => e.status === 'On Leave' || e.status === 'Upcoming Leave' || e.status === 'Absent',
+    ).length;
   }
 
   get filteredEmployees() {
-    return this.employees.filter(e => {
-      const matchesSearch = e.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
-                            e.dept.toLowerCase().includes(this.searchQuery.toLowerCase());
+    return this.employees.filter((e) => {
+      const matchesSearch =
+        e.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        e.dept.toLowerCase().includes(this.searchQuery.toLowerCase());
       const matchesDept = this.selectedDept === 'All Departments' || e.dept === this.selectedDept;
       return matchesSearch && matchesDept;
     });

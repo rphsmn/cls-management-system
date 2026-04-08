@@ -23,10 +23,18 @@
         <h3>Employment Details</h3>
         <span class="verified">✓ Verified</span>
       </div>
-      <div class="data-row"><label>Department</label><span>{{ user.department || user.dept || 'N/A' }}</span></div>
-      <div class="data-row"><label>Role</label><span>{{ user.role }}</span></div>
-      <div class="data-row"><label>Joined Date</label><span>{{ formatDate(user.joinedDate) }}</span></div>
-      <div class="data-row"><label>Years of Service</label><span>{{ yearsOfService }}</span></div>
+      <div class="data-row">
+        <label>Department</label><span>{{ user.department || user.dept || 'N/A' }}</span>
+      </div>
+      <div class="data-row">
+        <label>Role</label><span>{{ user.role }}</span>
+      </div>
+      <div class="data-row">
+        <label>Joined Date</label><span>{{ formatDate(user.joinedDate) }}</span>
+      </div>
+      <div class="data-row">
+        <label>Years of Service</label><span>{{ yearsOfService }}</span>
+      </div>
     </section>
 
     <section class="info-card" *ngIf="user.birthday || user.gender">
@@ -34,8 +42,12 @@
         <h3>Personal Information</h3>
         <span class="verified">✓ Verified</span>
       </div>
-      <div class="data-row" *ngIf="user.birthday"><label>Birthday</label><span>{{ user.birthday }}</span></div>
-      <div class="data-row" *ngIf="user.gender"><label>Gender</label><span>{{ user.gender | titlecase }}</span></div>
+      <div class="data-row" *ngIf="user.birthday">
+        <label>Birthday</label><span>{{ user.birthday }}</span>
+      </div>
+      <div class="data-row" *ngIf="user.gender">
+        <label>Gender</label><span>{{ user.gender | titlecase }}</span>
+      </div>
     </section>
 
     <section class="info-card" *ngIf="user.tin || user.sss || user.philhealth || user.pagibig">
@@ -43,10 +55,18 @@
         <h3>Government IDs</h3>
         <span class="verified">✓ Verified</span>
       </div>
-      <div class="data-row" *ngIf="user.tin"><label>TIN</label><span>{{ user.tin }}</span></div>
-      <div class="data-row" *ngIf="user.sss"><label>SSS</label><span>{{ user.sss }}</span></div>
-      <div class="data-row" *ngIf="user.philhealth"><label>PhilHealth</label><span>{{ user.philhealth }}</span></div>
-      <div class="data-row" *ngIf="user.pagibig"><label>Pag-IBIG</label><span>{{ user.pagibig }}</span></div>
+      <div class="data-row" *ngIf="user.tin">
+        <label>TIN</label><span>{{ user.tin }}</span>
+      </div>
+      <div class="data-row" *ngIf="user.sss">
+        <label>SSS</label><span>{{ user.sss }}</span>
+      </div>
+      <div class="data-row" *ngIf="user.philhealth">
+        <label>PhilHealth</label><span>{{ user.philhealth }}</span>
+      </div>
+      <div class="data-row" *ngIf="user.pagibig">
+        <label>Pag-IBIG</label><span>{{ user.pagibig }}</span>
+      </div>
     </section>
 
     <section class="info-card">
@@ -54,8 +74,12 @@
         <h3>Leave Balance</h3>
         <span class="verified">✓ Available</span>
       </div>
-      <div class="data-row"><label>Birthday Leave</label><span>{{ user.birthdayLeave }} day(s)</span></div>
-      <div class="data-row"><label>Paid Time Off</label><span>{{ paidTimeOff }} day(s)</span></div>
+      <div class="data-row">
+        <label>Birthday Leave</label><span>{{ user.birthdayLeave }} day(s)</span>
+      </div>
+      <div class="data-row">
+        <label>Paid Leave</label><span>{{ paidTimeOff }} day(s)</span>
+      </div>
     </section>
   </div>
 
@@ -66,34 +90,34 @@
         Request Info Update from HR
         <span class="dropdown-arrow" [class.open]="showEmailOptions">▼</span>
       </button>
-      
+
       <div class="email-options-dropdown" *ngIf="showEmailOptions">
         <div class="email-options-header">
           <span>Choose your email provider:</span>
         </div>
-        
+
         <a [href]="getGmailComposeUrl()" target="_blank" class="email-option gmail">
           <span class="email-icon">✉️</span>
           <span class="email-label">Gmail</span>
         </a>
-        
+
         <a [href]="getYahooComposeUrl()" target="_blank" class="email-option yahoo">
           <span class="email-icon">✉️</span>
           <span class="email-label">Yahoo Mail</span>
         </a>
-        
+
         <a [href]="getOutlookWebComposeUrl()" target="_blank" class="email-option outlook">
           <span class="email-icon">✉️</span>
           <span class="email-label">Outlook Web</span>
         </a>
-        
+
         <a [href]="getMailtoUrl()" class="email-option default">
           <span class="email-icon">📧</span>
           <span class="email-label">Default Email Client</span>
         </a>
-        
+
         <div class="email-option-divider"></div>
-        
+
         <button (click)="copyHrEmail()" class="email-option copy">
           <span class="email-icon">{{ emailCopied ? '✓' : '📋' }}</span>
           <span class="email-label">{{ emailCopied ? 'Copied!' : 'Copy HR Email' }}</span>

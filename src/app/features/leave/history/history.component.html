@@ -2,9 +2,11 @@
   <header class="content-header">
     <div class="title-group">
       <h1>
-        {{ (currentUser.role.includes('Staff') || currentUser.role === 'It Developer') 
-            ? 'My Leave History' 
-            : 'Leave Records & History' }}
+        {{
+          currentUser.role.includes('Staff') || currentUser.role === 'It Developer'
+            ? 'My Leave History'
+            : 'Leave Records & History'
+        }}
       </h1>
       <div class="status-indicator">
         <span class="role-badge">{{ currentUser.role }}</span>
@@ -23,17 +25,23 @@
         <select [formControl]="statusControl" class="filter-select" aria-label="Filter by status">
           <option *ngFor="let s of statusOptions" [value]="s.v">{{ s.l }}</option>
         </select>
-        <button 
-          *ngIf="hasActiveFilters()" 
-          class="reset-filters-btn" 
+        <button
+          *ngIf="hasActiveFilters()"
+          class="reset-filters-btn"
           (click)="resetFilters()"
-          aria-label="Reset all filters">
+          aria-label="Reset all filters"
+        >
           ✕ Reset
         </button>
       </div>
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input type="text" [formControl]="searchControl" placeholder="Search employee, ID, or type..." aria-label="Search leave records">
+        <input
+          type="text"
+          [formControl]="searchControl"
+          placeholder="Search employee, ID, or type..."
+          aria-label="Search leave records"
+        />
       </div>
     </div>
   </header>
@@ -45,7 +53,12 @@
           <table class="history-table">
             <thead>
               <tr>
-                <th *ngIf="!currentUser.role.includes('Staff') && currentUser.role !== 'It Developer'" class="col-emp">Employee</th>
+                <th
+                  *ngIf="!currentUser.role.includes('Staff') && currentUser.role !== 'It Developer'"
+                  class="col-emp"
+                >
+                  Employee
+                </th>
                 <th class="col-date">Date Filed</th>
                 <th class="col-type">Leave Type</th>
                 <th class="col-period">Period</th>
@@ -53,10 +66,12 @@
                 <th class="col-progress">Approval Progress</th>
               </tr>
             </thead>
-            
+
             <tbody>
-              <tr *ngFor="let req of (paginatedRequests$ | async)">
-                <td *ngIf="!currentUser.role.includes('Staff') && currentUser.role !== 'It Developer'">
+              <tr *ngFor="let req of paginatedRequests$ | async">
+                <td
+                  *ngIf="!currentUser.role.includes('Staff') && currentUser.role !== 'It Developer'"
+                >
                   <div class="employee-info">
                     <span class="user-name">{{ req.employeeName }}</span>
                     <span class="emp-id" *ngIf="req.employeeId">{{ req.employeeId }}</span>
@@ -65,8 +80,12 @@
 
                 <td>
                   <div class="period-stack">
-                    <span class="period-word">{{ getRelativeDate(req.dateFiled) || (req.dateFiled | date:'MMM d') }}</span>
-                    <span class="period-sub">{{ req.dateFiled | date:'yyyy' }}, {{ req.dateFiled | date:'MMM d' }}</span>
+                    <span class="period-word">{{
+                      getRelativeDate(req.dateFiled) || (req.dateFiled | date: 'MMM d')
+                    }}</span>
+                    <span class="period-sub"
+                      >{{ req.dateFiled | date: 'yyyy' }}, {{ req.dateFiled | date: 'MMM d' }}</span
+                    >
                   </div>
                 </td>
 
@@ -79,7 +98,7 @@
 
                 <td>
                   <div class="period-stack">
-                    <span class="period-word">{{ getFormattedPeriod(req.period) }}</span>
+                    <span class="period-word">{{ getFormattedPeriod(req) }}</span>
                     <span class="period-sub">{{ req.period }}</span>
                   </div>
                 </td>
@@ -90,10 +109,18 @@
                       "{{ req.reason }}"
                     </div>
                     <div class="reason-meta">
-                      <span class="see-more" *ngIf="req.reason && req.reason.length > 40" (click)="toggleReason(req)">
+                      <span
+                        class="see-more"
+                        *ngIf="req.reason && req.reason.length > 40"
+                        (click)="toggleReason(req)"
+                      >
                         {{ expandedReq === req ? 'Collapse ↑' : 'Read More ↓' }}
                       </span>
-                      <button *ngIf="req.attachment" (click)="viewDocument(req.attachment)" class="doc-link-btn">
+                      <button
+                        *ngIf="req.attachment"
+                        (click)="viewDocument(req.attachment)"
+                        class="doc-link-btn"
+                      >
                         👁️ View Doc
                       </button>
                     </div>
@@ -106,12 +133,13 @@
                       <div class="icon-circle">✓</div>
                       <span class="step-label">Filed</span>
                     </div>
-                    
+
                     <ng-container *ngFor="let stepName of getSteps(req); let i = index">
-                      <div class="connector" 
-                           [class.active]="getStepStatus(req, i) === 'completed'" 
-                           [class.rejected]="getStepStatus(req, i) === 'rejected'">
-                      </div>
+                      <div
+                        class="connector"
+                        [class.active]="getStepStatus(req, i) === 'completed'"
+                        [class.rejected]="getStepStatus(req, i) === 'rejected'"
+                      ></div>
 
                       <div class="step" [ngClass]="getStepStatus(req, i)">
                         <div class="icon-circle">{{ getStepIcon(req, i) }}</div>
@@ -124,25 +152,42 @@
                       <span class="cancel-icon">✕</span>
                       <div class="cancel-details">
                         <span class="cancel-text">{{ getCancellationInfo(req) }}</span>
-                        <span class="last-step" *ngIf="getLastApprovedStep(req)">{{ getLastApprovedStep(req) }}</span>
+                        <span class="last-step" *ngIf="getLastApprovedStep(req)">{{
+                          getLastApprovedStep(req)
+                        }}</span>
                       </div>
                     </div>
                     <div class="cancel-reason" *ngIf="getCancellationReason(req)">
-                      <div class="reason-header" (click)="toggleCancellationReason(req)" [class.clickable]="getCancellationReason(req).length > 50">
+                      <div
+                        class="reason-header"
+                        (click)="toggleCancellationReason(req)"
+                        [class.clickable]="getCancellationReason(req).length > 50"
+                      >
                         <span class="reason-label">Reason:</span>
                         <span class="see-more" *ngIf="getCancellationReason(req).length > 50">
-                          {{ (req.id || req.$id) === expandedCancellationReason ? 'Collapse ↑' : 'Read More ↓' }}
+                          {{
+                            (req.id || req.$id) === expandedCancellationReason
+                              ? 'Collapse ↑'
+                              : 'Read More ↓'
+                          }}
                         </span>
                       </div>
-                      <div [ngClass]="(req.id || req.$id) === expandedCancellationReason ? 'reason-full' : 'reason-text'">
+                      <div
+                        [ngClass]="
+                          (req.id || req.$id) === expandedCancellationReason
+                            ? 'reason-full'
+                            : 'reason-text'
+                        "
+                      >
                         "{{ getCancellationReason(req) }}"
                       </div>
                     </div>
                   </div>
-                  <button 
-                    *ngIf="canCancel(req)" 
+                  <button
+                    *ngIf="canCancel(req)"
                     class="cancel-request-btn"
-                    (click)="cancelRequest(req)">
+                    (click)="cancelRequest(req)"
+                  >
                     ✕ Cancel
                   </button>
                 </td>
@@ -152,19 +197,29 @@
 
           <div class="pagination-footer">
             <div class="pagination-left">
-                Showing <strong>{{ getStartRange(allReqs.length) }}</strong> - <strong>{{ getEndRange(allReqs.length) }}</strong> of <strong>{{ allReqs.length }}</strong>
-                <span class="rows-select">
-                  Rows:
-                  <select (change)="onItemsPerPageChange($event)">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                  </select>
-                </span>
+              Showing <strong>{{ getStartRange(allReqs.length) }}</strong> -
+              <strong>{{ getEndRange(allReqs.length) }}</strong> of
+              <strong>{{ allReqs.length }}</strong>
+              <span class="rows-select">
+                Rows:
+                <select (change)="onItemsPerPageChange($event)">
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                </select>
+              </span>
             </div>
             <div class="pagination-controls" *ngIf="currentPage$ | async as curPage">
-              <button class="btn-pager" (click)="prevPage()" [disabled]="curPage === 1">Previous</button>
+              <button class="btn-pager" (click)="prevPage()" [disabled]="curPage === 1">
+                Previous
+              </button>
               <span class="page-num">{{ curPage }} / {{ getTotalPages(allReqs.length) }}</span>
-              <button class="btn-pager" (click)="nextPage(allReqs.length)" [disabled]="curPage >= getTotalPages(allReqs.length)">Next</button>
+              <button
+                class="btn-pager"
+                (click)="nextPage(allReqs.length)"
+                [disabled]="curPage >= getTotalPages(allReqs.length)"
+              >
+                Next
+              </button>
             </div>
           </div>
         </ng-container>

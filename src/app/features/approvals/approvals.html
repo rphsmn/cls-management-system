@@ -20,7 +20,11 @@
 
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input type="text" [formControl]="searchControl" placeholder="Search employee, ID, or type...">
+        <input
+          type="text"
+          [formControl]="searchControl"
+          placeholder="Search employee, ID, or type..."
+        />
       </div>
     </div>
   </header>
@@ -54,8 +58,8 @@
               </td>
               <td>
                 <div class="period-stack">
-                  <span class="period-word">{{ getFormattedPeriod(req.period) }}</span>
-                  <span class="period-sub">Filed: {{ req.dateFiled | date:'MMM d, y' }}</span>
+                  <span class="period-word">{{ getFormattedPeriod(req) }}</span>
+                  <span class="period-sub">Filed: {{ req.dateFiled | date: 'MMM d, y' }}</span>
                 </div>
               </td>
               <td>
@@ -64,18 +68,26 @@
                     "{{ req.reason }}"
                   </div>
                   <div class="reason-meta">
-                    <span class="see-more" *ngIf="req.reason?.length > 40" (click)="toggleReason(req)">
+                    <span
+                      class="see-more"
+                      *ngIf="req.reason?.length > 40"
+                      (click)="toggleReason(req)"
+                    >
                       {{ expandedReq === req ? 'Collapse ↑' : 'Read More ↓' }}
                     </span>
                     <div class="doc-actions" *ngIf="req.attachment">
-                      <button (click)="viewDocument(req.attachment)" class="doc-link-btn">👁️ View Doc</button>
+                      <button (click)="viewDocument(req.attachment)" class="doc-link-btn">
+                        👁️ View Doc
+                      </button>
                     </div>
                   </div>
                 </div>
               </td>
               <td>
                 <div class="action-buttons">
-                  <button class="btn-approve" (click)="updateStatus(req, 'Approve')">APPROVE</button>
+                  <button class="btn-approve" (click)="updateStatus(req, 'Approve')">
+                    APPROVE
+                  </button>
                   <button class="btn-reject" (click)="updateStatus(req, 'Reject')">REJECT</button>
                 </div>
               </td>
@@ -85,7 +97,9 @@
 
         <div class="pagination-footer">
           <div class="pagination-left">
-            Showing <strong>{{ getStartRange(allReqs.length) }}</strong> - <strong>{{ getEndRange(allReqs.length) }}</strong> of <strong>{{ allReqs.length }}</strong>
+            Showing <strong>{{ getStartRange(allReqs.length) }}</strong> -
+            <strong>{{ getEndRange(allReqs.length) }}</strong> of
+            <strong>{{ allReqs.length }}</strong>
             <span class="rows-select">
               Rows:
               <select (change)="onItemsPerPageChange($event)">
@@ -96,9 +110,17 @@
           </div>
 
           <div class="pagination-controls" *ngIf="currentPage$ | async as curPage">
-            <button class="btn-pager" (click)="prevPage()" [disabled]="curPage === 1">Previous</button>
+            <button class="btn-pager" (click)="prevPage()" [disabled]="curPage === 1">
+              Previous
+            </button>
             <span class="page-num">{{ curPage }} / {{ getTotalPages(allReqs.length) }}</span>
-            <button class="btn-pager" (click)="nextPage(allReqs.length)" [disabled]="curPage >= getTotalPages(allReqs.length)">Next</button>
+            <button
+              class="btn-pager"
+              (click)="nextPage(allReqs.length)"
+              [disabled]="curPage >= getTotalPages(allReqs.length)"
+            >
+              Next
+            </button>
           </div>
         </div>
       </ng-container>

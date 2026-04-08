@@ -4,7 +4,7 @@
       <h1>{{ greeting }}, {{ user.name?.split(' ')[0] }}</h1>
       <div class="sub-header">
         <span class="role-badge">{{ user.role }}</span>
-        <span class="status-text">{{ today | date:'fullDate' }}</span>
+        <span class="status-text">{{ today | date: 'fullDate' }}</span>
       </div>
     </div>
   </header>
@@ -23,7 +23,9 @@
 
         <div class="stat-card">
           <h3>On Leave Today</h3>
-          <p class="value" [class.unavailable]="!stats?.onLeaveToday">{{ stats?.onLeaveToday || 0 }}</p>
+          <p class="value" [class.unavailable]="!stats?.onLeaveToday">
+            {{ stats?.onLeaveToday || 0 }}
+          </p>
           <div class="stat-footer">
             <span class="stat-label">Currently absent</span>
           </div>
@@ -31,7 +33,9 @@
 
         <div class="stat-card">
           <h3>Pending Requests</h3>
-          <p class="value" [class.warning]="stats?.pendingRequests">{{ stats?.pendingRequests || 0 }}</p>
+          <p class="value" [class.warning]="stats?.pendingRequests">
+            {{ stats?.pendingRequests || 0 }}
+          </p>
           <div class="stat-footer">
             <span class="stat-label">Awaiting approval</span>
           </div>
@@ -49,9 +53,9 @@
 
     <!-- Regular Employee Dashboard - Leave Balances -->
     <section class="stats-grid" *ngIf="user.role !== 'MANAGING DIRECTOR'">
-      <!-- Paid Time Off Card -->
+      <!-- Leave Credits Card -->
       <div class="stat-card">
-        <h3>Paid Time Off</h3>
+        <h3>Leave Credits</h3>
         <p class="value">{{ user.paidTimeOff?.remaining || 0 }}</p>
         <div class="stat-footer">
           <span class="stat-label">
@@ -67,7 +71,7 @@
       <div class="stat-card">
         <h3>Birthday Leave (1)</h3>
         <p class="value" [class.unavailable]="!user.birthdayLeave?.isAvailable">
-          {{ user.birthdayLeave?.isAvailable ? (user.birthdayLeave?.remaining || 0) : 'N/A' }}
+          {{ user.birthdayLeave?.isAvailable ? user.birthdayLeave?.remaining || 0 : 'N/A' }}
         </p>
         <div class="stat-footer">
           <span class="stat-label">
@@ -79,22 +83,13 @@
         </div>
       </div>
 
-      <!-- Sick Leave Card -->
-      <div class="stat-card">
-        <h3>Sick Leave</h3>
-        <p class="value">{{ user.sickLeave?.remaining || 0 }}</p>
-        <div class="stat-footer">
-          <span class="stat-label">of {{ user.sickLeave?.total || 10 }} days</span>
-          <span class="pending-tag" *ngIf="user.sickLeave?.pending > 0">
-            {{ user.sickLeave.pending }} Pending
-          </span>
-        </div>
-      </div>
-
       <!-- Others Card (Maternity/Paternity) -->
-      <div class="stat-card others-card" *ngIf="user.others?.maternity?.isVisible || user.others?.paternity?.isVisible">
+      <div
+        class="stat-card others-card"
+        *ngIf="user.others?.maternity?.isVisible || user.others?.paternity?.isVisible"
+      >
         <h3>Others</h3>
-        
+
         <!-- Maternity Leave (for female employees) -->
         <div class="sub-category" *ngIf="user.others?.maternity?.isVisible">
           <span class="sub-label">Maternity</span>
@@ -103,7 +98,7 @@
             {{ user.others.maternity.pending }} Pending
           </span>
         </div>
-        
+
         <!-- Paternity Leave (for male employees) -->
         <div class="sub-category" *ngIf="user.others?.paternity?.isVisible">
           <span class="sub-label">Paternity</span>
@@ -115,7 +110,12 @@
       </div>
 
       <!-- No Leave Eligibility Warning -->
-      <div class="stat-card warning-card" *ngIf="!user.canFileLeave && user.role !== 'ADMIN MANAGER' && user.role !== 'ACCOUNT SUPERVISOR'">
+      <div
+        class="stat-card warning-card"
+        *ngIf="
+          !user.canFileLeave && user.role !== 'ADMIN MANAGER' && user.role !== 'ACCOUNT SUPERVISOR'
+        "
+      >
         <h3>Leave Status</h3>
         <p class="value warning">Restricted</p>
         <div class="stat-footer">
@@ -132,7 +132,9 @@
         <table class="cls-table">
           <thead>
             <tr>
-              <th *ngIf="user.role !== 'Operations Staff' && user.role !== 'Accounts Staff'">Employee</th>
+              <th *ngIf="user.role !== 'Operations Staff' && user.role !== 'Accounts Staff'">
+                Employee
+              </th>
               <th>Type</th>
               <th>Date Filed</th>
               <th>Status</th>
@@ -143,10 +145,16 @@
               <td *ngIf="user.role !== 'Operations Staff' && user.role !== 'Accounts Staff'">
                 <strong>{{ req.employeeName }}</strong>
               </td>
-              <td><span class="type-tag">{{ req.type }}</span></td>
-              <td>{{ req.dateFiled | date:'MMM d' }}</td>
               <td>
-                <span [ngClass]="'status-pill ' + (req.status?.toLowerCase()?.split(' ')?.join('-') || 'pending')">
+                <span class="type-tag">{{ req.type }}</span>
+              </td>
+              <td>{{ req.dateFiled | date: 'MMM d' }}</td>
+              <td>
+                <span
+                  [ngClass]="
+                    'status-pill ' + (req.status?.toLowerCase()?.split(' ')?.join('-') || 'pending')
+                  "
+                >
                   {{ req.status }}
                 </span>
               </td>

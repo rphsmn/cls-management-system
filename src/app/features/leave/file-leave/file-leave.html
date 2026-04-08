@@ -37,24 +37,47 @@
     <!-- Managing Director cannot file leaves at all -->
     <div class="notice-banner info" *ngIf="!currentUser.canFileLeave">
       <span class="notice-icon">ℹ️</span>
-      <span>As the Managing Director, you have full oversight of all leave requests. You don't need to file leave requests.</span>
+      <span
+        >As the Managing Director, you have full oversight of all leave requests. You don't need to
+        file leave requests.</span
+      >
     </div>
 
     <!-- Warning for employees less than 1 year or part-time -->
-    <div class="notice-banner warning" *ngIf="currentUser.canFileLeave && !currentUser.canFilePaidLeaves && !currentUser.isAdminOrSupervisor">
+    <div
+      class="notice-banner warning"
+      *ngIf="
+        currentUser.canFileLeave &&
+        !currentUser.canFilePaidLeaves &&
+        !currentUser.isAdminOrSupervisor
+      "
+    >
       <span class="notice-icon">⚠️</span>
-      <span *ngIf="currentUser.isPartTime">As a part-time employee, only <strong>Leave Without Pay</strong> and <strong>Birthday Leave</strong> are available.</span>
-      <span *ngIf="!currentUser.isPartTime">You have not completed 1 year of service. Only <strong>Leave Without Pay</strong> and <strong>Birthday Leave</strong> are available.</span>
+      <span *ngIf="currentUser.isPartTime"
+        >As a part-time employee, only <strong>Leave Without Pay</strong> and
+        <strong>Birthday Leave</strong> are available.</span
+      >
+      <span *ngIf="!currentUser.isPartTime"
+        >You have not completed 1 year of service. Only <strong>Leave Without Pay</strong> and
+        <strong>Birthday Leave</strong> are available.</span
+      >
     </div>
 
     <!-- Leave form - hidden for Managing Director -->
-    <form (ngSubmit)="onSubmit()" #leaveForm="ngForm" class="leave-form" *ngIf="currentUser.canFileLeave">
+    <form
+      (ngSubmit)="onSubmit()"
+      #leaveForm="ngForm"
+      class="leave-form"
+      *ngIf="currentUser.canFileLeave"
+    >
       <div class="form-grid">
         <div class="form-group full-width">
           <div class="label-row">
             <label>Leave Type</label>
             <div class="balance-meta" *ngIf="leaveRequest.type">
-              <ng-container *ngIf="leaveRequest.type === LEAVE_TYPES.LEAVE_WITHOUT_PAY; else showBalance">
+              <ng-container
+                *ngIf="leaveRequest.type === LEAVE_TYPES.LEAVE_WITHOUT_PAY; else showBalance"
+              >
                 <span class="bal available">UNLIMITED</span>
               </ng-container>
               <ng-template #showBalance>
@@ -67,109 +90,196 @@
               </ng-template>
             </div>
           </div>
-          
+
           <!-- Leave type options for eligible employees (1+ year or admin/supervisor) -->
-          <select name="type" [(ngModel)]="leaveRequest.type" (change)="onLeaveTypeChange()" required 
-                  *ngIf="currentUser.canFilePaidLeaves || currentUser.isAdminOrSupervisor">
+          <select
+            name="type"
+            [(ngModel)]="leaveRequest.type"
+            (change)="onLeaveTypeChange()"
+            required
+            *ngIf="currentUser.canFilePaidLeaves || currentUser.isAdminOrSupervisor"
+          >
             <option value="" disabled>Select type of leave</option>
-            
-            <!-- Paid Time Off -->
-            <option [value]="LEAVE_TYPES.PAID_TIME_OFF">
-              Paid Time Off
-            </option>
-            
+
+            <!-- Paid Leave -->
+            <option [value]="LEAVE_TYPES.PAID_TIME_OFF">Paid Leave</option>
+
             <!-- Birthday Leave -->
-            <option [value]="LEAVE_TYPES.BIRTHDAY_LEAVE" 
-                    [disabled]="!currentUser.isBirthMonth">
-              Birthday Leave {{ !currentUser.isBirthMonth ? '(Birth month only)' : '' }}
-            </option>
-            
-            <!-- Sick Leave (1+ year employees or admin/supervisor) -->
-            <option [value]="LEAVE_TYPES.SICK_LEAVE">
-              Sick Leave
-            </option>
-            
-            <!-- Maternity Leave (female only, non part-time) -->
-            <option [value]="LEAVE_TYPES.MATERNITY_LEAVE" *ngIf="currentUser.isFemale && currentUser.canFileMaternityPaternityLeaves">
-              Maternity Leave
-            </option>
-            
-            <!-- Paternity Leave (male only, non part-time) -->
-            <option [value]="LEAVE_TYPES.PATERNITY_LEAVE" *ngIf="currentUser.isMale && currentUser.canFileMaternityPaternityLeaves">
-              Paternity Leave
-            </option>
-            
-            <!-- Leave Without Pay (always available) -->
-            <option [value]="LEAVE_TYPES.LEAVE_WITHOUT_PAY">
-              Leave Without Pay
-            </option>
-          </select>
-          
-          <!-- Leave Without Pay and Birthday Leave for employees < 1 year or part-time -->
-          <select name="type" [(ngModel)]="leaveRequest.type" (change)="onLeaveTypeChange()" required
-                  *ngIf="!currentUser.canFilePaidLeaves && !currentUser.isAdminOrSupervisor">
             <option [value]="LEAVE_TYPES.BIRTHDAY_LEAVE" [disabled]="!currentUser.isBirthMonth">
               Birthday Leave {{ !currentUser.isBirthMonth ? '(Birth month only)' : '' }}
             </option>
-            <option [value]="LEAVE_TYPES.SICK_LEAVE">
-              Sick Leave
+
+            <!-- Sick Leave (1+ year employees or admin/supervisor) -->
+            <option [value]="LEAVE_TYPES.SICK_LEAVE">Sick Leave</option>
+
+            <!-- Maternity Leave (female only, non part-time) -->
+            <option
+              [value]="LEAVE_TYPES.MATERNITY_LEAVE"
+              *ngIf="currentUser.isFemale && currentUser.canFileMaternityPaternityLeaves"
+            >
+              Maternity Leave
             </option>
-            <option [value]="LEAVE_TYPES.LEAVE_WITHOUT_PAY">
-              Leave Without Pay
+
+            <!-- Paternity Leave (male only, non part-time) -->
+            <option
+              [value]="LEAVE_TYPES.PATERNITY_LEAVE"
+              *ngIf="currentUser.isMale && currentUser.canFileMaternityPaternityLeaves"
+            >
+              Paternity Leave
             </option>
+
+            <!-- Leave Without Pay (always available) -->
+            <option [value]="LEAVE_TYPES.LEAVE_WITHOUT_PAY">Leave Without Pay</option>
+          </select>
+
+          <!-- Leave Without Pay and Birthday Leave for employees < 1 year or part-time -->
+          <select
+            name="type"
+            [(ngModel)]="leaveRequest.type"
+            (change)="onLeaveTypeChange()"
+            required
+            *ngIf="!currentUser.canFilePaidLeaves && !currentUser.isAdminOrSupervisor"
+          >
+            <option [value]="LEAVE_TYPES.BIRTHDAY_LEAVE" [disabled]="!currentUser.isBirthMonth">
+              Birthday Leave {{ !currentUser.isBirthMonth ? '(Birth month only)' : '' }}
+            </option>
+            <option [value]="LEAVE_TYPES.SICK_LEAVE">Sick Leave</option>
+            <option [value]="LEAVE_TYPES.LEAVE_WITHOUT_PAY">Leave Without Pay</option>
           </select>
         </div>
 
         <div class="form-group">
           <label>Start Date</label>
-          <input type="date" name="startDate" [(ngModel)]="leaveRequest.startDate" 
-                 [min]="minDate" (change)="calculateDays()" required>
+          <input
+            type="date"
+            name="startDate"
+            [(ngModel)]="leaveRequest.startDate"
+            [min]="minDateAllowed"
+            (change)="calculateDays()"
+            required
+          />
         </div>
 
         <div class="form-group">
           <label>End Date</label>
-          <input type="date" name="endDate" [(ngModel)]="leaveRequest.endDate" 
-                 [min]="leaveRequest.startDate || minDate" (change)="calculateDays()" required>
+          <input
+            type="date"
+            name="endDate"
+            [(ngModel)]="leaveRequest.endDate"
+            [min]="leaveRequest.startDate || minDateAllowed"
+            (change)="calculateDays()"
+            required
+          />
         </div>
 
         <div class="duration-summary full-width" *ngIf="totalDays > 0">
-          <div class="summary-content error" *ngIf="isOverBalance && leaveRequest.type !== LEAVE_TYPES.LEAVE_WITHOUT_PAY">
-            <span class="summary-icon">⚠️</span>
-            <span>Insufficient balance for this duration ({{totalDays}} days requested).</span>
-          </div>
-          
-          <div class="summary-content error" *ngIf="isInsufficientNotice && !isOverBalance">
-            <span class="summary-icon">⏳</span>
-            <span>Advance notice too short. Requires <strong>{{ noticeRequired }} {{ noticeRequired === 1 ? 'day' : 'days' }}</strong>.</span>
+          <!-- Half Day Toggle - Inline when single day -->
+          <div
+            class="half-day-inline"
+            *ngIf="totalDays === 1 && leaveRequest.type !== LEAVE_TYPES.LEAVE_WITHOUT_PAY"
+          >
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="isHalfDay"
+                name="isHalfDay"
+                [ngModelOptions]="{ standalone: true }"
+                (change)="onHalfDayToggle()"
+              />
+              <span class="toggle-text">Half Day (0.5 day deduction)</span>
+            </label>
           </div>
 
-          <div class="summary-content" *ngIf="!isOverBalance && !isInsufficientNotice">
+          <div
+            class="summary-content error"
+            *ngIf="isOverBalance && leaveRequest.type !== LEAVE_TYPES.LEAVE_WITHOUT_PAY"
+          >
+            <span class="summary-icon">⚠️</span>
+            <span
+              >Insufficient balance for this duration ({{
+                totalDays === 1 ? (isHalfDay ? '0.5' : '1') : totalDays
+              }}
+              days requested).</span
+            >
+          </div>
+
+          <div class="summary-content error" *ngIf="isInsufficientNotice && !isOverBalance">
+            <span class="summary-icon">⏳</span>
+            <span
+              >Advance notice too short. Requires
+              <strong>{{ noticeRequired }} {{ noticeRequired === 1 ? 'day' : 'days' }}</strong
+              >.</span
+            >
+          </div>
+
+          <div class="summary-content info" *ngIf="isPostFiling">
+            <span class="summary-icon">ℹ️</span>
+            <span>Post-filing: This leave is being filed for today or a past date.</span>
+          </div>
+
+          <div
+            class="summary-content"
+            *ngIf="!isOverBalance && !isInsufficientNotice && !isPostFiling"
+          >
             <span class="summary-icon">🗓️</span>
-            <span>You are requesting <strong>{{ totalDays }} {{ totalDays === 1 ? 'day' : 'days' }}</strong>.</span>
+            <span
+              >You are requesting
+              <strong>{{
+                isHalfDay ? 'a half-day leave' : totalDays === 1 ? '1 day' : totalDays + ' days'
+              }}</strong
+              >.</span
+            >
           </div>
         </div>
 
         <div class="notice-banner info full-width" *ngIf="holidaysInRange.length > 0">
           <span class="notice-icon">🎉</span>
-          <span>Hey! Just a heads up - <strong>{{ holidaysInRange.join(', ') }}</strong> {{ holidaysInRange.length === 1 ? 'is' : 'are' }} included in your selected dates. You can still proceed with your leave request.</span>
+          <span
+            >Hey! Just a heads up - <strong>{{ holidaysInRange.join(', ') }}</strong>
+            {{ holidaysInRange.length === 1 ? 'is' : 'are' }} included in your selected dates. You
+            can still proceed with your leave request.</span
+          >
         </div>
 
         <div class="form-group full-width">
           <label>Reason for leave</label>
-          <textarea name="reason" [(ngModel)]="leaveRequest.reason" placeholder="Please provide a brief reason..." rows="4" required></textarea>
+          <textarea
+            name="reason"
+            [(ngModel)]="leaveRequest.reason"
+            placeholder="Please provide a brief reason..."
+            rows="4"
+            required
+          ></textarea>
         </div>
 
         <div class="form-group full-width">
-          <label>Attachment (Optional)</label>
-          <div class="attachment-upload-box" [class.has-file]="fileName" (click)="!fileName && fileInput.click()">
-            <input type="file" (change)="onFileSelected($event)" #fileInput hidden>
+          <label
+            >Attachment
+            {{ leaveRequest.type === 'Sick Leave' ? '(Required)' : '(Optional)' }}</label
+          >
+          <div
+            class="attachment-upload-box"
+            [class.has-file]="fileName"
+            (click)="!fileName && fileInput.click()"
+          >
+            <input type="file" (change)="onFileSelected($event)" #fileInput hidden />
             <div class="upload-content" *ngIf="!fileName">
               <span class="upload-icon">📎</span>
-              <span class="upload-text">Click to upload supporting document (Max 2MB)</span>
+              <span class="upload-text">
+                {{
+                  leaveRequest.type === 'Sick Leave' ? 'Medical certificate required - ' : ''
+                }}Click to upload supporting document (Max 2MB)
+              </span>
             </div>
             <div class="file-info-active" *ngIf="fileName">
               <span class="file-name-display">{{ fileName }}</span>
-              <button type="button" class="btn-remove-file" (click)="$event.stopPropagation(); removeFile()">✕</button>
+              <button
+                type="button"
+                class="btn-remove-file"
+                (click)="$event.stopPropagation(); removeFile()"
+              >
+                ✕
+              </button>
             </div>
           </div>
         </div>
@@ -177,8 +287,19 @@
 
       <div class="form-actions">
         <button type="button" class="btn-secondary" routerLink="/calendar">Back to Calendar</button>
-        <button type="submit" class="btn-primary" 
-                [disabled]="!leaveForm.valid || totalDays <= 0 || isOverBalance || isInsufficientNotice || isSubmitting">
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="
+            !leaveForm.valid ||
+            totalDays <= 0 ||
+            isOverBalance ||
+            isInsufficientNotice ||
+            isSubmitting ||
+            !canSubmit
+          "
+          [title]="submitDisabledReason"
+        >
           {{ isSubmitting ? 'Submitting...' : 'Submit Request' }}
         </button>
       </div>
