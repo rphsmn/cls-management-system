@@ -507,33 +507,203 @@ export class HistoryComponent implements OnDestroy {
   }
 
   exportToCSV() {
-    this.allFilteredRequests$.pipe(take(1)).subscribe(requests => {
-      if (requests.length === 0) {
-        return;
-      }
+    this.allFilteredRequests$.pipe(take(1)).subscribe({
+      next: (requests) => {
+        if (requests.length === 0) {
+          return;
+        }
 
-      const headers = ['Employee', 'Employee ID', 'Leave Type', 'Period', 'Days', 'Status', 'Date Filed', 'Reason'];
-      const rows = requests.map(req => [
-        req.employeeName || '',
-        req.employeeId || '',
-        req.type || '',
-        req.period || '',
-        req.daysDeducted || req.noOfDays || '1',
-        req.status || '',
-        req.dateFiled ? new Date(req.dateFiled).toLocaleDateString() : '',
-        (req.reason || '').replace(/,/g, ';')
-      ]);
+        const formatDate = (dateStr: string | undefined): string => {
+          if (!dateStr) return '';
+          const date = new Date(dateStr);
+          if (isNaN(date.getTime())) return '';
+          return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        };
 
-      const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
+        const parsePeriod = (period: string | undefined) => {
+          if (!period) return { startDate: '', endDate: '' };
+          const parts = period.split(' to ');
+          return {
+            startDate: parts[0]?.trim() || '',
+            endDate: parts[1]?.trim() || parts[0]?.trim() || ''
+          };
+        };
+
+        const sortedRequests = [...requests].sort((a, b) => {
+          const aPeriod = parsePeriod(a.period);
+          const bPeriod = parsePeriod(b.period);
+          const dateA = new Date(aPeriod.startDate).getTime();
+          const dateB = new Date(bPeriod.startDate).getTime();
+          return dateB - dateA;
+        });
+
+        const escapeHtml = (value: any): string => {
+          const str = value == null ? '' : String(value);
+          return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        };
+
+        const getStatusStyle = (status: string): { bg: string; color: string; cellBg: string } => {
+          const s = status?.toLowerCase() || '';
+          if (s.includes('approved')) return { bg: '#dcfce7', color: '#166534', cellBg: '#ecfdf5' };
+          if (s.includes('rejected')) return { bg: '#fef2f2', color: '#dc2626', cellBg: '#fef2f2' };
+          if (s.includes('pending')) return { bg: '#fef9c3', color: '#854d0e', cellBg: '#fefce8' };
+          return { bg: '#f1f5f9', color: '#475569', cellBg: '#ffffff' };
+        };
+
+        const approvedCount = sortedRequests.filter(r => r.status?.toLowerCase().includes('approved')).length;
+        const pendingCount = sortedRequests.filter(r => r.status?.toLowerCase().includes('pending')).length;
+        const totalDays = sortedRequests.reduce((sum, req) => sum + (Number(req.daysDeducted ?? req.noOfDays ?? 1)), 0);
+
+        const headers = ['Employee Name', 'Employee ID', 'Leave Type', 'Start Date', 'End Date', 'Days', 'Status', 'Date Filed', 'Reason'];
+        const columnWidths = ['220px', '140px', '160px', '130px', '130px', '80px', '120px', '130px', '250px'];
+
+        const headerRow = headers.map((h, i) => {
+          const align = i === 1 || i === 5 || i === 6 ? 'center' : i >= 3 && i <= 7 ? 'right' : 'left';
+          return `<th style="background: #2D5A27; color: white; padding: 18px 16px; text-align: ${align}; font-weight: 700; font-size: 13px; border: 1px solid #1a5336; font-family: 'Segoe UI', sans-serif; white-space: nowrap; width: ${columnWidths[i]};">${h}</th>`;
+        }).join('');
+
+        const dataRows = sortedRequests.map((req, index) => {
+          const period = parsePeriod(req.period);
+          const days = req.daysDeducted ?? req.noOfDays ?? 1;
+          const reason = req.reason?.trim() || 'N/A';
+          const dateFiled = req.dateFiled ? formatDate(req.dateFiled) : '';
+          const statusStyle = getStatusStyle(req.status || '');
+          const zebraBg = index % 2 === 0 ? '#ffffff' : '#f9f9f9';
+
+          return `
+            <tr style="background: ${zebraBg};">
+              <td style="padding: 14px 12px; color: #1e293b; font-weight: 600; font-size: 13px; border: 1px solid #e2e8f0; font-family: 'Segoe UI', sans-serif; text-align: left; width: 220px;">${escapeHtml(req.employeeName || '')}</td>
+              <td style="padding: 14px 12px; color: #64748b; font-size: 12px; border: 1px solid #e2e8f0; font-family: 'Consolas', monospace; text-align: center; width: 140px;">${escapeHtml(req.employeeId || '')}</td>
+              <td style="padding: 14px 12px; color: #166534; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; font-family: 'Segoe UI', sans-serif; text-align: left; width: 160px;">${escapeHtml(req.type || '')}</td>
+              <td style="padding: 14px 12px; color: #1e293b; font-size: 12px; border: 1px solid #e2e8f0; font-family: 'Segoe UI', sans-serif; text-align: right; width: 130px;">${formatDate(period.startDate)}</td>
+              <td style="padding: 14px 12px; color: #1e293b; font-size: 12px; border: 1px solid #e2e8f0; font-family: 'Segoe UI', sans-serif; text-align: right; width: 130px;">${formatDate(period.endDate)}</td>
+              <td style="padding: 14px 12px; color: #1e293b; font-weight: 700; font-size: 12px; border: 1px solid #e2e8f0; font-family: 'Segoe UI', sans-serif; text-align: center; width: 80px;">${String(days)}</td>
+              <td style="padding: 14px 12px; border: 1px solid #e2e8f0; text-align: center; width: 120px; background: ${statusStyle.cellBg};"><span style="background: ${statusStyle.bg}; color: ${statusStyle.color}; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 11px; font-family: 'Segoe UI', sans-serif; display: inline-block;">${escapeHtml(req.status || '')}</span></td>
+              <td style="padding: 14px 12px; color: #64748b; font-size: 12px; border: 1px solid #e2e8f0; font-family: 'Segoe UI', sans-serif; text-align: right; width: 130px;">${dateFiled}</td>
+              <td style="padding: 14px 12px; color: #475569; font-size: 12px; border: 1px solid #e2e8f0; font-family: 'Segoe UI', sans-serif; text-align: left; width: 250px; max-width: 250px; overflow: visible; white-space: normal;">${escapeHtml(reason)}</td>
+            </tr>
+          `;
+        }).join('');
+
+        const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Leave History Report</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc;">
+    <div style="max-width: 1200px; margin: 0 auto;">
       
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `leave-history-${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      <!-- HEADER SECTION (Rows 1-5) -->
+      <div style="background: linear-gradient(135deg, #2D5A27 0%, #3d7a3d 100%); padding: 32px 32px; border-radius: 16px 16px 0 0;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <p style="color: rgba(255,255,255,0.7); font-size: 11px; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Company Report</p>
+            <h1 style="color: white; margin: 0; font-size: 22px; font-weight: 800; font-family: 'Segoe UI', sans-serif;">Leave History Report</h1>
+            <p style="color: rgba(255,255,255,0.85); margin: 10px 0 0 0; font-size: 13px;">Cor Logic Solutions Inc.</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="color: rgba(255,255,255,0.9); font-size: 13px; margin: 0 0 4px 0; font-weight: 600;">Generated On</p>
+            <p style="color: rgba(255,255,255,0.8); font-size: 12px; margin: 0;">${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- METADATA SECTION (Rows 6-15) - Label-Value Pairs -->
+      <div style="background: white; padding: 24px 32px; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+          <tr>
+            <!-- Column Key - Row based labels -->
+            <td style="vertical-align: top; padding-right: 40px; border-right: 1px solid #e2e8f0; width: 35%;">
+              <p style="color: #2D5A27; font-size: 11px; font-weight: 700; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #2D5A27; padding-bottom: 8px;">📋 Column Key</p>
+              <table style="width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed;">
+                <tr><td style="padding: 4px 8px; color: #64748b; width: 120px;"><strong style="color: #1e293b;">Employee Name</strong></td><td style="padding: 4px 8px; color: #64748b;">Full name of employee</td></tr>
+                <tr><td style="padding: 4px 8px; color: #64748b;"><strong style="color: #1e293b;">Employee ID</strong></td><td style="padding: 4px 8px; color: #64748b;">Unique ID (CLS-XXXX)</td></tr>
+                <tr><td style="padding: 4px 8px; color: #64748b;"><strong style="color: #1e293b;">Leave Type</strong></td><td style="padding: 4px 8px; color: #64748b;">Type of leave requested</td></tr>
+                <tr><td style="padding: 4px 8px; color: #64748b;"><strong style="color: #1e293b;">Start / End Date</strong></td><td style="padding: 4px 8px; color: #64748b;">Leave period coverage</td></tr>
+                <tr><td style="padding: 4px 8px; color: #64748b;"><strong style="color: #1e293b;">Days</strong></td><td style="padding: 4px 8px; color: #64748b;">Number of days deducted</td></tr>
+                <tr><td style="padding: 4px 8px; color: #64748b;"><strong style="color: #1e293b;">Status</strong></td><td style="padding: 4px 8px; color: #64748b;">Approval status</td></tr>
+                <tr><td style="padding: 4px 8px; color: #64748b;"><strong style="color: #1e293b;">Date Filed</strong></td><td style="padding: 4px 8px; color: #64748b;">When request was submitted</td></tr>
+                <tr><td style="padding: 4px 8px; color: #64748b;"><strong style="color: #1e293b;">Reason</strong></td><td style="padding: 4px 8px; color: #64748b;">Purpose/remarks</td></tr>
+              </table>
+            </td>
+            
+            <!-- Status Legend -->
+            <td style="vertical-align: top; padding: 0 40px; border-right: 1px solid #e2e8f0;">
+              <p style="color: #2D5A27; font-size: 11px; font-weight: 700; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #2D5A27; padding-bottom: 8px;">🎨 Status Legend</p>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 6px 0;"><span style="background: #ecfdf5; color: #166534; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid #dcfce7;">Approved</span></td></tr>
+                <tr><td style="padding: 6px 0;"><span style="background: #fefce8; color: #854d0e; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid #fef9c3;">Pending</span></td></tr>
+                <tr><td style="padding: 6px 0;"><span style="background: #fef2f2; color: #dc2626; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid #fee2e2;">Rejected</span></td></tr>
+              </table>
+            </td>
+            
+            <!-- Summary - Row based label-value -->
+            <td style="vertical-align: top; padding-left: 40px;">
+              <p style="color: #2D5A27; font-size: 11px; font-weight: 700; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #2D5A27; padding-bottom: 8px;">📊 Summary</p>
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                <tr><td style="padding: 6px 0; color: #64748b; width: 120px;">Total Records</td><td style="padding: 6px 0; color: #1e293b; font-weight: 600;">${sortedRequests.length}</td></tr>
+                <tr><td style="padding: 6px 0; color: #64748b;">Total Days</td><td style="padding: 6px 0; color: #2D5A27; font-weight: 700; font-size: 14px;">${totalDays}</td></tr>
+                <tr><td style="padding: 6px 0; color: #64748b;">Approved</td><td style="padding: 6px 0; color: #166534; font-weight: 700;">${approvedCount}</td></tr>
+                <tr><td style="padding: 6px 0; color: #64748b;">Pending</td><td style="padding: 6px 0; color: #854d0e; font-weight: 700;">${pendingCount}</td></tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+      <!-- BUFFER ROW (Row 16) -->
+      <div style="height: 16px; background: #f8fafc;"></div>
+      
+      <!-- TABLE HEADER (Row 17) -->
+      <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.08); table-layout: fixed;">
+        <thead>
+          <tr>${headerRow}</tr>
+        </thead>
+        <tbody>
+          ${dataRows}
+          <tr style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+            <td style="padding: 18px 12px; text-align: right; font-weight: 700; color: #1a5336; font-size: 13px; border: 1px solid #e2e8f0; font-family: 'Segoe UI', sans-serif; width: 220px;"></td>
+            <td style="padding: 18px 12px; text-align: center; font-weight: 700; color: #1a5336; font-size: 13px; border: 1px solid #e2e8f0; font-family: 'Segoe UI', sans-serif; width: 140px;"></td>
+            <td style="padding: 18px 12px; text-align: left; font-weight: 700; color: #1a5336; font-size: 13px; border: 1px solid #e2e8f0; font-family: 'Segoe UI', sans-serif; width: 160px;">TOTAL DAYS</td>
+            <td style="padding: 18px 12px; text-align: right; border: 1px solid #e2e8f0; width: 130px;"></td>
+            <td style="padding: 18px 12px; text-align: right; border: 1px solid #e2e8f0; width: 130px;"></td>
+            <td style="padding: 18px 12px; text-align: center; font-weight: 800; color: #1a5336; font-size: 14px; border: 1px solid #e2e8f0; font-family: 'Segoe UI', sans-serif; background: #dcfce7; border-bottom: 3px double #1a5336; width: 80px;">${totalDays}</td>
+            <td style="padding: 18px 12px; border: 1px solid #e2e8f0; text-align: center; width: 120px;"></td>
+            <td style="padding: 18px 12px; text-align: right; border: 1px solid #e2e8f0; width: 130px;"></td>
+            <td style="padding: 18px 12px; text-align: left; border: 1px solid #e2e8f0; width: 250px;"></td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <!-- Footer -->
+      <div style="background: #f1f5f9; padding: 16px 32px; border-radius: 0 0 16px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="color: #1a5336; font-size: 13px; font-weight: 700;">Cor Logic Solutions Inc.</span>
+          <span style="color: #64748b; font-size: 12px; margin-left: 8px;">| Leave Management System</span>
+        </div>
+        <span style="color: #94a3b8; font-size: 11px;">Total Records: ${sortedRequests.length}</span>
+      </div>
+      
+      <!-- Disclaimer -->
+      <div style="text-align: center; padding: 16px; color: #94a3b8; font-size: 10px; font-style: italic;">
+        Confidential - For Internal Use Only | Cor Logic Solutions Inc.
+      </div>
+    </div>
+  </body>
+</html>`;
+
+        const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `leave-history-${new Date().toISOString().split('T')[0]}.xls`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      },
     });
   }
 }
