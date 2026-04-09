@@ -16,11 +16,11 @@ import {
 } from '@angular/fire/firestore';
 import { Observable, BehaviorSubject, of, Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { AuthService } from './auth';
-import { calculatePaidTimeOff } from './auth';
+import { AuthService, calculatePaidTimeOff } from './auth';
+import { NotificationService } from './notification.service';
 
-// Limit for initial load - loads most recent 100 requests
-const REQUESTS_LIMIT = 100;
+// Limit for initial load - loads most recent 500 requests to ensure all records are captured
+const REQUESTS_LIMIT = 500;
 
 @Injectable({
   providedIn: 'root',
@@ -28,6 +28,7 @@ const REQUESTS_LIMIT = 100;
 export class LeaveService implements OnDestroy {
   private firestore = inject(Firestore);
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
 
   // Live Stream of all requests using BehaviorSubject
   private requestsSubject = new BehaviorSubject<any[]>([]);
@@ -112,7 +113,24 @@ export class LeaveService implements OnDestroy {
       targetReviewer: this.getInitialReviewer(user.role),
     };
 
-    return addDoc(requestCollection, enrichedRequest);
+    const docRef = await addDoc(requestCollection, enrichedRequest);
+
+    // Create notification for supervisors
+    console.log('[LeaveService] Creating notification, user.role:', user.role, 'user.name:', user.name);
+    try {
+      await this.notificationService.notifyNewLeaveRequest(
+        user.name,
+        user.uid,
+        requestData.type,
+        enrichedRequest.period,
+        user.role
+      );
+      console.log('[LeaveService] Notification created successfully');
+    } catch (err) {
+      console.error('[LeaveService] Failed to create notification:', err);
+    }
+
+    return docRef;
   }
 
   // 3. Update status (Approved/Rejected)
@@ -234,10 +252,9 @@ export class LeaveService implements OnDestroy {
     if (status !== 'Approved') return;
 
     // Only restore for Paid Time Off and Sick Leave
-    if (leaveType !== 'Paid Time Off' && leaveType !== 'Sick Leave') return;
+    const leaveTypeLower = leaveType.toLowerCase();
+    if (!leaveTypeLower.includes('paid time off') && !leaveTypeLower.includes('sick leave')) return;
 
-    // Get the number of days to restore - use daysDeducted (0.5/1.0) if available
-    const noOfDays = requestData['daysDeducted'] ?? requestData['noOfDays'] ?? 1;
     const employeeId = requestData['employeeId'];
 
     if (!employeeId) {
@@ -257,14 +274,33 @@ export class LeaveService implements OnDestroy {
 
     const userDoc = userSnapshot.docs[0];
     const userData = userDoc.data();
-    const currentBalance = userData['leaveBalance'] || 0;
+    const role = userData['role'] || '';
+    const joinedDate = userData['joinedDate'];
 
-    // Calculate new balance (restore the days)
-    const newBalance = currentBalance + noOfDays;
+    // Calculate total credits using the proper formula
+    const totalCredits = calculatePaidTimeOff(joinedDate, role);
 
-    // Calculate total credits for consistent note format
-    const totalCredits = currentBalance + noOfDays;
-    const usedDays = totalCredits - newBalance;
+    // Get all approved leave requests to calculate used days from scratch
+    const requestsRef = collection(this.firestore, 'leaveRequests');
+    const requestsQuery = query(
+      requestsRef,
+      where('employeeId', '==', employeeId),
+      where('status', '==', 'Approved'),
+    );
+    const requestsSnapshot = await getDocs(requestsQuery);
+
+    let usedDays = 0;
+    for (const reqDoc of requestsSnapshot.docs) {
+      const reqData = reqDoc.data();
+      const reqLeaveType = (reqData['type'] || '').toLowerCase();
+      if (reqLeaveType.includes('paid time off') || reqLeaveType.includes('sick leave')) {
+        const days = reqData['daysDeducted'] ?? reqData['noOfDays'] ?? 1;
+        usedDays += days;
+      }
+    }
+
+    // Calculate new balance
+    const newBalance = Math.max(0, totalCredits - usedDays);
 
     // Update the user's leave balance with consistent format
     const userRef = doc(this.firestore, 'users', userDoc.id);
@@ -274,7 +310,7 @@ export class LeaveService implements OnDestroy {
     });
 
     console.log(
-      `Restored ${noOfDays} leave credit(s) for employee ${employeeId}. Balance: ${currentBalance} -> ${newBalance}`,
+      `Restored leave for ${employeeId}. Total: ${totalCredits}, Used: ${usedDays}, Remaining: ${newBalance}`,
     );
   }
 
@@ -290,7 +326,8 @@ export class LeaveService implements OnDestroy {
     }
 
     // Only deduct for Paid Time Off and Sick Leave (they share the same balance)
-    if (leaveType !== 'Paid Time Off' && leaveType !== 'Sick Leave') {
+    const leaveTypeLower = leaveType.toLowerCase();
+    if (!leaveTypeLower.includes('paid time off') && !leaveTypeLower.includes('sick leave')) {
       return;
     }
 
@@ -315,14 +352,33 @@ export class LeaveService implements OnDestroy {
 
     const userDoc = userSnapshot.docs[0];
     const userData = userDoc.data();
-    const currentBalance = userData['leaveBalance'] || 0;
+    const role = userData['role'] || '';
+    const joinedDate = userData['joinedDate'];
+
+    // Calculate total credits using the proper formula
+    const totalCredits = calculatePaidTimeOff(joinedDate, role);
+
+    // Get all approved leave requests to calculate used days from scratch
+    const requestsRef = collection(this.firestore, 'leaveRequests');
+    const requestsQuery = query(
+      requestsRef,
+      where('employeeId', '==', employeeId),
+      where('status', '==', 'Approved'),
+    );
+    const requestsSnapshot = await getDocs(requestsQuery);
+
+    let usedDays = 0;
+    for (const reqDoc of requestsSnapshot.docs) {
+      const reqData = reqDoc.data();
+      const reqLeaveType = (reqData['type'] || '').toLowerCase();
+      if (reqLeaveType.includes('paid time off') || reqLeaveType.includes('sick leave')) {
+        const days = reqData['daysDeducted'] ?? reqData['noOfDays'] ?? 1;
+        usedDays += days;
+      }
+    }
 
     // Calculate new balance
-    const newBalance = Math.max(0, currentBalance - noOfDays);
-
-    // Calculate used days for the note
-    const totalCredits = currentBalance + noOfDays;
-    const usedDays = totalCredits - newBalance;
+    const newBalance = Math.max(0, totalCredits - usedDays);
 
     // Update the user's leave balance with consistent format
     const userRef = doc(this.firestore, 'users', userDoc.id);
@@ -332,7 +388,7 @@ export class LeaveService implements OnDestroy {
     });
 
     console.log(
-      `Deducted ${noOfDays} leave credit(s) for employee ${employeeId}. Balance: ${currentBalance} -> ${newBalance}`,
+      `Deducted leave for ${employeeId}. Total: ${totalCredits}, Used: ${usedDays}, Remaining: ${newBalance}`,
     );
   }
 
@@ -410,8 +466,8 @@ export class LeaveService implements OnDestroy {
     let usedDays = 0;
     for (const reqDoc of requestsSnapshot.docs) {
       const reqData = reqDoc.data();
-      const leaveType = reqData['type'] || '';
-      if (leaveType === 'Paid Time Off' || leaveType === 'Sick Leave') {
+      const leaveType = (reqData['type'] || '').toLowerCase();
+      if (leaveType.includes('paid time off') || leaveType.includes('sick leave')) {
         const days = reqData['daysDeducted'] ?? reqData['noOfDays'] ?? 1;
         usedDays += days;
       }

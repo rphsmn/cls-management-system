@@ -22,6 +22,7 @@ import {
 import { BehaviorSubject, Observable, of, from, Subscription } from 'rxjs';
 import { switchMap, map, catchError } from 'rxjs/operators';
 import { calculateWorkdays } from '../utils/workday-calculator.util';
+import { HolidayService } from './holiday.service';
 
 export interface Attachment {
   name: string;
@@ -100,10 +101,12 @@ export function calculatePaidTimeOff(joinedDate: string | undefined, role: strin
     baseCredits = 5;
   }
 
-  // Add 1 extra credit for all employees (regardless of years of service)
-  // This means: 1yr = 5+1=6, 2yr+ = 7+1=8, 4yr+ = 8+1=9
-  // Admin Manager and Account Supervisor also get 1 extra (making it 10+1=11, but we'll cap at 10)
-  let totalCredits = baseCredits + 1;
+  // Add 1 extra credit only for employees with at least 1 year of service
+  // Employees with < 1 year cannot file paid leave (only LWOP, maternity, birthday)
+  let totalCredits = baseCredits;
+  if (yearsOfService >= 1) {
+    totalCredits = baseCredits + 1;
+  }
 
   // Cap at 10 for Admin Manager and Account Supervisor
   if (role === 'ADMIN MANAGER' || role === 'ACCOUNT SUPERVISOR') {
@@ -214,6 +217,7 @@ export class AuthService implements OnDestroy {
   private auth = inject(Auth);
   private firestore = inject(Firestore);
   private ngZone = inject(NgZone);
+  private holidayService = inject(HolidayService);
 
   public fbUser$: Observable<FirebaseUser | null> = user(this.auth);
   private currentUserSubject = new BehaviorSubject<User | null>(null);
@@ -253,11 +257,12 @@ export class AuthService implements OnDestroy {
       let usedDays = 0;
       requestsSnapshot.docs.forEach((reqDoc) => {
         const reqData = reqDoc.data();
+        const leaveType = (reqData['type'] || '').toLowerCase();
         if (
           reqData['status'] === 'Approved' &&
-          (reqData['type'] === 'Paid Time Off' || reqData['type'] === 'Sick Leave')
+          (leaveType.includes('paid time off') || leaveType.includes('sick leave'))
         ) {
-          usedDays += reqData['daysDeducted'] || 0;
+          usedDays += reqData['daysDeducted'] ?? reqData['noOfDays'] ?? 0;
         }
       });
 
@@ -507,8 +512,8 @@ export class AuthService implements OnDestroy {
     const userProfile = this.currentUser; // Uses the getter
     if (!userProfile) return;
 
-    const holidayList = JSON.parse(localStorage.getItem('company_holidays') || '[]');
-    const daysToDeduct = calculateWorkdays(period, holidayList);
+    const holidays = this.holidayService.getHolidays();
+    const daysToDeduct = calculateWorkdays(period, holidays);
 
     // Only deduct from birthday leave - Paid Time Off is not stored, it's calculated dynamically
     if (leaveType === LEAVE_TYPES.BIRTHDAY_LEAVE) {

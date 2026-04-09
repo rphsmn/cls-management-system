@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { AuthService, User, calculatePaidTimeOff } from '../../core/services/auth';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-profile',
@@ -13,6 +14,7 @@ import { AuthService, User, calculatePaidTimeOff } from '../../core/services/aut
 export class ProfileComponent implements OnInit {
   currentUser$: Observable<User | null>;
   private authService = inject(AuthService);
+  private hrEmail = environment.hrEmail;
   
   // Computed values (will be updated when user data is available)
   yearsOfService = 'N/A';
@@ -80,32 +82,34 @@ export class ProfileComponent implements OnInit {
     this.emailCopied = false;
   }
   
+  private getEmailSubjectAndBody(): { subject: string; body: string } {
+    const subject = encodeURIComponent(`Update Request - ${this.currentUser?.name || 'Employee'}`);
+    const body = encodeURIComponent(`Hello HR,\n\nI would like to request an update to my professional information.\n\nEmployee: ${this.currentUser?.name || 'N/A'}\nEmployee ID: ${this.currentUser?.employeeId || 'N/A'}\nDepartment: ${this.currentUser?.department || this.currentUser?.dept || 'N/A'}\n\nPlease let me know what information needs to be updated.\n\nThank you.`);
+    return { subject, body };
+  }
+
   getGmailComposeUrl(): string {
-    const subject = encodeURIComponent(`Update Request - ${this.currentUser?.name || 'Employee'}`);
-    const body = encodeURIComponent(`Hello HR,\n\nI would like to request an update to my professional information.\n\nEmployee: ${this.currentUser?.name || 'N/A'}\nEmployee ID: ${this.currentUser?.employeeId || 'N/A'}\nDepartment: ${this.currentUser?.department || this.currentUser?.dept || 'N/A'}\n\nPlease let me know what information needs to be updated.\n\nThank you.`);
-    return `https://mail.google.com/mail/?view=cm&fs=1&to=neptunorosalie25@gmail.com&su=${subject}&body=${body}`;
+    const { subject, body } = this.getEmailSubjectAndBody();
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=${this.hrEmail}&su=${subject}&body=${body}`;
   }
-  
+
   getYahooComposeUrl(): string {
-    const subject = encodeURIComponent(`Update Request - ${this.currentUser?.name || 'Employee'}`);
-    const body = encodeURIComponent(`Hello HR,\n\nI would like to request an update to my professional information.\n\nEmployee: ${this.currentUser?.name || 'N/A'}\nEmployee ID: ${this.currentUser?.employeeId || 'N/A'}\nDepartment: ${this.currentUser?.department || this.currentUser?.dept || 'N/A'}\n\nPlease let me know what information needs to be updated.\n\nThank you.`);
-    return `https://compose.mail.yahoo.com/?to=neptunorosalie25@gmail.com&subject=${subject}&body=${body}`;
+    const { subject, body } = this.getEmailSubjectAndBody();
+    return `https://compose.mail.yahoo.com/?to=${this.hrEmail}&subject=${subject}&body=${body}`;
   }
-  
+
   getOutlookWebComposeUrl(): string {
-    const subject = encodeURIComponent(`Update Request - ${this.currentUser?.name || 'Employee'}`);
-    const body = encodeURIComponent(`Hello HR,\n\nI would like to request an update to my professional information.\n\nEmployee: ${this.currentUser?.name || 'N/A'}\nEmployee ID: ${this.currentUser?.employeeId || 'N/A'}\nDepartment: ${this.currentUser?.department || this.currentUser?.dept || 'N/A'}\n\nPlease let me know what information needs to be updated.\n\nThank you.`);
-    return `https://outlook.live.com/owa/?path=/mail/action/compose&to=neptunorosalie25@gmail.com&subject=${subject}&body=${body}`;
+    const { subject, body } = this.getEmailSubjectAndBody();
+    return `https://outlook.live.com/owa/?path=/mail/action/compose&to=${this.hrEmail}&subject=${subject}&body=${body}`;
   }
-  
+
   getMailtoUrl(): string {
-    const subject = encodeURIComponent(`Update Request - ${this.currentUser?.name || 'Employee'}`);
-    const body = encodeURIComponent(`Hello HR,\n\nI would like to request an update to my professional information.\n\nEmployee: ${this.currentUser?.name || 'N/A'}\nEmployee ID: ${this.currentUser?.employeeId || 'N/A'}\nDepartment: ${this.currentUser?.department || this.currentUser?.dept || 'N/A'}\n\nPlease let me know what information needs to be updated.\n\nThank you.`);
-    return `mailto:neptunorosalie25@gmail.com?subject=${subject}&body=${body}`;
+    const { subject, body } = this.getEmailSubjectAndBody();
+    return `mailto:${this.hrEmail}?subject=${subject}&body=${body}`;
   }
   
   copyHrEmail(): void {
-    navigator.clipboard.writeText('neptunorosalie25@gmail.com').then(() => {
+    navigator.clipboard.writeText(this.hrEmail).then(() => {
       this.emailCopied = true;
       setTimeout(() => {
         this.emailCopied = false;

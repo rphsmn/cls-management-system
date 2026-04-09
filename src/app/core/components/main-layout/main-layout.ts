@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
 import { ConnectionService } from '../../../core/services/connection.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { Observable, map } from 'rxjs';
 
 @Component({
@@ -12,12 +13,14 @@ import { Observable, map } from 'rxjs';
   templateUrl: './main-layout.html',
   styleUrls: ['./main-layout.css']
 })
-export class MainLayoutComponent {
+export class MainLayoutComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private connectionService = inject(ConnectionService);
+  private notificationService = inject(NotificationService);
   private router = inject(Router);
 
   showLogoutModal = false;
+  showNotifications = false;
   
   // Using the observables from AuthService
   currentUser$ = this.authService.currentUser$;
@@ -27,6 +30,48 @@ export class MainLayoutComponent {
   isOnline$: Observable<boolean> = this.connectionService.connectionState$.pipe(
     map(state => state.isOnline)
   );
+
+  // Notifications
+  unreadCount$ = this.notificationService.unreadCount$;
+  notifications$ = this.notificationService.notifications$;
+
+  toggleNotifications() {
+    this.showNotifications = !this.showNotifications;
+  }
+
+  async markAllAsRead() {
+    const user = this.authService.currentUser;
+    if (user) {
+      await this.notificationService.markAllAsRead(user.role);
+    }
+  }
+
+  async clearAllNotifications() {
+    const user = this.authService.currentUser;
+    if (user) {
+      await this.notificationService.clearAllNotifications(user.role);
+    }
+  }
+
+  async markAsRead(notification: any) {
+    console.log('[MainLayout] Mark as read clicked:', notification);
+    if (!notification.read) {
+      await this.notificationService.markAsRead(notification.id);
+    }
+  }
+
+  ngOnInit() {
+    // Subscribe to notifications when user logs in
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.notificationService.subscribeToNotifications(user.role, user.uid);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.notificationService.unsubscribeFromNotifications();
+  }
 
   confirmLogout() { 
     this.showLogoutModal = true; 

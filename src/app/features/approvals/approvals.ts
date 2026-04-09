@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Observable, map, combineLatest, startWith, BehaviorSubject, tap } from 'rxjs';
+import { Observable, map, combineLatest, startWith, BehaviorSubject, tap, take } from 'rxjs';
 import { AuthService, User } from '../../core/services/auth';
 import { LeaveService } from '../../core/services/leave.services';
 import Swal from 'sweetalert2';

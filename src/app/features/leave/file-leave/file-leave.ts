@@ -9,7 +9,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { trigger, transition, style, animate } from '@angular/animations';
 import {
   AuthService,
@@ -22,9 +21,9 @@ import {
   LEAVE_TYPES,
 } from '../../../core/services/auth';
 import { LeaveService } from '../../../core/services/leave.services';
+import { HolidayService } from '../../../core/services/holiday.service';
 import { calculateWorkdays } from '../../../core/utils/workday-calculator.util';
-import { Observable, combineLatest, map, take, forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, combineLatest, map, take, of } from 'rxjs';
 
 @Component({
   selector: 'app-file-leave',
@@ -51,18 +50,16 @@ import { catchError } from 'rxjs/operators';
 export class FileLeaveComponent implements OnInit {
   private authService = inject(AuthService);
   private leaveService = inject(LeaveService);
+  private holidayService = inject(HolidayService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
-  private http = inject(HttpClient);
-  private ngZone = inject(NgZone);
 
   // Expose LEAVE_TYPES to template
   LEAVE_TYPES = LEAVE_TYPES;
 
-  // Cache holiday list to avoid repeated API calls
   private holidayList: any[] = [];
-  private holidaysLoaded = false;
+
   holidaysInRange: string[] = [];
 
   liveCredits$: Observable<any>;
@@ -126,8 +123,6 @@ export class FileLeaveComponent implements OnInit {
   }
 
   constructor() {
-    // Fetch holidays from API for consistency with calendar component
-    this.fetchHolidays();
 
     this.liveCredits$ = combineLatest([
       this.authService.currentUser$,
@@ -168,6 +163,10 @@ export class FileLeaveComponent implements OnInit {
         );
         const canFileSickLeaves = canFileSickLeave(user.role);
 
+        const leaveBal = user.leaveBalance ?? -1;
+        const sickLeaveUsed = calc(LEAVE_TYPES.SICK_LEAVE, 'approved');
+        const paidTimeOffTotalCalc = leaveBal >= 0 ? leaveBal + calc(LEAVE_TYPES.PAID_TIME_OFF, 'approved') : paidTimeOffTotal;
+
         return {
           ...user,
           isPartTime,
@@ -175,12 +174,14 @@ export class FileLeaveComponent implements OnInit {
           // leaveBalance in Firestore is already the remaining balance after deductions
           balances: {
             [LEAVE_TYPES.PAID_TIME_OFF]: {
+              // Use leaveBalance from Firestore if available, otherwise calculate dynamically
               rem:
-                (user.leaveBalance ?? -1) >= 0
-                  ? user.leaveBalance
+                leaveBal >= 0
+                  ? leaveBal
                   : paidTimeOffTotal - calc(LEAVE_TYPES.PAID_TIME_OFF, 'approved'),
               pen: calc(LEAVE_TYPES.PAID_TIME_OFF, 'pending'),
-              total: user.leaveBalance ?? paidTimeOffTotal,
+              // Use leaveBalance from Firestore, or calculate total based on years of service
+              total: paidTimeOffTotalCalc,
             },
             [LEAVE_TYPES.BIRTHDAY_LEAVE]: {
               rem: user.birthdayLeave - calc(LEAVE_TYPES.BIRTHDAY_LEAVE, 'approved'),
@@ -203,12 +204,13 @@ export class FileLeaveComponent implements OnInit {
               total: Infinity,
             },
             [LEAVE_TYPES.SICK_LEAVE]: {
+              // Sick leave shares balance with PTO - use same calculation
               rem:
-                (user.leaveBalance ?? -1) >= 0
-                  ? user.leaveBalance
+                leaveBal >= 0
+                  ? leaveBal
                   : paidTimeOffTotal - calc(LEAVE_TYPES.SICK_LEAVE, 'approved'),
               pen: calc(LEAVE_TYPES.SICK_LEAVE, 'pending'),
-              total: user.leaveBalance ?? paidTimeOffTotal,
+              total: paidTimeOffTotalCalc,
             },
           },
           // Additional flags
@@ -230,66 +232,6 @@ export class FileLeaveComponent implements OnInit {
         };
       }),
     );
-  }
-
-  private fetchHolidays() {
-    if (this.holidaysLoaded) return;
-
-    const currentYear = new Date().getFullYear();
-
-    forkJoin([
-      this.http
-        .get<any[]>(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/PH`)
-        .pipe(catchError(() => of([]))),
-      this.http
-        .get<any[]>(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/AU`)
-        .pipe(catchError(() => of([]))),
-    ]).subscribe(([phData, auData]) => {
-      const processedPH = phData.map((h) => ({
-        date: h.date,
-        name: h.name,
-        region: 'ph',
-        type: this.mapHolidayType(h.name),
-      }));
-      const processedAU = auData.map((h) => ({
-        date: h.date,
-        name: h.name,
-        region: 'au',
-        type: this.mapHolidayType(h.name),
-      }));
-
-      const holidayMap = new Map<string, any>();
-
-      processedPH.forEach((h) => {
-        holidayMap.set(h.date, { ...h, region: 'ph/au' });
-      });
-
-      processedAU.forEach((h) => {
-        if (holidayMap.has(h.date)) {
-          const existing = holidayMap.get(h.date);
-          existing.region = 'ph/au';
-          existing.name = h.name;
-        } else {
-          holidayMap.set(h.date, h);
-        }
-      });
-
-      this.holidayList = Array.from(holidayMap.values());
-      this.holidaysLoaded = true;
-
-      // Recalculate days if dates are already selected
-      if (this.leaveRequest.startDate && this.leaveRequest.endDate) {
-        this.calculateDays();
-      }
-      this.cdr.detectChanges();
-    });
-  }
-
-  private mapHolidayType(name: string): string {
-    const lower = name.toLowerCase();
-    if (lower.includes('edsa')) return 'special-work';
-    if (lower.includes('ninoy') || lower.includes('chinese')) return 'special-non';
-    return 'regular';
   }
 
   private async checkForDuplicateRequest(): Promise<boolean> {
@@ -330,11 +272,19 @@ export class FileLeaveComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Subscribe to holiday service
+    this.holidayService.holidays$.subscribe(holidays => {
+      this.holidayList = holidays;
+      // Recalculate if dates already selected
+      if (this.leaveRequest.startDate && this.leaveRequest.endDate) {
+        this.calculateDays();
+      }
+    });
+
     this.route.queryParams.subscribe((params) => {
       if (params['date']) {
         this.leaveRequest.startDate = params['date'];
         this.leaveRequest.endDate = params['date'];
-        // Use setTimeout to ensure holidays might be loaded
         setTimeout(() => {
           this.calculateDays();
           this.cdr.detectChanges();

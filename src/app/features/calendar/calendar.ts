@@ -1,29 +1,27 @@
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms'; 
 import { AuthService, User } from '../../core/services/auth';
 import { LeaveService } from '../../core/services/leave.services';
-// Added getDocs and doc to imports
+import { HolidayService, Holiday } from '../../core/services/holiday.service';
 import { Firestore, collection, getDocs, doc, deleteDoc, addDoc } from '@angular/fire/firestore'; 
-import { forkJoin, of, Subscription } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, RouterModule, HttpClientModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './calendar.html',
   styleUrls: ['./calendar.css']
 })
 export class CalendarComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private leaveService = inject(LeaveService);
+  private holidayService = inject(HolidayService);
   private firestore = inject(Firestore);
   private router = inject(Router);
-  private http = inject(HttpClient);
   private cd = inject(ChangeDetectorRef);
   
   private subscriptions = new Subscription();
@@ -38,7 +36,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
   isLoading = false; 
   isHR = false; 
   newEventName = ''; // Bound to your [(ngModel)] in the HTML
-  holidays: any[] = [];
+  holidays: Holiday[] = [];
   companyEvents: any[] = [];
   birthdays: any[] = []; // Store employee birthdays
 
@@ -54,8 +52,15 @@ export class CalendarComponent implements OnInit, OnDestroy {
                        r.includes('ADMIN MANAGER') || 
                        r.includes('MANAGER') || 
                        r.includes('MGR');
-          this.fetchHolidays(this.currentDate.getFullYear());
         }
+      })
+    );
+
+    // Subscribe to HolidayService for real-time holiday data
+    this.subscriptions.add(
+      this.holidayService.holidays$.subscribe(holidays => {
+        this.holidays = holidays;
+        this.generateCalendar();
       })
     );
 
@@ -219,49 +224,6 @@ export class CalendarComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ... rest of your existing methods (fetchHolidays, generateCalendar, etc.)
-  fetchHolidays(year: number) {
-    this.isLoading = true;
-    forkJoin([
-      this.http.get<any[]>(`https://date.nager.at/api/v3/PublicHolidays/${year}/PH`).pipe(catchError(() => of([]))),
-      this.http.get<any[]>(`https://date.nager.at/api/v3/PublicHolidays/${year}/AU`).pipe(catchError(() => of([])))
-    ]).subscribe(([phData, auData]) => {
-      const processedPH = phData.map(h => ({ date: h.date, name: h.name, region: 'ph', type: this.mapHolidayType(h.name) }));
-      const processedAU = auData.map(h => ({ date: h.date, name: h.name, region: 'au', type: this.mapHolidayType(h.name) }));
-      
-      // Deduplicate holidays - if same date appears in both PH and AU (like Christmas),
-      // merge them into a single entry with both regions
-      const holidayMap = new Map<string, any>();
-      
-      processedPH.forEach(h => {
-        holidayMap.set(h.date, { ...h, region: 'ph/au' });
-      });
-      
-      processedAU.forEach(h => {
-        if (holidayMap.has(h.date)) {
-          // Date already exists (e.g., Christmas) - mark as shared
-          const existing = holidayMap.get(h.date);
-          existing.region = 'ph/au';
-          existing.name = h.name; // Keep the name (same for both countries)
-        } else {
-          holidayMap.set(h.date, h);
-        }
-      });
-      
-      this.holidays = Array.from(holidayMap.values());
-      this.generateCalendar();
-      this.isLoading = false;
-      this.cd.detectChanges();
-    });
-  }
-
-  private mapHolidayType(name: string): string {
-    const lower = name.toLowerCase();
-    if (lower.includes('edsa')) return 'special-work';
-    if (lower.includes('ninoy') || lower.includes('chinese')) return 'special-non';
-    return 'regular';
-  }
-
   generateCalendar() {
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
@@ -324,9 +286,9 @@ export class CalendarComponent implements OnInit, OnDestroy {
     for (let i = currentYear; i <= currentYear + 10; i++) { this.years.push(i); }
   }
 
-  prevMonth() { this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getMonth() - 1)); this.fetchHolidays(this.currentDate.getFullYear()); }
-  nextMonth() { this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getMonth() + 1)); this.fetchHolidays(this.currentDate.getFullYear()); }
-  goToToday() { this.currentDate = new Date(); this.fetchHolidays(this.currentDate.getFullYear()); }
-  changeYear(e: any) { this.currentDate = new Date(this.currentDate.setFullYear(e.target.value)); this.fetchHolidays(this.currentDate.getFullYear()); }
+  prevMonth() { this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getMonth() - 1)); this.holidayService.refreshYear(this.currentDate.getFullYear()); }
+  nextMonth() { this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getMonth() + 1)); this.holidayService.refreshYear(this.currentDate.getFullYear()); }
+  goToToday() { this.currentDate = new Date(); this.holidayService.refreshYear(this.currentDate.getFullYear()); }
+  changeYear(e: any) { this.currentDate = new Date(this.currentDate.setFullYear(e.target.value)); this.holidayService.refreshYear(this.currentDate.getFullYear()); }
   goToFiling(date: string) { this.router.navigate(['/file-leave'], { queryParams: { date } }); }
 }

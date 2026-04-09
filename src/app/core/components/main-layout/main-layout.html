@@ -35,6 +35,48 @@
   </aside>
 
   <main class="content-wrapper">
+    <!-- Top Header with Notifications -->
+    <header class="top-header">
+      <div class="header-spacer"></div>
+      <div class="header-actions">
+        <div class="notification-wrapper">
+          <div class="notification-bell" (click)="toggleNotifications()">
+            <span class="bell-icon">🔔</span>
+            <span class="notification-badge" *ngIf="(unreadCount$ | async)! > 0">{{ unreadCount$ | async }}</span>
+          </div>
+            <div class="notification-dropdown" *ngIf="showNotifications">
+            <div class="dropdown-header">
+              <h4>Notifications</h4>
+              <div class="header-right">
+                <button class="clear-all-btn" (click)="clearAllNotifications()" [disabled]="(notifications$ | async)?.length === 0" [style.opacity]="(notifications$ | async)?.length === 0 ? 0.5 : 1">
+                  Clear all ({{(notifications$ | async)?.length}})
+                </button>
+                <button class="mark-read-btn" (click)="markAllAsRead()" *ngIf="((unreadCount$ | async) ?? 0) > 0">
+                  Mark all read
+                </button>
+                <button class="close-dropdown" (click)="toggleNotifications()">✕</button>
+              </div>
+            </div>
+            <div class="dropdown-content">
+              <div class="notification-item" *ngFor="let notif of notifications$ | async" [class.unread]="!notif.read" (click)="markAsRead(notif)">
+                <div class="notif-icon">
+                  {{ notif.type === 'new_leave_request' ? '📝' : notif.type === 'leave_approved' ? '✅' : '❌' }}
+                </div>
+                <div class="notif-details">
+                  <p class="notif-title">{{ notif.title }}</p>
+                  <p class="notif-message">{{ notif.message }}</p>
+                  <p class="notif-time">{{ notif.createdAt | date:'short' }}</p>
+                </div>
+                <div class="unread-dot" *ngIf="!notif.read"></div>
+              </div>
+              <div class="empty-notifications" *ngIf="(notifications$ | async)?.length === 0">
+                No notifications
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
     <router-outlet></router-outlet>
   </main>
 

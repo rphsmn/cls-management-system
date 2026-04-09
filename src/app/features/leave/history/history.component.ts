@@ -15,7 +15,9 @@ import {
 } from 'rxjs';
 import { AuthService, User } from '../../../core/services/auth';
 import { LeaveService } from '../../../core/services/leave.services';
+import { HolidayService } from '../../../core/services/holiday.service';
 import { calculateWorkdays } from '../../../core/utils/workday-calculator.util';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-history',
@@ -27,6 +29,7 @@ import { calculateWorkdays } from '../../../core/utils/workday-calculator.util';
 export class HistoryComponent implements OnDestroy {
   private authService = inject(AuthService);
   private leaveService = inject(LeaveService);
+  private holidayService = inject(HolidayService);
 
   currentUser$ = this.authService.currentUser$;
   allFilteredRequests$: Observable<any[]>;
@@ -36,8 +39,8 @@ export class HistoryComponent implements OnDestroy {
   private currentPageSubject = new BehaviorSubject<number>(1);
   currentPage$ = this.currentPageSubject.asObservable();
 
-  // Pre-compute holidays once to avoid repeated localStorage access
-  private holidayList: string[] = [];
+  // Pre-compute holidays from HolidayService
+  private holidayList: any[] = [];
 
   searchControl = new FormControl('', { nonNullable: true });
   monthControl = new FormControl(-1, { nonNullable: true }); // Default to 'All' months
@@ -70,12 +73,10 @@ export class HistoryComponent implements OnDestroy {
   expandedCancellationReason: any = null;
 
   constructor() {
-    // Load holidays once
-    try {
-      this.holidayList = JSON.parse(localStorage.getItem('company_holidays') || '[]');
-    } catch (e) {
-      this.holidayList = [];
-    }
+    // Subscribe to HolidayService
+    this.holidayService.holidays$.subscribe(holidays => {
+      this.holidayList = holidays;
+    });
 
     this.allFilteredRequests$ = combineLatest([
       this.authService.currentUser$,
@@ -276,53 +277,41 @@ export class HistoryComponent implements OnDestroy {
     );
   }
 
-  getSteps(req: any): string[] {
-    const role = (req.role || '').toUpperCase();
-    // Approval hierarchy based on user role:
-    // - Part-Time: HR only (1 step)
-    // - Operations Admin staff: Operations Admin Supervisor → HR
-    // - Accounts staff: Account Supervisor → HR
-    // - IT staff: Admin Manager → HR
-    // - Operations Admin Supervisor: Admin Manager → HR
-    // - Account Supervisor: Admin Manager → HR
-    // - HR: Admin Manager (HR NOT reviewed again after Admin Manager approval)
-    // - Admin Manager: HR
-
-    // HR and Admin Manager (1 step each)
-    if (role === 'HR' || role === 'HUMAN RESOURCE OFFICER') return ['Admin Manager'];
-    if (role === 'ADMIN MANAGER') return ['HR'];
-
-    // Part-time (1 step)
-    if (role === 'PART-TIME') return ['HR'];
-
-    // Supervisors (2 steps): Admin Manager → HR
-    if (role === 'OPERATIONS ADMIN SUPERVISOR' || role === 'ACCOUNT SUPERVISOR')
-      return ['Admin Manager', 'HR'];
-
-    // IT staff (2 steps): Admin Manager → HR
-    if (role === 'SENIOR IT DEVELOPER' || role === 'IT ASSISTANT' || role === 'IT DEVELOPER')
-      return ['Admin Manager', 'HR'];
-
-    // Operations Admin staff (2 steps): Ops Admin Supervisor → HR
-    if (
-      role === 'ADMIN OPERATION OFFICER' ||
-      role === 'ADMIN OPERATION ASSISTANT' ||
-      role === 'ADMIN COMPLIANCE OFFICER'
-    )
-      return ['Ops Admin', 'HR'];
-
-    // Accounts staff (2 steps): Account Supervisor → HR
-    if (
-      role === 'ACCOUNTING CLERK' ||
-      role === 'ACCOUNT RECEIVABLE SPECIALIST' ||
-      role === 'ACCOUNT PAYABLES SPECIALIST'
-    )
-      return ['Acct Sup', 'HR'];
-
-    return ['HR'];
+  private getRoleCategory(role: string): string {
+    const upper = role.toUpperCase();
+    if (upper === 'HR' || upper === 'HUMAN RESOURCE OFFICER') return 'hr';
+    if (upper === 'ADMIN MANAGER') return 'admin-manager';
+    if (upper === 'PART-TIME') return 'part-time';
+    if (upper === 'OPERATIONS ADMIN SUPERVISOR' || upper === 'ACCOUNT SUPERVISOR') return 'supervisor';
+    if (upper === 'SENIOR IT DEVELOPER' || upper === 'IT ASSISTANT' || upper === 'IT DEVELOPER') return 'it';
+    if (upper === 'ADMIN OPERATION OFFICER' || upper === 'ADMIN OPERATION ASSISTANT' || upper === 'ADMIN COMPLIANCE OFFICER') return 'ops-admin';
+    if (upper === 'ACCOUNTING CLERK' || upper === 'ACCOUNT RECEIVABLE SPECIALIST' || upper === 'ACCOUNT PAYABLES SPECIALIST') return 'accounts';
+    return 'default';
   }
 
-  // Abbreviate role names for display in the progress tracker
+  getSteps(req: any): string[] {
+    const role = (req.role || '').toUpperCase();
+    const category = this.getRoleCategory(role);
+    
+    switch (category) {
+      case 'hr':
+        return ['Admin Manager'];
+      case 'admin-manager':
+        return ['HR'];
+      case 'part-time':
+        return ['HR'];
+      case 'supervisor':
+      case 'it':
+        return ['Admin Manager', 'HR'];
+      case 'ops-admin':
+        return ['Ops Admin', 'HR'];
+      case 'accounts':
+        return ['Acct Sup', 'HR'];
+      default:
+        return ['HR'];
+    }
+  }
+
   abbreviateRole(role: string): string {
     const upper = role.toUpperCase();
     if (upper.includes('OPERATIONS ADMIN SUPERVISOR')) return 'Ops Admin';
@@ -332,159 +321,45 @@ export class HistoryComponent implements OnDestroy {
     return role;
   }
 
+  private getStepCompletedStatus(req: any, role: string): string {
+    const status = req.status;
+    if (status === 'Approved' || status === 'Awaiting HR Approval') return 'completed';
+    if (status.includes('Rejected') && (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER'))) return 'rejected';
+    if (status === 'Rejected' && !status.includes('HR') && !status.includes('HUMAN RESOURCE OFFICER')) return 'rejected';
+    return 'pending';
+  }
+
   getStepStatus(req: any, index: number): string {
     const status = req.status;
     const role = (req.role || '').toUpperCase();
-    const steps = this.getSteps(req);
-
-    // For Part-Time employees (1 step): HR only
-    if (role === 'PART-TIME') {
-      if (index === 0) {
-        if (status === 'Approved') return 'completed';
-        if (status.includes('Rejected')) return 'rejected';
-        return 'pending';
-      }
+    const category = this.getRoleCategory(role);
+    const isFirstStep = index === 0;
+    const isSecondStep = index === 1;
+    
+    if (category === 'hr' || category === 'admin-manager' || category === 'part-time') {
+      if (status === 'Approved' || status === 'Awaiting HR Approval') return 'completed';
+      if (status.includes('Rejected')) return 'rejected';
+      return 'pending';
     }
 
-    // For Operations Admin staff (2 steps): Ops Admin Supervisor → HR
-    if (
-      role === 'ADMIN OPERATION OFFICER' ||
-      role === 'ADMIN OPERATION ASSISTANT' ||
-      role === 'ADMIN COMPLIANCE OFFICER'
-    ) {
-      if (index === 0) {
-        // First step (Ops Admin Supervisor): completed when Approved, Awaiting HR Approval, or Rejected by HR
-        // Awaiting HR Approval means Ops Admin Supervisor already approved
-        // Rejected by HR means Ops Admin Supervisor already approved (HR rejected later)
-        if (
-          status === 'Approved' ||
-          status === 'Awaiting HR Approval' ||
-          (status.includes('Rejected') &&
-            (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER')))
-        )
-          return 'completed';
-        // Rejected by Ops Admin Supervisor (not HR)
-        if (
-          status === 'Rejected' &&
-          !status.includes('HR') &&
-          !status.includes('HUMAN RESOURCE OFFICER')
-        )
-          return 'rejected';
-        return 'pending';
-      }
-      if (index === 1) {
-        // Second step (HR): completed only when status is Approved (final)
-        // Pending when awaiting HR approval
-        if (status === 'Approved') return 'completed';
-        // Rejected by HR specifically
-        if (
-          status.includes('Rejected') &&
-          (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER'))
-        )
-          return 'rejected';
-        return status === 'Awaiting HR Approval' ? 'pending' : '';
-      }
+    if ((category === 'supervisor' || category === 'it') && isFirstStep) {
+      return this.getStepCompletedStatus(req, role);
     }
 
-    // For Accounts staff (2 steps): Account Supervisor → HR
-    if (
-      role === 'ACCOUNTING CLERK' ||
-      role === 'ACCOUNT RECEIVABLE SPECIALIST' ||
-      role === 'ACCOUNT PAYABLES SPECIALIST'
-    ) {
-      if (index === 0) {
-        // First step (Account Supervisor): completed when Approved, Awaiting HR Approval, or Rejected by HR
-        // Awaiting HR Approval means Account Supervisor already approved
-        // Rejected by HR means Account Supervisor already approved (HR rejected later)
-        if (
-          status === 'Approved' ||
-          status === 'Awaiting HR Approval' ||
-          (status.includes('Rejected') &&
-            (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER')))
-        )
-          return 'completed';
-        // Rejected by Account Supervisor (not HR)
-        if (
-          status === 'Rejected' &&
-          !status.includes('HR') &&
-          !status.includes('HUMAN RESOURCE OFFICER')
-        )
-          return 'rejected';
-        return 'pending';
-      }
-      if (index === 1) {
-        // Second step (HR): completed only when status is Approved (final)
-        if (status === 'Approved') return 'completed';
-        // Rejected by HR specifically
-        if (
-          status.includes('Rejected') &&
-          (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER'))
-        )
-          return 'rejected';
-        return status === 'Awaiting HR Approval' ? 'pending' : '';
-      }
+    if ((category === 'supervisor' || category === 'it') && isSecondStep) {
+      if (status === 'Approved') return 'completed';
+      if (status.includes('Rejected') && (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER'))) return 'rejected';
+      return status === 'Awaiting HR Approval' ? 'pending' : '';
     }
 
-    // For Supervisors / IT Dev (2 steps): Admin Manager → HR
-    if (
-      role === 'OPERATIONS ADMIN SUPERVISOR' ||
-      role === 'ACCOUNT SUPERVISOR' ||
-      role === 'SENIOR IT DEVELOPER' ||
-      role === 'IT ASSISTANT' ||
-      role === 'IT DEVELOPER'
-    ) {
-      if (index === 0) {
-        // First step (Admin Manager): completed when Approved, Awaiting HR Approval, or Rejected by HR
-        // Awaiting HR Approval means Admin Manager already approved
-        // Rejected by HR means Admin Manager already approved (HR rejected later)
-        if (
-          status === 'Approved' ||
-          status === 'Awaiting HR Approval' ||
-          (status.includes('Rejected') &&
-            (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER')))
-        )
-          return 'completed';
-        // Rejected by Admin Manager (not HR)
-        if (
-          status.includes('Rejected') &&
-          !status.includes('HR') &&
-          !status.includes('HUMAN RESOURCE OFFICER')
-        )
-          return 'rejected';
-        return 'pending';
-      }
-      if (index === 1) {
-        // Second step (HR): completed only when status is Approved (final)
-        if (status === 'Approved') return 'completed';
-        // Rejected by HR specifically
-        if (
-          status.includes('Rejected') &&
-          (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER'))
-        )
-          return 'rejected';
-        return status === 'Awaiting HR Approval' ? 'pending' : '';
-      }
+    if ((category === 'ops-admin' || category === 'accounts') && isFirstStep) {
+      return this.getStepCompletedStatus(req, role);
     }
 
-    // For HR (1 step): Admin Manager only (HR NOT reviewed again after Admin Manager approval)
-    if (role === 'HR' || role === 'HUMAN RESOURCE OFFICER') {
-      if (index === 0) {
-        // HR requests: Admin Manager approves, then it's done (no second HR review)
-        // Status after Admin Manager approval: 'Awaiting HR Approval' (misleading name but means approved)
-        if (status === 'Approved' || status === 'Awaiting HR Approval') return 'completed';
-        if (status.includes('Rejected')) return 'rejected';
-        return 'pending';
-      }
-    }
-
-    // For Admin Manager (1 step): HR
-    if (role === 'ADMIN MANAGER') {
-      if (index === 0) {
-        // Admin Manager requests go to HR for approval
-        if (status === 'Approved') return 'completed';
-        if (status.includes('Rejected')) return 'rejected';
-        return 'pending';
-      }
+    if ((category === 'ops-admin' || category === 'accounts') && isSecondStep) {
+      if (status === 'Approved') return 'completed';
+      if (status.includes('Rejected') && (status.includes('HR') || status.includes('HUMAN RESOURCE OFFICER'))) return 'rejected';
+      return status === 'Awaiting HR Approval' ? 'pending' : '';
     }
 
     return '';
@@ -629,5 +504,36 @@ export class HistoryComponent implements OnDestroy {
       this.yearControl.value !== -1 ||
       this.statusControl.value !== 'all'
     );
+  }
+
+  exportToCSV() {
+    this.allFilteredRequests$.pipe(take(1)).subscribe(requests => {
+      if (requests.length === 0) {
+        return;
+      }
+
+      const headers = ['Employee', 'Employee ID', 'Leave Type', 'Period', 'Days', 'Status', 'Date Filed', 'Reason'];
+      const rows = requests.map(req => [
+        req.employeeName || '',
+        req.employeeId || '',
+        req.type || '',
+        req.period || '',
+        req.daysDeducted || req.noOfDays || '1',
+        req.status || '',
+        req.dateFiled ? new Date(req.dateFiled).toLocaleDateString() : '',
+        (req.reason || '').replace(/,/g, ';')
+      ]);
+
+      const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `leave-history-${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
   }
 }

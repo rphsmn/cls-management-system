@@ -21,6 +21,7 @@ import {
   LEAVE_TYPES,
 } from '../../core/services/auth';
 import { LeaveService } from '../../core/services/leave.services';
+import { HolidayService } from '../../core/services/holiday.service';
 import { calculateWorkdays } from '../../core/utils/workday-calculator.util';
 import { Firestore, collection, getDocs } from '@angular/fire/firestore';
 import Swal from 'sweetalert2';
@@ -43,6 +44,7 @@ interface CompanyStats {
 export class DashboardComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private leaveService = inject(LeaveService);
+  private holidayService = inject(HolidayService);
   private firestore = inject(Firestore);
 
   currentUser$: Observable<any>;
@@ -51,16 +53,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   greeting: string = '';
   today: Date = new Date();
 
-  // Pre-compute holidays once to avoid repeated localStorage access
-  private holidayList: string[] = [];
+  private holidayList: any[] = [];
 
   constructor() {
-    // Load holidays once
-    try {
-      this.holidayList = JSON.parse(localStorage.getItem('company_holidays') || '[]');
-    } catch (e) {
-      this.holidayList = [];
-    }
 
     // Company Stats for MANAGING DIRECTOR
     this.companyStats$ = combineLatest([
@@ -237,7 +232,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
           // Paid Leave / Leave Credits - calculate dynamically from leaveRequests
           // This ensures the balance always reflects actual approved leaves
           paidTimeOff: (() => {
-            const calculatedTotal = paidTimeOffTotal || 10;
+            // Don't use fallback to 10 - 0 is valid for employees with < 1 year
+            const calculatedTotal = paidTimeOffTotal;
             // Calculate used from approved leaves (Paid Time Off + Sick Leave)
             const usedDays = paidTimeOffUsed + sickLeaveUsed;
             const pendingDays = paidTimeOffPending + sickLeavePending;
@@ -316,6 +312,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // Subscribe to HolidayService for real-time holiday data
+    this.holidayService.holidays$.subscribe(holidays => {
+      this.holidayList = holidays;
+    });
+
     this.setGreeting();
 
     // Check for birthday and show greeting popup

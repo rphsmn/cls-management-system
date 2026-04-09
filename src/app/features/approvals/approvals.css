@@ -86,6 +86,24 @@
   width: 250px; 
 }
 
+.export-btn {
+  background: #1a5336;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.export-btn:hover {
+  background: #145029;
+}
+
 .card-full-width { 
   background: white; 
   border-radius: 16px; 

@@ -54,12 +54,12 @@
     >
       <span class="notice-icon">⚠️</span>
       <span *ngIf="currentUser.isPartTime"
-        >As a part-time employee, only <strong>Leave Without Pay</strong> and
-        <strong>Birthday Leave</strong> are available.</span
+        >As a part-time employee, only <strong>Leave Without Pay</strong>,
+        <strong>Birthday Leave</strong>, and <strong>Maternity/Paternity Leave</strong> are available.</span
       >
       <span *ngIf="!currentUser.isPartTime"
-        >You have not completed 1 year of service. Only <strong>Leave Without Pay</strong> and
-        <strong>Birthday Leave</strong> are available.</span
+        >You have not completed 1 year of service. Only <strong>Leave Without Pay</strong>,
+        <strong>Birthday Leave</strong>, and <strong>Maternity/Paternity Leave</strong> are available.</span
       >
     </div>
 
@@ -144,6 +144,18 @@
               Birthday Leave {{ !currentUser.isBirthMonth ? '(Birth month only)' : '' }}
             </option>
             <option [value]="LEAVE_TYPES.SICK_LEAVE">Sick Leave</option>
+            <option
+              [value]="LEAVE_TYPES.MATERNITY_LEAVE"
+              *ngIf="currentUser.isFemale && currentUser.canFileMaternityPaternityLeaves"
+            >
+              Maternity Leave
+            </option>
+            <option
+              [value]="LEAVE_TYPES.PATERNITY_LEAVE"
+              *ngIf="currentUser.isMale && currentUser.canFileMaternityPaternityLeaves"
+            >
+              Paternity Leave
+            </option>
             <option [value]="LEAVE_TYPES.LEAVE_WITHOUT_PAY">Leave Without Pay</option>
           </select>
         </div>

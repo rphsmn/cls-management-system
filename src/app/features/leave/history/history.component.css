@@ -35,6 +35,24 @@
 .search-box input { border: none; background: transparent; outline: none; padding-left: 12px; color: #1e293b; font-size: 14px; width: 250px; }
 .search-box:focus-within { border-color: #1a5336; box-shadow: 0 0 0 3px rgba(26, 83, 54, 0.1); }
 
+.export-btn {
+  background: #1a5336;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.export-btn:hover {
+  background: #145029;
+}
+
 .card-full-width { background: white; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 10px 25px rgba(0,0,0,0.03); overflow: hidden; min-height: 700px; display: flex; flex-direction: column; }
 .history-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .history-table th { padding: 20px 24px; text-align: left; background: #fafbfc; color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; }
