@@ -3,60 +3,163 @@
 
 :root {
   --primary-green: #1a5336;
+  --primary-green-light: #4ade80;
   --accent-yellow: #facc15;
   --sidebar-text: rgba(255, 255, 255, 0.75);
-  --bg-light: #fcfdfd;
+  --sidebar-bg: #1a5336;
+
+  /* Light Theme (Default) */
+  --bg-main: #fcfdfd;
+  --bg-card: #ffffff;
+  --bg-sidebar: #1a5336;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --text-primary: #1a5336;
+  --text-heading: #1e293b;
+  --border-color: #e2e8f0;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --input-bg: #f8fafc;
 }
 
-html, body {
+/* Dark Theme */
+[data-theme='dark'] {
+  --bg-main: #0f172a;
+  --bg-card: #1e293b;
+  --bg-sidebar: #0d2118;
+  --sidebar-bg: #0d2118;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-primary: #4ade80;
+  --text-heading: #ffffff;
+  --border-color: #334155;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --input-bg: #334155;
+}
+
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden; 
-  background-color: var(--bg-light);
+  overflow: hidden;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition:
+    background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Global Font Override */
 * {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif !important;
+}
+
+/* Global h1 styles for pages using var(--text-primary) */
+.title-area h1,
+.title-section h1,
+.title-group h1,
+.page-header h1,
+.calendar-header h1 {
+  color: var(--text-primary);
 }
 
 /* --- THE SHARED SIDEBAR --- */
 .sidebar {
   width: 240px;
-  background-color: var(--primary-green) !important; /* Force the color */
+  background-color: var(--sidebar-bg) !important;
   color: white;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   height: 100vh;
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.sidebar-header { padding: 40px 24px; display: flex; align-items: center; gap: 12px; }
-.sidebar h2 { font-size: 14px; font-weight: 800; letter-spacing: 1.5px; margin: 0; text-transform: uppercase; color: white; }
-.logo-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; }
-
-.nav-menu { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
-.nav-menu li { 
-  padding: 12px 24px; margin: 4px 12px; border-radius: 8px; 
-  cursor: pointer; color: var(--sidebar-text); font-size: 14px; font-weight: 600; 
+.sidebar-header {
+  padding: 40px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sidebar h2 {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  margin: 0;
+  text-transform: uppercase;
+  color: white;
+}
+.logo-dot {
+  width: 8px;
+  height: 8px;
+  background: #4ade80;
+  border-radius: 50%;
+  transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.active-link { 
-  background: white !important; 
-  color: var(--primary-green) !important; 
-  font-weight: 800 !important; 
+[data-theme='dark'] .logo-dot {
+  box-shadow: 0 0 8px #d4af37;
 }
 
-.sidebar-footer { padding: 24px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-.logout-btn-sidebar { 
-  width: 100%; padding: 10px; background: transparent; 
-  border: 1px solid rgba(255, 255, 255, 0.2); color: white; border-radius: 6px; 
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+}
+.nav-menu li {
+  padding: 12px 24px;
+  margin: 4px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--sidebar-text);
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.nav-menu li:hover {
+  transform: translateX(4px);
+}
+
+[data-theme='dark'] .nav-menu li {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .nav-menu li:hover {
+  color: #ffffff;
+  transform: translateX(4px);
+}
+
+.active-link {
+  background: white !important;
+  color: var(--primary-green) !important;
+  font-weight: 800 !important;
+}
+
+.sidebar-footer {
+  padding: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.logout-btn-sidebar {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 6px;
 }
 
 /* Kill default margins that cause horizontal scrolling */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;

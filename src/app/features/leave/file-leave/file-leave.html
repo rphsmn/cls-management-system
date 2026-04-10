@@ -3,7 +3,7 @@
     <div class="toast-content">
       <div class="toast-icon">✓</div>
       <div class="toast-body">
-        <strong>SUBMISSION SUCCESSFUL</strong>
+        <strong>SUBMISSION SUCCESSFUL </strong>
         <span>{{ successMessage }}</span>
       </div>
     </div>
@@ -55,11 +55,13 @@
       <span class="notice-icon">⚠️</span>
       <span *ngIf="currentUser.isPartTime"
         >As a part-time employee, only <strong>Leave Without Pay</strong>,
-        <strong>Birthday Leave</strong>, and <strong>Maternity/Paternity Leave</strong> are available.</span
+        <strong>Birthday Leave</strong>, and <strong>Maternity/Paternity Leave</strong> are
+        available.</span
       >
       <span *ngIf="!currentUser.isPartTime"
         >You have not completed 1 year of service. Only <strong>Leave Without Pay</strong>,
-        <strong>Birthday Leave</strong>, and <strong>Maternity/Paternity Leave</strong> are available.</span
+        <strong>Birthday Leave</strong>, and <strong>Maternity/Paternity Leave</strong> are
+        available.</span
       >
     </div>
 
@@ -267,7 +269,9 @@
         <div class="form-group full-width">
           <label
             >Attachment
-            {{ leaveRequest.type === 'Sick Leave' ? '(Required)' : '(Optional)' }}</label
+            {{
+              leaveRequest.type === 'Sick Leave' && totalDays >= 3 ? '(Required)' : '(Optional)'
+            }}</label
           >
           <div
             class="attachment-upload-box"
@@ -279,8 +283,10 @@
               <span class="upload-icon">📎</span>
               <span class="upload-text">
                 {{
-                  leaveRequest.type === 'Sick Leave' ? 'Medical certificate required - ' : ''
-                }}Click to upload supporting document (Max 2MB)
+                  leaveRequest.type === 'Sick Leave' && totalDays >= 3
+                    ? 'Medical certificate required - '
+                    : ''
+                }}Click to upload supporting document (Max 10MB)
               </span>
             </div>
             <div class="file-info-active" *ngIf="fileName">

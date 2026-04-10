@@ -1,4 +1,8 @@
-<div class="main-app-shell" *ngIf="currentUser$ | async as currentUser; else loadingOrError">
+<div
+  class="main-app-shell"
+  *ngIf="currentUser$ | async as currentUser; else loadingOrError"
+  [attr.data-theme]="darkMode ? 'dark' : 'light'"
+>
   <!-- Offline Banner -->
   <div class="offline-banner" *ngIf="!(isOnline$ | async)">
     <span class="offline-icon">📡</span>
@@ -9,19 +13,43 @@
       <div class="logo-dot"></div>
       <h2>COR LOGIC</h2>
     </div>
-    
+
     <div class="sidebar-content">
       <ul class="nav-menu">
         <li class="section-header">Main</li>
-        <li routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">Dashboard</li>
-        <li routerLink="/calendar" routerLinkActive="active-link">Company Calendar</li> 
+        <li
+          routerLink="/dashboard"
+          routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          Dashboard
+        </li>
+        <li routerLink="/calendar" routerLinkActive="active-link">Company Calendar</li>
         <li routerLink="/history" routerLinkActive="active-link">Leave Tracker</li>
-        <li routerLink="/file-leave" routerLinkActive="active-link" *ngIf="currentUser?.role !== 'MANAGING DIRECTOR'">File Leave</li>
+        <li
+          routerLink="/file-leave"
+          routerLinkActive="active-link"
+          *ngIf="currentUser?.role !== 'MANAGING DIRECTOR'"
+        >
+          File Leave
+        </li>
 
         <ng-container *ngIf="hasAccess(currentUser.role)">
           <li class="section-header">Management</li>
-          <li *ngIf="canSeeEmployees(currentUser.role)" routerLink="/employees" routerLinkActive="active-link">Employee Status</li>
-          <li *ngIf="canSeeApprovals(currentUser.role)" routerLink="/approvals" routerLinkActive="active-link">Leave Approvals</li>
+          <li
+            *ngIf="canSeeEmployees(currentUser.role)"
+            routerLink="/employees"
+            routerLinkActive="active-link"
+          >
+            Employee Status
+          </li>
+          <li
+            *ngIf="canSeeApprovals(currentUser.role)"
+            routerLink="/approvals"
+            routerLinkActive="active-link"
+          >
+            Leave Approvals
+          </li>
         </ng-container>
 
         <li class="section-header">Account</li>
@@ -39,33 +67,63 @@
     <header class="top-header">
       <div class="header-spacer"></div>
       <div class="header-actions">
+        <!-- Dark Mode Toggle -->
+        <button
+          class="theme-toggle"
+          (click)="toggleDarkMode()"
+          [attr.title]="darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+        >
+          <span class="theme-icon">{{ darkMode ? '☀️' : '🌙' }}</span>
+        </button>
         <div class="notification-wrapper">
           <div class="notification-bell" (click)="toggleNotifications()">
             <span class="bell-icon">🔔</span>
-            <span class="notification-badge" *ngIf="(unreadCount$ | async)! > 0">{{ unreadCount$ | async }}</span>
+            <span class="notification-badge" *ngIf="(unreadCount$ | async)! > 0">{{
+              unreadCount$ | async
+            }}</span>
           </div>
-            <div class="notification-dropdown" *ngIf="showNotifications">
+          <div class="notification-dropdown" *ngIf="showNotifications">
             <div class="dropdown-header">
               <h4>Notifications</h4>
               <div class="header-right">
-                <button class="clear-all-btn" (click)="clearAllNotifications()" [disabled]="(notifications$ | async)?.length === 0" [style.opacity]="(notifications$ | async)?.length === 0 ? 0.5 : 1">
-                  Clear all ({{(notifications$ | async)?.length}})
+                <button
+                  class="clear-all-btn"
+                  (click)="clearAllNotifications()"
+                  [disabled]="(notifications$ | async)?.length === 0"
+                  [style.opacity]="(notifications$ | async)?.length === 0 ? 0.5 : 1"
+                >
+                  Clear all ({{ (notifications$ | async)?.length }})
                 </button>
-                <button class="mark-read-btn" (click)="markAllAsRead()" *ngIf="((unreadCount$ | async) ?? 0) > 0">
+                <button
+                  class="mark-read-btn"
+                  (click)="markAllAsRead()"
+                  *ngIf="((unreadCount$ | async) ?? 0) > 0"
+                >
                   Mark all read
                 </button>
                 <button class="close-dropdown" (click)="toggleNotifications()">✕</button>
               </div>
             </div>
             <div class="dropdown-content">
-              <div class="notification-item" *ngFor="let notif of notifications$ | async" [class.unread]="!notif.read" (click)="markAsRead(notif)">
+              <div
+                class="notification-item"
+                *ngFor="let notif of notifications$ | async"
+                [class.unread]="!notif.read"
+                (click)="markAsRead(notif)"
+              >
                 <div class="notif-icon">
-                  {{ notif.type === 'new_leave_request' ? '📝' : notif.type === 'leave_approved' ? '✅' : '❌' }}
+                  {{
+                    notif.type === 'new_leave_request'
+                      ? '📝'
+                      : notif.type === 'leave_approved'
+                        ? '✅'
+                        : '❌'
+                  }}
                 </div>
                 <div class="notif-details">
                   <p class="notif-title">{{ notif.title }}</p>
                   <p class="notif-message">{{ notif.message }}</p>
-                  <p class="notif-time">{{ notif.createdAt | date:'short' }}</p>
+                  <p class="notif-time">{{ notif.createdAt | date: 'short' }}</p>
                 </div>
                 <div class="unread-dot" *ngIf="!notif.read"></div>
               </div>
@@ -84,7 +142,10 @@
     <div class="modal-card">
       <div class="modal-icon">!</div>
       <h3>Confirm Logout</h3>
-      <p>Are you sure you want to log out, <strong>{{ currentUser.name }}</strong>?</p>
+      <p>
+        Are you sure you want to log out, <strong>{{ (currentUser$ | async)?.name }}</strong
+        >?
+      </p>
       <div class="modal-actions">
         <button class="btn-cancel" (click)="cancelLogout()">Cancel</button>
         <button class="btn-confirm" (click)="executeLogout()">Log Out</button>

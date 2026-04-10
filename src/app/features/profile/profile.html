@@ -69,6 +69,36 @@
       </div>
     </section>
 
+    <section
+      class="info-card"
+      *ngIf="
+        user.mobileNo || user.address || user.emergencyContactPerson || user.emergencyContactMobile
+      "
+    >
+      <div class="card-title">
+        <h3>Emergency Contact</h3>
+        <span class="verified">✓ Available</span>
+      </div>
+      <div class="data-row" *ngIf="user.mobileNo">
+        <label>Mobile No.</label><span>{{ user.mobileNo }}</span>
+      </div>
+      <div class="data-row" *ngIf="user.address">
+        <label>Address</label><span>{{ user.address }}</span>
+      </div>
+      <div class="data-row" *ngIf="user.emergencyContactPerson">
+        <label>Emergency Contact Person</label><span>{{ user.emergencyContactPerson }}</span>
+      </div>
+      <div class="data-row" *ngIf="user.emergencyContactRelation">
+        <label>Relationship</label><span>{{ user.emergencyContactRelation }}</span>
+      </div>
+      <div class="data-row" *ngIf="user.emergencyContactMobile">
+        <label>Contact Person's Mobile</label><span>{{ user.emergencyContactMobile }}</span>
+      </div>
+      <div class="data-row" *ngIf="user.emergencyContactAddress">
+        <label>Contact Person's Address</label><span>{{ user.emergencyContactAddress }}</span>
+      </div>
+    </section>
+
     <section class="info-card">
       <div class="card-title">
         <h3>Leave Balance</h3>

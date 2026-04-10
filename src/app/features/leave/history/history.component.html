@@ -45,8 +45,18 @@
       </div>
 
       <button class="export-btn" (click)="exportToCSV()">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          />
         </svg>
         Export Excel
       </button>
@@ -79,8 +89,25 @@
                 <td
                   *ngIf="!currentUser.role.includes('Staff') && currentUser.role !== 'It Developer'"
                 >
-                  <div class="employee-info">
-                    <span class="user-name">{{ req.employeeName }}</span>
+                  <div
+                    class="employee-info"
+                    [class.clickable]="
+                      currentUser.role === 'HUMAN RESOURCE OFFICER' ||
+                      currentUser.role === 'MANAGING DIRECTOR' ||
+                      currentUser.role === 'HR'
+                    "
+                  >
+                    <span
+                      class="user-name"
+                      (click)="
+                        currentUser.role === 'HUMAN RESOURCE OFFICER' ||
+                        currentUser.role === 'MANAGING DIRECTOR' ||
+                        currentUser.role === 'HR'
+                          ? viewEmployeeProfile(req)
+                          : null
+                      "
+                      >{{ req.employeeName }}</span
+                    >
                     <span class="emp-id" *ngIf="req.employeeId">{{ req.employeeId }}</span>
                   </div>
                 </td>
@@ -241,3 +268,114 @@
     </ng-container>
   </div>
 </main>
+
+<div class="modal-overlay" *ngIf="selectedEmployee" (click)="closeEmployeeProfile()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Employee Profile</h2>
+      <button class="modal-close" (click)="closeEmployeeProfile()">✕</button>
+    </div>
+    <div class="modal-body" *ngIf="selectedEmployeeLoading">
+      <div class="loading-spinner">Loading...</div>
+    </div>
+    <div class="modal-body" *ngIf="!selectedEmployeeLoading && selectedEmployee">
+      <div class="profile-modal-grid">
+        <div class="profile-header-section">
+          <div class="avatar-circle large">{{ selectedEmployee.name?.charAt(0) }}</div>
+          <div class="profile-name-section">
+            <h3>{{ selectedEmployee.name }}</h3>
+            <span class="role-badge">{{ selectedEmployee.role }}</span>
+          </div>
+        </div>
+
+        <div class="profile-card">
+          <h4>Employment Details</h4>
+          <div class="data-row">
+            <label>Employee ID</label><span>{{ selectedEmployee.employeeId || 'N/A' }}</span>
+          </div>
+          <div class="data-row">
+            <label>Department</label><span>{{ selectedEmployee.dept || 'N/A' }}</span>
+          </div>
+          <div class="data-row">
+            <label>Joined Date</label
+            ><span>{{
+              selectedEmployee.joinedDate?.toDate
+                ? (selectedEmployee.joinedDate.toDate() | date: 'MMM d, yyyy')
+                : (selectedEmployee.joinedDate | date: 'MMM d, yyyy')
+            }}</span>
+          </div>
+          <div class="data-row">
+            <label>Years of Service</label><span>{{ selectedEmployee.yearsOfService }}</span>
+          </div>
+        </div>
+
+        <div class="profile-card" *ngIf="selectedEmployee.birthday || selectedEmployee.gender">
+          <h4>Personal Information</h4>
+          <div class="data-row" *ngIf="selectedEmployee.birthday">
+            <label>Birthday</label><span>{{ selectedEmployee.birthday }}</span>
+          </div>
+          <div class="data-row" *ngIf="selectedEmployee.gender">
+            <label>Gender</label><span>{{ selectedEmployee.gender }}</span>
+          </div>
+        </div>
+
+        <div
+          class="profile-card"
+          *ngIf="
+            selectedEmployee.tin ||
+            selectedEmployee.sss ||
+            selectedEmployee.philhealth ||
+            selectedEmployee.pagibig
+          "
+        >
+          <h4>Government IDs</h4>
+          <div class="data-row" *ngIf="selectedEmployee.tin">
+            <label>TIN</label><span>{{ selectedEmployee.tin }}</span>
+          </div>
+          <div class="data-row" *ngIf="selectedEmployee.sss">
+            <label>SSS</label><span>{{ selectedEmployee.sss }}</span>
+          </div>
+          <div class="data-row" *ngIf="selectedEmployee.philhealth">
+            <label>PhilHealth</label><span>{{ selectedEmployee.philhealth }}</span>
+          </div>
+          <div class="data-row" *ngIf="selectedEmployee.pagibig">
+            <label>Pag-IBIG</label><span>{{ selectedEmployee.pagibig }}</span>
+          </div>
+        </div>
+
+        <div
+          class="profile-card"
+          *ngIf="
+            selectedEmployee.mobileNo ||
+            selectedEmployee.address ||
+            selectedEmployee.emergencyContactPerson ||
+            selectedEmployee.emergencyContactMobile
+          "
+        >
+          <h4>Emergency Contact</h4>
+          <div class="data-row" *ngIf="selectedEmployee.mobileNo">
+            <label>Mobile No.</label><span>{{ selectedEmployee.mobileNo }}</span>
+          </div>
+          <div class="data-row" *ngIf="selectedEmployee.address">
+            <label>Address</label><span>{{ selectedEmployee.address }}</span>
+          </div>
+          <div class="data-row" *ngIf="selectedEmployee.emergencyContactPerson">
+            <label>Emergency Contact Person</label
+            ><span>{{ selectedEmployee.emergencyContactPerson }}</span>
+          </div>
+          <div class="data-row" *ngIf="selectedEmployee.emergencyContactRelation">
+            <label>Relationship</label><span>{{ selectedEmployee.emergencyContactRelation }}</span>
+          </div>
+          <div class="data-row" *ngIf="selectedEmployee.emergencyContactMobile">
+            <label>Contact Person's Mobile</label
+            ><span>{{ selectedEmployee.emergencyContactMobile }}</span>
+          </div>
+          <div class="data-row" *ngIf="selectedEmployee.emergencyContactAddress">
+            <label>Contact Person's Address</label
+            ><span>{{ selectedEmployee.emergencyContactAddress }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

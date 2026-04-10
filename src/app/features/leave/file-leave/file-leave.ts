@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import Swal from 'sweetalert2';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 import {
@@ -108,22 +109,23 @@ export class FileLeaveComponent implements OnInit {
   get canSubmit(): boolean {
     if (this.isSubmitting || this.totalDays <= 0) return false;
     const isSickLeave = this.leaveRequest.type === 'Sick Leave';
+    const requiresAttachment = isSickLeave && this.totalDays >= 3;
     const hasAttachment = !!this.leaveRequest.attachment;
-    if (isSickLeave && !hasAttachment) return false;
+    if (requiresAttachment && !hasAttachment) return false;
     return true;
   }
 
   get submitDisabledReason(): string {
     const isSickLeave = this.leaveRequest.type === 'Sick Leave';
+    const requiresAttachment = isSickLeave && this.totalDays >= 3;
     const hasAttachment = !!this.leaveRequest.attachment;
-    if (isSickLeave && !hasAttachment) {
-      return 'Medical certificate required';
+    if (requiresAttachment && !hasAttachment) {
+      return 'Medical certificate required for 3+ days sick leave';
     }
     return '';
   }
 
   constructor() {
-
     this.liveCredits$ = combineLatest([
       this.authService.currentUser$,
       this.leaveService.requests$,
@@ -165,7 +167,8 @@ export class FileLeaveComponent implements OnInit {
 
         const leaveBal = user.leaveBalance ?? -1;
         const sickLeaveUsed = calc(LEAVE_TYPES.SICK_LEAVE, 'approved');
-        const paidTimeOffTotalCalc = leaveBal >= 0 ? leaveBal + calc(LEAVE_TYPES.PAID_TIME_OFF, 'approved') : paidTimeOffTotal;
+        const paidTimeOffTotalCalc =
+          leaveBal >= 0 ? leaveBal + calc(LEAVE_TYPES.PAID_TIME_OFF, 'approved') : paidTimeOffTotal;
 
         return {
           ...user,
@@ -273,7 +276,7 @@ export class FileLeaveComponent implements OnInit {
 
   ngOnInit() {
     // Subscribe to holiday service
-    this.holidayService.holidays$.subscribe(holidays => {
+    this.holidayService.holidays$.subscribe((holidays) => {
       this.holidayList = holidays;
       // Recalculate if dates already selected
       if (this.leaveRequest.startDate && this.leaveRequest.endDate) {
@@ -480,6 +483,19 @@ export class FileLeaveComponent implements OnInit {
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
+      const maxSizeMB = 10;
+      const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+      if (file.size > maxSizeBytes) {
+        Swal.fire({
+          title: 'File Too Large',
+          text: `Maximum file size is ${maxSizeMB}MB. Please upload a smaller file.`,
+          icon: 'error',
+        });
+        event.target.value = '';
+        return;
+      }
+
       this.fileName = file.name;
       const reader = new FileReader();
       reader.onload = () => {
@@ -570,11 +586,15 @@ export class FileLeaveComponent implements OnInit {
       return;
     }
 
-    // Sick Leave requires attachment (medical certificate/proof)
-    if (this.leaveRequest.type === LEAVE_TYPES.SICK_LEAVE && !this.leaveRequest.attachment) {
+    // Sick Leave requires attachment (medical certificate/proof) for 3+ days
+    if (
+      this.leaveRequest.type === LEAVE_TYPES.SICK_LEAVE &&
+      this.totalDays >= 3 &&
+      !this.leaveRequest.attachment
+    ) {
       this.showErrorToast = true;
       this.errorMessage =
-        'Attachment is required for Sick Leave. Please upload a medical certificate or proof of illness.';
+        'Attachment is required for sick leave of 3 days or more. Please upload a medical certificate or proof of illness.';
       this.cdr.detectChanges();
       setTimeout(() => {
         this.showErrorToast = false;

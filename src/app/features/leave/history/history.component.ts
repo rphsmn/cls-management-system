@@ -17,6 +17,7 @@ import { AuthService, User } from '../../../core/services/auth';
 import { LeaveService } from '../../../core/services/leave.services';
 import { HolidayService } from '../../../core/services/holiday.service';
 import { calculateWorkdays } from '../../../core/utils/workday-calculator.util';
+import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -30,6 +31,7 @@ export class HistoryComponent implements OnDestroy {
   private authService = inject(AuthService);
   private leaveService = inject(LeaveService);
   private holidayService = inject(HolidayService);
+  private firestore = inject(Firestore);
 
   currentUser$ = this.authService.currentUser$;
   allFilteredRequests$: Observable<any[]>;
@@ -71,6 +73,8 @@ export class HistoryComponent implements OnDestroy {
   years: number[] = [-1]; // Will be populated dynamically from leave data
   expandedReq: any = null;
   expandedCancellationReason: any = null;
+  selectedEmployee: any = null;
+  selectedEmployeeLoading = false;
 
   constructor() {
     // Subscribe to HolidayService
@@ -174,6 +178,45 @@ export class HistoryComponent implements OnDestroy {
     // Cleanup if needed
   }
 
+  async viewEmployeeProfile(req: any) {
+    if (!req.uid) return;
+
+    this.selectedEmployeeLoading = true;
+    this.selectedEmployee = null;
+
+    try {
+      const userDoc = await getDoc(doc(this.firestore, 'users', req.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+
+        const joinDate = userData['joinedDate']?.toDate
+          ? userData['joinedDate'].toDate()
+          : new Date(userData['joinedDate']);
+        const today = new Date();
+        const yearsOfService =
+          (today.getTime() - joinDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+
+        this.selectedEmployee = {
+          ...userData,
+          dept: userData['dept'] || 'N/A',
+          joinedDate: userData['joinedDate'],
+          yearsOfService:
+            yearsOfService >= 1
+              ? `${Math.floor(yearsOfService)} year(s) ${Math.round((yearsOfService % 1) * 12)} month(s)`
+              : 'Less than 1 year',
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching employee profile:', error);
+    } finally {
+      this.selectedEmployeeLoading = false;
+    }
+  }
+
+  closeEmployeeProfile() {
+    this.selectedEmployee = null;
+  }
+
   // Helper to parse ISO date strings (YYYY-MM-DD) correctly without timezone issues
   private parseISODate(dateString: string): Date | null {
     if (!dateString) return null;
@@ -269,6 +312,14 @@ export class HistoryComponent implements OnDestroy {
   }
 
   canCancel(req: any): boolean {
+    // Only the employee who filed the request can cancel it
+    const currentUser = this.authService.currentUser;
+    if (!currentUser) return false;
+
+    // Check if current user is the one who filed the request
+    const isOwner = req.uid === currentUser.uid || req.employeeId === currentUser.employeeId;
+    if (!isOwner) return false;
+
     // Can cancel if status is Pending or Awaiting HR Approval OR Awaiting Admin Manager Approval
     return (
       req.status === 'Pending' ||

@@ -11,7 +11,7 @@ import { Observable, map } from 'rxjs';
   standalone: true,
   imports: [CommonModule, RouterModule, RouterOutlet],
   templateUrl: './main-layout.html',
-  styleUrls: ['./main-layout.css']
+  styleUrls: ['./main-layout.css'],
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
@@ -21,19 +21,43 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   showLogoutModal = false;
   showNotifications = false;
-  
+  darkMode = false;
+
   // Using the observables from AuthService
   currentUser$ = this.authService.currentUser$;
   isLoading$ = this.authService.isLoading$;
-  
+
   // Connection state for offline indicator
   isOnline$: Observable<boolean> = this.connectionService.connectionState$.pipe(
-    map(state => state.isOnline)
+    map((state) => state.isOnline),
   );
 
   // Notifications
   unreadCount$ = this.notificationService.unreadCount$;
   notifications$ = this.notificationService.notifications$;
+
+  ngOnInit() {
+    console.log('[MainLayout] ngOnInit - checking theme...');
+    const savedTheme = localStorage.getItem('theme');
+    console.log('[MainLayout] Saved theme from localStorage:', savedTheme);
+    if (savedTheme === 'dark') {
+      this.darkMode = true;
+    }
+    console.log('[MainLayout] darkMode state after init:', this.darkMode);
+    this.authService.currentUser$.subscribe((user) => {
+      if (user) {
+        this.notificationService.subscribeToNotifications(user.role, user.uid);
+      }
+    });
+  }
+
+  toggleDarkMode() {
+    console.log('[MainLayout] toggleDarkMode - before:', this.darkMode);
+    this.darkMode = !this.darkMode;
+    console.log('[MainLayout] toggleDarkMode - after:', this.darkMode);
+    localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+    console.log('[MainLayout] localStorage theme set to:', this.darkMode ? 'dark' : 'light');
+  }
 
   toggleNotifications() {
     this.showNotifications = !this.showNotifications;
@@ -60,25 +84,16 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnInit() {
-    // Subscribe to notifications when user logs in
-    this.authService.currentUser$.subscribe(user => {
-      if (user) {
-        this.notificationService.subscribeToNotifications(user.role, user.uid);
-      }
-    });
-  }
-
   ngOnDestroy() {
     this.notificationService.unsubscribeFromNotifications();
   }
 
-  confirmLogout() { 
-    this.showLogoutModal = true; 
+  confirmLogout() {
+    this.showLogoutModal = true;
   }
 
-  cancelLogout() { 
-    this.showLogoutModal = false; 
+  cancelLogout() {
+    this.showLogoutModal = false;
   }
 
   async executeLogout() {
@@ -103,11 +118,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     if (!role) return false;
     const r = role.toUpperCase();
     return (
-      r.includes('HR') || 
-      r.includes('HUMAN RESOURCE') || 
-      r.includes('ADMIN MANAGER') || 
-      r.includes('ADM-MGR') || 
-      r.includes('MANAGER') || 
+      r.includes('HR') ||
+      r.includes('HUMAN RESOURCE') ||
+      r.includes('ADMIN MANAGER') ||
+      r.includes('ADM-MGR') ||
+      r.includes('MANAGER') ||
       r.includes('MGR') ||
       r === 'MANAGING DIRECTOR'
     );
@@ -119,9 +134,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     // Managing Director cannot see approvals - hands-off approach
     if (r === 'MANAGING DIRECTOR') return false;
     return (
-      r.includes('SUPERVISOR') || 
-      r.includes('MANAGER') || 
-      r.includes('MGR') || 
+      r.includes('SUPERVISOR') ||
+      r.includes('MANAGER') ||
+      r.includes('MGR') ||
       r.includes('HR') ||
       r.includes('HUMAN RESOURCE')
     );

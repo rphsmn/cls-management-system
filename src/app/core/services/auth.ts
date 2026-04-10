@@ -50,6 +50,14 @@ export interface User {
   sss?: string; // Social Security System
   philhealth?: string; // PhilHealth number
   pagibig?: string; // Pag-IBIG number
+  // Contact Information
+  mobileNo?: string; // Mobile Number
+  address?: string; // Home Address
+  // Emergency Contact
+  emergencyContactPerson?: string; // Emergency Contact Person Name
+  emergencyContactRelation?: string; // Relationship to Employee
+  emergencyContactMobile?: string; // Emergency Contact Person's Mobile Number
+  emergencyContactAddress?: string; // Contact Person's Address
   // Note: paidTimeoff is calculated dynamically based on joinedDate and role
   // Note: others (maternity/paternity) is fixed based on gender
 }

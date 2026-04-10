@@ -4,28 +4,26 @@
       <h1>Company Pulse</h1>
       <p>Live availability for {{ employees.length }} team members</p>
     </div>
-    
+
     <div class="filter-actions">
       <div class="select-wrapper">
         <select [(ngModel)]="selectedDept" class="dept-select">
           <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
         </select>
       </div>
-      
+
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input type="text" [(ngModel)]="searchQuery" placeholder="Search name or position...">
+        <input type="text" [(ngModel)]="searchQuery" placeholder="Search name or position..." />
       </div>
     </div>
   </header>
 
-  <!-- Loading indicator -->
   <div class="loading-container" *ngIf="isLoading">
     <div class="spinner"></div>
     <p>Loading employee data...</p>
   </div>
 
-  <!-- Content (hidden while loading) -->
   <div *ngIf="!isLoading">
     <div class="stats-grid">
       <div class="stat-card">
@@ -34,27 +32,37 @@
         <p class="stat-subtext" *ngIf="workingToday > 0">Team productivity is active</p>
         <div class="stat-bar working"></div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-value">{{ awayToday }}</div>
         <div class="stat-label">ABSENT / ON LEAVE</div>
-        <p class="stat-subtext">{{ awayToday === 0 ? 'All members present' : 'Current capacity reduced' }}</p>
+        <p class="stat-subtext">
+          {{ awayToday === 0 ? 'All members present' : 'Current capacity reduced' }}
+        </p>
         <div class="stat-bar away" [class.active-away]="awayToday > 0"></div>
       </div>
     </div>
 
     <div class="employee-grid">
-      <div *ngFor="let emp of filteredEmployees" class="emp-card" [class.has-action]="isAdminOrHR" (click)="isAdminOrHR && toggleAbsentStatus(emp)">
+      <div
+        *ngFor="let emp of filteredEmployees"
+        class="emp-card"
+        [class.has-action]="isAdminOrHR"
+        [class.clickable]="isAdminOrHR"
+        (click)="isAdminOrHR && onEmployeeCardClick($event, emp)"
+      >
         <div class="card-top">
           <div class="avatar-container">
             <div class="avatar">{{ emp.initials }}</div>
             <div class="online-indicator" *ngIf="emp.status === 'In Office'"></div>
           </div>
-          <span class="status-badge" 
-                [class.in-office]="emp.status === 'In Office'" 
-                [class.upcoming]="emp.status === 'Upcoming Leave'"
-                [class.is-away]="emp.status === 'On Leave'"
-                [class.is-absent]="emp.status === 'Absent'">
+          <span
+            class="status-badge"
+            [class.in-office]="emp.status === 'In Office'"
+            [class.upcoming]="emp.status === 'Upcoming Leave'"
+            [class.is-away]="emp.status === 'On Leave'"
+            [class.is-absent]="emp.status === 'Absent'"
+          >
             {{ emp.status | uppercase }}
           </span>
         </div>
@@ -72,10 +80,237 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="empty-state" *ngIf="filteredEmployees.length === 0">
-      <p>No team members found matching your filters.</p>
+      <div class="empty-state" *ngIf="filteredEmployees.length === 0">
+        <p>No team members found matching your filters.</p>
+      </div>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showEmployeeMenu" (click)="closeEmployeeMenu()">
+  <div class="employee-modal" (click)="$event.stopPropagation()">
+    <button class="modal-close-btn" (click)="closeEmployeeMenu()">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+
+    <ng-container *ngIf="selectedEmployee && !selectedEmployeeProfile">
+      <div class="modal-header">
+        <div class="modal-avatar">{{ selectedEmployee.initials }}</div>
+        <div class="modal-header-info">
+          <h2>{{ selectedEmployee.name }}</h2>
+          <span class="modal-emp-id">{{ selectedEmployee.employeeId }}</span>
+          <span class="modal-role">{{ selectedEmployee.dept }}</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn cancel-btn" (click)="closeEmployeeMenu()">Close</button>
+        <button class="modal-btn secondary" (click)="viewEmployeeProfile()">View Profile</button>
+        <button class="modal-btn primary" (click)="markAsAbsentFromMenu()">Mark as Absent</button>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="selectedEmployeeProfile">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-avatar large">{{ selectedEmployeeProfile.name?.charAt(0) }}</div>
+          <div class="modal-header-info">
+            <h2>{{ selectedEmployeeProfile.name }}</h2>
+            <span class="modal-emp-id">{{ selectedEmployeeProfile.employeeId }}</span>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <div class="info-columns">
+            <div class="info-column">
+              <h4>General</h4>
+              <div class="info-row">
+                <label>Dept</label>
+                <span
+                  class="clickable"
+                  (click)="copyToClipboard(selectedEmployeeProfile.dept, $event)"
+                >
+                  {{ selectedEmployeeProfile.dept || '-' }}
+                </span>
+              </div>
+              <div class="info-row">
+                <label>Email</label>
+                <span class="expandable" [class.expanded]="isFieldExpanded('email')">
+                  <span
+                    class="clickable"
+                    (click)="copyToClipboard(selectedEmployeeProfile.email, $event)"
+                  >
+                    {{ selectedEmployeeProfile.email || '-' }}
+                  </span>
+                  <span class="expand-icon" (click)="toggleFieldExpand('email')">
+                    {{ isFieldExpanded('email') ? '▲' : '▼' }}
+                  </span>
+                </span>
+              </div>
+              <div class="info-row">
+                <label>Mobile</label>
+                <span
+                  class="clickable"
+                  (click)="copyToClipboard(selectedEmployeeProfile.mobileNo, $event)"
+                >
+                  {{ selectedEmployeeProfile.mobileNo || '-' }}
+                </span>
+              </div>
+              <div class="info-row">
+                <label>Birthday</label>
+                <span
+                  class="clickable"
+                  (click)="copyToClipboard(selectedEmployeeProfile.birthday, $event)"
+                >
+                  {{ selectedEmployeeProfile.birthday || '-' }}
+                </span>
+              </div>
+              <div class="info-row">
+                <label>Gender</label>
+                <span>{{ selectedEmployeeProfile.gender || '-' }}</span>
+              </div>
+              <div class="info-row">
+                <label>Joined</label>
+                <span>
+                  {{
+                    selectedEmployeeProfile.joinedDate?.toDate
+                      ? (selectedEmployeeProfile.joinedDate.toDate() | date: 'MMM yyyy')
+                      : (selectedEmployeeProfile.joinedDate | date: 'MMM yyyy')
+                  }}
+                </span>
+              </div>
+              <div class="info-row">
+                <label>Yrs Service</label>
+                <span>{{ selectedEmployeeProfile.yearsOfService || '-' }}</span>
+              </div>
+            </div>
+
+            <div class="info-column private-column">
+              <div class="private-header">
+                <h4>Private</h4>
+                <button class="toggle-private-btn" (click)="togglePrivateInfo()">
+                  {{ showPrivateInfo ? 'Hide' : 'Show' }}
+                </button>
+              </div>
+              <div class="private-content" [class.visible]="showPrivateInfo">
+                <div class="info-row">
+                  <label>Address</label>
+                  <span class="expandable" [class.expanded]="isFieldExpanded('address')">
+                    <span
+                      class="clickable"
+                      (click)="copyToClipboard(selectedEmployeeProfile.address, $event)"
+                    >
+                      {{ selectedEmployeeProfile.address || '-' }}
+                    </span>
+                    <span class="expand-icon" (click)="toggleFieldExpand('address')">
+                      {{ isFieldExpanded('address') ? '▲' : '▼' }}
+                    </span>
+                  </span>
+                </div>
+                <div class="info-row">
+                  <label>Contact Person</label>
+                  <span class="expandable" [class.expanded]="isFieldExpanded('contactPerson')">
+                    <span
+                      class="clickable"
+                      (click)="
+                        copyToClipboard(selectedEmployeeProfile.emergencyContactPerson, $event)
+                      "
+                    >
+                      {{ selectedEmployeeProfile.emergencyContactPerson || '-' }}
+                    </span>
+                    <span class="expand-icon" (click)="toggleFieldExpand('contactPerson')">
+                      {{ isFieldExpanded('contactPerson') ? '▲' : '▼' }}
+                    </span>
+                  </span>
+                </div>
+                <div class="info-row">
+                  <label>Relation</label>
+                  <span>{{ selectedEmployeeProfile.emergencyContactRelation || '-' }}</span>
+                </div>
+                <div class="info-row">
+                  <label>Contact Mobile</label>
+                  <span
+                    class="clickable"
+                    (click)="
+                      copyToClipboard(selectedEmployeeProfile.emergencyContactMobile, $event)
+                    "
+                  >
+                    {{ selectedEmployeeProfile.emergencyContactMobile || '-' }}
+                  </span>
+                </div>
+                <div class="info-row">
+                  <label>Contact Address</label>
+                  <span class="expandable" [class.expanded]="isFieldExpanded('contactAddress')">
+                    <span
+                      class="clickable"
+                      (click)="
+                        copyToClipboard(selectedEmployeeProfile.emergencyContactAddress, $event)
+                      "
+                    >
+                      {{ selectedEmployeeProfile.emergencyContactAddress || '-' }}
+                    </span>
+                    <span class="expand-icon" (click)="toggleFieldExpand('contactAddress')">
+                      {{ isFieldExpanded('contactAddress') ? '▲' : '▼' }}
+                    </span>
+                  </span>
+                </div>
+
+                <h4 style="margin-top: 16px">Government IDs</h4>
+                <div class="info-row">
+                  <label>TIN</label>
+                  <span
+                    class="clickable"
+                    (click)="copyToClipboard(selectedEmployeeProfile.tin, $event)"
+                  >
+                    {{ selectedEmployeeProfile.tin || '-' }}
+                  </span>
+                </div>
+                <div class="info-row">
+                  <label>SSS</label>
+                  <span
+                    class="clickable"
+                    (click)="copyToClipboard(selectedEmployeeProfile.sss, $event)"
+                  >
+                    {{ selectedEmployeeProfile.sss || '-' }}
+                  </span>
+                </div>
+                <div class="info-row">
+                  <label>PhilHealth</label>
+                  <span
+                    class="clickable"
+                    (click)="copyToClipboard(selectedEmployeeProfile.philhealth, $event)"
+                  >
+                    {{ selectedEmployeeProfile.philhealth || '-' }}
+                  </span>
+                </div>
+                <div class="info-row">
+                  <label>Pag-IBIG</label>
+                  <span
+                    class="clickable"
+                    (click)="copyToClipboard(selectedEmployeeProfile.pagibig, $event)"
+                  >
+                    {{ selectedEmployeeProfile.pagibig || '-' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="modal-btn cancel-btn" (click)="closeEmployeeMenu()">Close</button>
+        </div>
+      </div>
+    </ng-container>
   </div>
 </div>
