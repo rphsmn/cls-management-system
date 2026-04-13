@@ -161,7 +161,7 @@
   overflow-y: auto;
 }
 
-email.table-row {
+.table-row {
   display: grid;
   grid-template-columns: 140px 140px 1fr 1fr 2fr;
   gap: 16px;
