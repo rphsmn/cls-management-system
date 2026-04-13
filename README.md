@@ -1,59 +1,221 @@
-# ClsManagementSystem
+# CLS HRIS - Human Resources Information System
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.0.
+A comprehensive Angular-based HR management system with Firebase backend for managing employee leave requests, approvals, and tracking.
 
-## Development server
+---
 
-To start a local development server, run:
+## Table of Contents
 
-```bash
-ng serve
-```
+1. User Manual
+2. Technical Documentation
+3. System Architecture
+4. API/Data Schema
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+# User Manual
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+A guide for HR personnel on how to use the CLS HRIS portal.
 
-```bash
-ng generate component component-name
-```
+## Getting Started
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### Logging In
+1. Navigate to the HRIS portal URL
+2. Enter your email and password
+3. Click Sign In
+4. If you forget your password, use Forgot Password to reset
 
-```bash
-ng generate --help
-```
+### Navigation
+- Dashboard: Overview and quick stats
+- File Leave: Submit a leave request
+- History: View your leave history
+- Approvals: Approve/reject leave requests
+- Calendar: View team calendar
+- Employees: View employee directory
+- Profile: Manage your profile
+- Audit Logs: View system activity
 
-## Building
+---
 
-To build the project run:
+## How to Approve a Leave Request
+1. Log in and click Approvals in the sidebar
+2. View pending leave requests
+3. Click on a request to view details
+4. To approve: Click Approve button
+5. To reject: Click Reject button
 
-```bash
-ng build
-```
+### Approval Flow
+| Employee Role | Approval Chain |
+|---------------|----------------|
+| Operations Admin | Supervisor to HR |
+| Accounts Staff | Supervisor to HR |
+| IT Developer | Admin Manager to HR |
+| HR Staff | Admin Manager to HR |
+| Admin Manager | HR (Final) |
+| Part-time | HR (Direct) |
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+---
 
-## Running unit tests
+## How to File a Leave Request
+1. Click File Leave in the sidebar
+2. Select Leave Type from dropdown
+3. Choose Start Date and End Date
+4. Provide a Reason for leave
+5. For sick leave 3+ days, upload medical certificate
+6. Click Submit Request
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+### Leave Types
+- Paid Time Off: 1 day/month of service (max 15)
+- Sick Leave: Same balance as PTO
+- Birthday Leave: 1 day during birth month
+- Maternity Leave: 105 days (female)
+- Paternity Leave: 7 days (male)
+- Leave Without Pay: Unlimited
 
-```bash
-ng test
-```
+---
 
-## Running end-to-end tests
+## How to Update an Employee Profile
+1. Click Profile to update your own
+2. Click Employees (admin) to update others
 
-For end-to-end (e2e) testing, run:
+---
 
-```bash
-ng e2e
-```
+## How to View Audit Logs
+1. Click Audit Logs in the sidebar
+2. Use filters (Time Presets, Month/Year, Action Type)
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+---
 
-## Additional Resources
+# Technical Documentation
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Project Setup
+
+### Prerequisites
+- Node.js 18+
+- npm 9+
+- Firebase project
+
+### Installation
+npm install
+npm start
+
+### Building
+npm run build
+
+---
+
+## Environment Variables
+
+Configure in src/environments/environment.ts:
+- apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId
+- appTitle: CLS HRIS
+- hrEmail, operationsAdminSupervisorEmail, accountSupervisorEmail, adminManagerEmail
+
+---
+
+## Key Scripts
+/scripts folder contains maintenance scripts.
+
+---
+
+# System Architecture
+
+## Overview
+Angular 21+ SPA with Firebase backend (Firestore + Auth).
+
+## Frontend to Backend Communication
+- AuthService: User authentication
+- LeaveService: Leave request CRUD
+- HolidayService: Holiday calendar
+- NotificationService: In-app notifications
+- AuditService: Audit logging
+- EmployeeUpdateService: Employee management
+
+### Real-time Data
+Uses Firestore onSnapshot for real-time updates with BehaviorSubject.
+
+---
+
+## Multi-Level Approval Logic
+
+### Workflow
+1. Employee submits request
+2. First-level reviewer approves/rejects
+3. If approved, moves to next level (HR)
+4. HR approval is final - balance is deducted
+
+### Approval Chain
+| Employee Role | Level 1 | Level 2 |
+|---------------|---------|---------|
+| Operations Admin | Ops Admin Supervisor | HR |
+| Accounts | Account Supervisor | HR |
+| IT Developer | Admin Manager | HR |
+| HR | Admin Manager | None |
+| Admin Manager | HR | None |
+| Part-time | HR | None |
+
+### Status Values
+- Pending: Awaiting review
+- Awaiting HR Approval: Passed first level
+- Approved: Final, balance deducted
+- Rejected: Denied
+- Cancelled: Withdrawn
+
+---
+
+# API/Data Schema
+
+## Firestore Collections
+
+### 1. users
+- uid, id, employeeId, email, name, role, department
+- joinedDate, birthday, gender
+- leaveBalance, birthdayLeave
+- phone, address, emergencyContactName, emergencyContactPhone
+
+### 2. leaveRequests
+- id, type, startDate, endDate, period, reason, daysDeducted
+- attachment: {name, data}
+- uid, employeeId, employeeName, role, department
+- status, targetReviewer
+- dateFiled, dateApproved, cancelledBy
+
+### 3. auditLogs
+- id, action, details
+- userId, performedByName
+- targetUserId, targetUserName
+- metadata, timestamp
+
+### 4. notifications
+- id, type, title, message
+- targetUserId, targetRole
+- isRead, createdAt
+
+### 5. holidays
+- id, name, date
+- type: regular | special-non-working | special-working
+- isRecurring
+
+---
+
+## Leave Type Constants
+- PAID_TIME_OFF: Paid Time Off
+- SICK_LEAVE: Sick Leave
+- BIRTHDAY_LEAVE: Birthday Leave
+- MATERNITY_LEAVE: Maternity Leave
+- PATERNITY_LEAVE: Paternity Leave
+- LEAVE_WITHOUT_PAY: Leave Without Pay
+
+---
+
+## Technology Stack
+- Frontend: Angular 21+
+- Styling: Custom CSS with CSS Variables
+- Backend: Firebase (Firestore, Auth)
+- Notifications: SweetAlert2
+- PDF: jsPDF + autoTable
+
+---
+
+## License
+Internal use only - CLS Human Resources
