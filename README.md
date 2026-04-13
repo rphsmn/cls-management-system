@@ -1,91 +1,104 @@
-# CLS HRIS — Human Resources Information System
+# CLS HRIS - Human Resources Information System
 
-A comprehensive, high-fidelity **Angular-based** management system integrated with a **Firebase** backend. Designed to streamline employee leave requests, multi-level approvals, and immutable audit tracking.
+A comprehensive Angular-based HR management system with Firebase backend for managing employee leave requests, approvals, and tracking.
 
 ---
 
-## 📑 Table of Contents
+## Table of Contents
 1. [User Manual](#user-manual)
 2. [Technical Documentation](#technical-documentation)
 3. [System Architecture](#system-architecture)
-4. [API & Data Schema](#api-data-schema)
+4. [API/Data Schema](#apidata-schema)
 
 ---
 
-# 👤 User Manual
-*A comprehensive guide for HR personnel and staff.*
+# User Manual
+A guide for HR personnel on how to use the CLS HRIS portal.
 
-## 🏁 Getting Started
-### **Logging In**
-1. Navigate to the portal URL.
-2. Enter your corporate email and password.
-3. If credentials are lost, utilize the **Forgot Password** link for a secure reset.
+## Getting Started
 
-### **Sidebar Navigation**
-* **Dashboard:** High-level overview and quick statistics.
-* **File Leave:** Interface for submitting new leave requests.
-* **History:** Personal log of all previous leave submissions.
-* **Approvals:** (Admin/Supervisor only) Management of pending requests.
-* **Calendar:** Centralized team availability view.
-* **Employees:** Corporate directory and profile management.
-* **Audit Logs:** Security-focused system activity tracking.
+### Logging In
+1. Navigate to the HRIS portal URL.
+2. Enter your email and password.
+3. Click **Sign In**.
+4. If you forget your password, use **Forgot Password** to reset.
+
+### Navigation
+- **Dashboard:** Overview and quick stats.
+- **File Leave:** Submit a leave request.
+- **History:** View your leave history.
+- **Approvals:** Approve/reject leave requests.
+- **Calendar:** View team calendar.
+- **Employees:** View employee directory.
+- **Profile:** Manage your profile.
+- **Audit Logs:** View system activity.
 
 ---
 
-## ✅ How to Approve a Leave Request
-1. Click **Approvals** in the sidebar.
-2. Review the list of pending requests.
-3. Select a request to view detailed reasons and attachments.
-4. **Approve:** Finalizes the step or moves to the next level.
-5. **Reject:** Denies the request (requires a reason).
+## How to Approve a Leave Request
+1. Log in and click **Approvals** in the sidebar.
+2. View pending leave requests.
+3. Click on a request to view details.
+4. **To approve:** Click the **Approve** button.
+5. **To reject:** Click the **Reject** button.
 
-### **Approval Workflow Logic**
+### Approval Flow
 | Employee Role | Approval Chain |
 | :--- | :--- |
-| **Operations Admin** | Supervisor → HR |
-| **Accounts Staff** | Supervisor → HR |
-| **IT Developer** | Admin Manager → HR |
-| **HR Staff** | Admin Manager → HR |
-| **Admin Manager** | HR (Final) |
-| **Part-time** | HR (Direct) |
+| Operations Admin | Supervisor to HR |
+| Accounts Staff | Supervisor to HR |
+| IT Developer | Admin Manager to HR |
+| HR Staff | Admin Manager to HR |
+| Admin Manager | HR (Final) |
+| Part-time | HR (Direct) |
 
 ---
 
-## 📝 How to File a Leave Request
-1. Select **File Leave** from the sidebar.
-2. Choose the **Leave Type** and set your date range.
-3. **Requirement:** For Sick Leave exceeding 3 days, a medical certificate upload is mandatory.
-4. Submit the request for the automated approval chain to begin.
+## How to File a Leave Request
+1. Click **File Leave** in the sidebar.
+2. Select **Leave Type** from the dropdown.
+3. Choose **Start Date** and **End Date**.
+4. Provide a **Reason** for leave.
+5. For **Sick Leave (3+ days)**, upload a medical certificate.
+6. Click **Submit Request**.
 
-### **Leave Entitlements (PTO/Sick Leave)**
-| Tenure / Role | Credit Entitlement |
-| :--- | :--- |
-| **Upon 1 Year in Service** | 5 Days |
-| **2nd Year of Service** | 7 Days |
-| **4 Years and above** | 8 Days |
-| **Admin Manager / Supervisor** | 10 Days (Fixed) |
-
-* **Birthday Leave:** 1 Day (usable during birth month).
-* **Maternity/Paternity:** 105 days (F) / 7 days (M).
-* **Leave Without Pay (LWOP):** Unlimited (subject to approval).
+### Leave Types
+* **Paid Time Off:** | Years of Service | Credit Entitlement |
+    | :--- | :--- |
+    | Upon 1 yr. in Service | 5 Days |
+    | 2nd Year of Service | 7 Days |
+    | 4 Years and above | 8 Days |
+    | Admin Manager/Supervisor | 10 Days (Fixed) |
+* **Sick Leave:** Same balance as PTO.
+* **Birthday Leave:** 1 day during birth month.
+* **Maternity Leave:** 105 days (female).
+* **Paternity Leave:** 7 days (male).
+* **Leave Without Pay:** Unlimited.
 
 ---
 
-# 🛠 Technical Documentation
+## How to Update an Employee Profile
+1. Click **Profile** to update your own records.
+2. Click **Employees** (admin only) to update others.
 
-## **Project Setup**
-### **Prerequisites**
-* Node.js 18+
-* npm 9+
-* Active Firebase Project
+---
 
-### **Installation & Deployment**
+## How to View Audit Logs
+1. Click **Audit Logs** in the sidebar.
+2. Use filters (**Time Presets, Month/Year, Action Type**).
+
+---
+
+# Technical Documentation
+
+## Project Setup
+
+### Prerequisites
+- Node.js 18+
+- npm 9+
+- Firebase project
+
+### Installation
 ```bash
-# Install dependencies
 npm install
-
-# Serve locally (localhost:4200)
 npm start
-
-# Production Build
-npm run build
