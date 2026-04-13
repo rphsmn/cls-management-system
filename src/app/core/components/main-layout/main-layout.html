@@ -50,6 +50,13 @@
           >
             Leave Approvals
           </li>
+          <li
+            *ngIf="canSeeAuditLogs(currentUser.role, currentUser.department)"
+            routerLink="/audit-logs"
+            routerLinkActive="active-link"
+          >
+            Audit Logs
+          </li>
         </ng-container>
 
         <li class="section-header">Account</li>

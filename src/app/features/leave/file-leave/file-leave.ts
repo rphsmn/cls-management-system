@@ -23,6 +23,8 @@ import {
 } from '../../../core/services/auth';
 import { LeaveService } from '../../../core/services/leave.services';
 import { HolidayService } from '../../../core/services/holiday.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { AuditService } from '../../../core/services/audit.service';
 import { calculateWorkdays } from '../../../core/utils/workday-calculator.util';
 import { Observable, combineLatest, map, take, of } from 'rxjs';
 
@@ -52,6 +54,8 @@ export class FileLeaveComponent implements OnInit {
   private authService = inject(AuthService);
   private leaveService = inject(LeaveService);
   private holidayService = inject(HolidayService);
+  private notificationService = inject(NotificationService);
+  private auditService = inject(AuditService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
@@ -123,6 +127,14 @@ export class FileLeaveComponent implements OnInit {
       return 'Medical certificate required for 3+ days sick leave';
     }
     return '';
+  }
+
+  private getNotificationTargets(employeeRole: string): string[] {
+    const r = employeeRole.toUpperCase();
+    if (r.includes('DEVELOPER')) return ['MANAGER', 'HR', 'HUMAN RESOURCE'];
+    if (r.includes('ACCOUNTS')) return ['ACCOUNT SUPERVISOR', 'HR'];
+    if (r.includes('PART-TIME')) return ['OPERATIONS ADMIN SUPERVISOR', 'HR'];
+    return ['MANAGER', 'HR', 'HUMAN RESOURCE'];
   }
 
   constructor() {
@@ -609,6 +621,38 @@ export class FileLeaveComponent implements OnInit {
 
     try {
       await this.leaveService.addRequest(this.leaveRequest);
+
+      // Log to audit trail
+      const user = this.authService.currentUser;
+      const period = `${this.leaveRequest.startDate} to ${this.leaveRequest.endDate}`;
+      await this.auditService.logAction(
+        'leave_filed',
+        `${user?.name} filed ${this.leaveRequest.type} leave`,
+        {
+          targetUserId: user?.uid,
+          targetUserName: user?.name,
+          metadata: {
+            leaveType: this.leaveRequest.type,
+            period: period,
+            noOfDays: this.leaveRequest.daysDeducted || this.totalDays,
+          },
+        },
+      );
+
+      // Send notification to supervisors
+      const employeeRole = user?.role || '';
+      const targets = this.getNotificationTargets(employeeRole);
+      for (const role of targets) {
+        await this.notificationService.createNotification(
+          'new_leave_request',
+          'New Leave Request',
+          `${user?.name} filed ${this.leaveRequest.type} (${period})`,
+          user?.name || 'Unknown',
+          user?.uid || '',
+          role,
+        );
+      }
+
       this.successMessage = `Your request has been filed for review.${holidayNotice}`;
       this.showSuccessToast = true;
       this.cdr.detectChanges();

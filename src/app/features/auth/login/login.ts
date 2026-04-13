@@ -3,14 +3,14 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationStart } from '@angular/router';
 import { Subject, takeUntil, filter, take } from 'rxjs';
-import { AuthService } from '../../../core/services/auth'; 
+import { AuthService } from '../../../core/services/auth';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [ReactiveFormsModule, CommonModule, RouterModule],
   templateUrl: './login.html',
-  styleUrls: ['./login.css']
+  styleUrls: ['./login.css'],
 })
 export class LoginComponent implements OnInit, OnDestroy {
   loginForm: FormGroup;
@@ -28,32 +28,32 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   constructor() {
     this.loginForm = this.fb.group({
-      employeeId: ['', [Validators.required]],
-      password: ['', [Validators.required]],
-      rememberMe: [false]
+      employeeId: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      rememberMe: [false],
     });
   }
-  
+
   ngOnInit() {
     // Set time-based greeting
     this.greeting = this.getGreeting();
-    
+
     // Force reset all state when component initializes (e.g., navigating back to login)
     this.resetFormState();
-    
+
     // Subscribe to navigation events to reset form when coming back to login
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationStart),
-      filter(event => (event as NavigationStart).url === '/login'),
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
-      this.resetFormState();
-    });
-    
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationStart),
+        filter((event) => (event as NavigationStart).url === '/login'),
+        takeUntil(this.destroy$),
+      )
+      .subscribe(() => {
+        this.resetFormState();
+      });
+
     // Reset local loading state when auth state changes (user logged out)
-    this.authService.currentUser$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(user => {
+    this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
       // Always reset when user is null (logged out)
       this.isLoading = false;
       this.errorMessage = null;
@@ -62,12 +62,12 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.loginForm.reset({ employeeId: '', password: '', rememberMe: false });
     });
   }
-  
+
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
   }
-  
+
   private resetFormState() {
     // Aggressive reset of all state
     this.isLoading = false;
@@ -85,11 +85,11 @@ export class LoginComponent implements OnInit, OnDestroy {
     const now = new Date();
     const hour = now.getHours();
     const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    
+
     // Time-based greetings
     if (hour >= 5 && hour < 12) {
       // Morning (5am-11:59am)
-      if (day === 1) return 'Happy Monday!';
+      if (day === 1) return 'Happy Monday';
       return 'Good morning';
     } else if (hour >= 12 && hour < 18) {
       // Afternoon (12pm-5:59pm)
@@ -116,21 +116,21 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.errorMessage = null;
 
     const { employeeId, password, rememberMe } = this.loginForm.value;
-    
-    try {
-      const success = await this.authService.login(employeeId, password, rememberMe);
 
-      if (success) {
+    try {
+      const result = await this.authService.login(employeeId, password, rememberMe);
+
+      if (result.success) {
         // Wait for loading to complete before navigating
         // This ensures the user profile is fetched before the dashboard loads
-        
+
         // Wait for isLoading$ to become false (profile loaded or timeout)
         await new Promise<void>((resolve) => {
           const timeout = setTimeout(() => {
             resolve();
           }, 5000); // 5 second timeout
-          
-          const sub = this.authService.isLoading$.subscribe(loading => {
+
+          const sub = this.authService.isLoading$.subscribe((loading) => {
             if (!loading) {
               clearTimeout(timeout);
               sub.unsubscribe();
@@ -138,7 +138,7 @@ export class LoginComponent implements OnInit, OnDestroy {
             }
           });
         });
-        
+
         // Reset submission flag
         this.isSubmitting = false;
         this.router.navigate(['/dashboard']);
@@ -146,13 +146,13 @@ export class LoginComponent implements OnInit, OnDestroy {
         // Auth failed - reset loading state
         this.isLoading = false;
         this.isSubmitting = false;
-        this.errorMessage = "Access Denied. Invalid Employee ID or Password.";
+        this.errorMessage = result.error || 'Access Denied. Invalid Employee ID or Password.';
       }
     } catch (error) {
       // Unexpected error - reset loading state
       this.isLoading = false;
       this.isSubmitting = false;
-      this.errorMessage = "An unexpected error occurred. Please try again.";
+      this.errorMessage = 'An unexpected error occurred. Please try again.';
     }
   }
 }

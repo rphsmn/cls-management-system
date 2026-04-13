@@ -1,10 +1,11 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
 import { ConnectionService } from '../../../core/services/connection.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Observable, map } from 'rxjs';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-main-layout',
@@ -18,6 +19,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   private connectionService = inject(ConnectionService);
   private notificationService = inject(NotificationService);
   private router = inject(Router);
+  private destroy$ = new Subject<void>();
+  private inactivityTimeout: any;
+  private readonly INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 hours
 
   showLogoutModal = false;
   showNotifications = false;
@@ -47,8 +51,46 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.authService.currentUser$.subscribe((user) => {
       if (user) {
         this.notificationService.subscribeToNotifications(user.role, user.uid);
+        this.resetInactivityTimeout();
       }
     });
+    this.resetInactivityTimeout();
+  }
+
+  @HostListener('window:mouseup')
+  @HostListener('window:keydown')
+  @HostListener('window:click')
+  @HostListener('window:scroll')
+  onUserActivity() {
+    this.resetInactivityTimeout();
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardShortcuts(event: KeyboardEvent) {
+    // Ctrl/Cmd + L = Logout
+    if ((event.ctrlKey || event.metaKey) && event.key === 'l') {
+      event.preventDefault();
+      this.confirmLogout();
+    }
+    // Ctrl/Cmd + D = Go to Dashboard
+    if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
+      event.preventDefault();
+      this.router.navigate(['/dashboard']);
+    }
+    // Ctrl/Cmd + P = Go to Profile
+    if ((event.ctrlKey || event.metaKey) && event.key === 'p') {
+      event.preventDefault();
+      this.router.navigate(['/profile']);
+    }
+    // Escape = Close modals
+    if (event.key === 'Escape') {
+      if (this.showLogoutModal) {
+        this.cancelLogout();
+      }
+      if (this.showNotifications) {
+        this.showNotifications = false;
+      }
+    }
   }
 
   toggleDarkMode() {
@@ -61,6 +103,20 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   toggleNotifications() {
     this.showNotifications = !this.showNotifications;
+  }
+
+  private resetInactivityTimeout() {
+    if (this.inactivityTimeout) {
+      clearTimeout(this.inactivityTimeout);
+    }
+    const currentUser = this.authService.currentUser;
+    if (currentUser) {
+      this.inactivityTimeout = setTimeout(() => {
+        console.log('[MainLayout] Session timed out due to inactivity');
+        this.authService.logout();
+        this.router.navigate(['/login']);
+      }, this.INACTIVITY_LIMIT);
+    }
   }
 
   async markAllAsRead() {
@@ -85,7 +141,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    if (this.inactivityTimeout) {
+      clearTimeout(this.inactivityTimeout);
+    }
     this.notificationService.unsubscribeFromNotifications();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   confirmLogout() {
@@ -124,6 +185,22 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       r.includes('ADM-MGR') ||
       r.includes('MANAGER') ||
       r.includes('MGR') ||
+      r.includes('MANAGER') ||
+      r === 'MANAGING DIRECTOR'
+    );
+  }
+
+  canSeeAuditLogs(role: string, dept?: string): boolean {
+    if (!role) return false;
+    const r = role.toUpperCase();
+    const d = (dept || '').toUpperCase();
+    return (
+      r.includes('HR') ||
+      r.includes('HUMAN RESOURCE') ||
+      r.includes('ADMIN MANAGER') ||
+      r.includes('MANAGER') ||
+      r.includes('MGR') ||
+      d.includes('MANAGER') ||
       r === 'MANAGING DIRECTOR'
     );
   }

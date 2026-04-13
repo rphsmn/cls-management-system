@@ -101,7 +101,8 @@
             required
             *ngIf="currentUser.canFilePaidLeaves || currentUser.isAdminOrSupervisor"
           >
-            <option value="" disabled>Select type of leave</option>
+            <option value="" disabled selected>— Select Leave Type —</option>
+            <option value="" disabled>─────────────────────</option>
 
             <!-- Paid Leave -->
             <option [value]="LEAVE_TYPES.PAID_TIME_OFF">Paid Leave</option>

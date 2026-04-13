@@ -12,22 +12,23 @@ import { ProfileComponent } from './features/profile/profile';
 import { CalendarComponent } from './features/calendar/calendar';
 import { EmployeeStatusComponent } from './features/employees/employees';
 import { EmployeeUpdateComponent } from './features/admin/employee-update/employee-update.component';
+import { AuditLogsComponent } from './features/audit-logs/audit-logs';
 
 export const routes: Routes = [
-  { 
-    path: 'login', 
-    component: LoginComponent, 
-    title: 'CLS HRIS | Login' 
+  {
+    path: 'login',
+    component: LoginComponent,
+    title: 'CLS HRIS | Login',
   },
-  { 
-    path: 'forgot-password', 
-    component: ForgotPasswordComponent, 
-    title: 'CLS HRIS | Forgot Password' 
+  {
+    path: 'forgot-password',
+    component: ForgotPasswordComponent,
+    title: 'CLS HRIS | Forgot Password',
   },
-  { 
-    path: 'reset-password', 
-    component: ResetPasswordComponent, 
-    title: 'CLS HRIS | Reset Password' 
+  {
+    path: 'reset-password',
+    component: ResetPasswordComponent,
+    title: 'CLS HRIS | Reset Password',
   },
   {
     path: '',
@@ -41,9 +42,14 @@ export const routes: Routes = [
       { path: 'profile', component: ProfileComponent, title: 'CLS HRIS | Profile' },
       { path: 'calendar', component: CalendarComponent, title: 'CLS HRIS | Calendar' },
       { path: 'employees', component: EmployeeStatusComponent, title: 'CLS HRIS | Employees' },
-      { path: 'admin/employee-update', component: EmployeeUpdateComponent, title: 'CLS HRIS | Employee Update' }
-    ]
+      {
+        path: 'admin/employee-update',
+        component: EmployeeUpdateComponent,
+        title: 'CLS HRIS | Employee Update',
+      },
+      { path: 'audit-logs', component: AuditLogsComponent, title: 'CLS HRIS | Audit Logs' },
+    ],
   },
   // Explicitly add login redirect for when not authenticated
-  { path: '**', redirectTo: 'login' }
+  { path: '**', redirectTo: 'login' },
 ];

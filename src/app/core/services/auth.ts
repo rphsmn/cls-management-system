@@ -378,6 +378,7 @@ export class AuthService implements OnDestroy {
                   birthday: userDoc['birthday'] || undefined,
                   joinedDate: userDoc['joinedDate'] || undefined,
                   gender: userDoc['gender'] || undefined,
+                  mobileNo: userDoc['mobileNo'] || undefined,
                   birthdayLeave: userDoc['birthdayLeave'] || userDoc['birthdayleave'] || 1,
                   sickLeave: userDoc['sickLeave'] !== undefined ? userDoc['sickLeave'] : 10, // Default 10 days sick leave
                   leaveBalance:
@@ -387,6 +388,11 @@ export class AuthService implements OnDestroy {
                   sss: userDoc['sss'] || undefined,
                   philhealth: userDoc['philhealth'] || undefined,
                   pagibig: userDoc['pagibig'] || undefined,
+                  // Emergency Contact
+                  emergencyContactPerson: userDoc['emergencyContactPerson'] || undefined,
+                  emergencyContactRelation: userDoc['emergencyContactRelation'] || undefined,
+                  emergencyContactMobile: userDoc['emergencyContactMobile'] || undefined,
+                  emergencyContactAddress: userDoc['emergencyContactAddress'] || undefined,
                 };
 
                 // Update cache
@@ -425,7 +431,11 @@ export class AuthService implements OnDestroy {
     }
   }
 
-  async login(email: string, pass: string, rememberMe: boolean = false): Promise<boolean> {
+  async login(
+    email: string,
+    pass: string,
+    rememberMe: boolean = false,
+  ): Promise<{ success: boolean; error?: string }> {
     // Set persistence before signing in
     // LOCAL = persists until explicitly logged out (Remember Me checked)
     // SESSION = persists only for current session/tab (Remember Me unchecked)
@@ -441,11 +451,30 @@ export class AuthService implements OnDestroy {
       await signInWithEmailAndPassword(this.auth, email, pass);
       // Firebase auth succeeded - the subscription will handle setting loading to false
       // after fetching the user profile from Firestore
-      return true;
-    } catch (error) {
+      return { success: true };
+    } catch (error: any) {
       // Reset loading state on auth failure
       this.isLoadingSubject.next(false);
-      return false;
+
+      let errorMessage = 'Login failed. Please try again.';
+      if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address format.';
+      } else if (error.code === 'auth/user-disabled') {
+        errorMessage = 'This account has been disabled. Please contact HR.';
+      } else if (error.code === 'auth/user-not-found') {
+        errorMessage = 'No account found with this email. Please check your Employee ID.';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Incorrect password. Please try again.';
+      } else if (error.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid credentials. Please check your Employee ID and password.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many failed attempts. Please try again later.';
+      }
+
+      console.error('[AuthService] Login error:', error.code, error.message);
+      return { success: false, error: errorMessage };
     }
   }
 

@@ -5,7 +5,12 @@
       <p>Live availability for {{ employees.length }} team members</p>
     </div>
 
-    <div class="filter-actions">
+    <div class="filter-actions" *ngIf="isHR()">
+      <button class="mark-absent-btn" (click)="enterSelectionMode()">Mark Absent</button>
+      <span *ngIf="selectionMode" class="selection-indicator">
+        {{ selectedIds.size || 0 }} selected
+        <button (click)="exitSelectionMode()">Cancel</button>
+      </span>
       <div class="select-wrapper">
         <select [(ngModel)]="selectedDept" class="dept-select">
           <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
@@ -47,11 +52,17 @@
       <div
         *ngFor="let emp of filteredEmployees"
         class="emp-card"
-        [class.has-action]="isAdminOrHR"
-        [class.clickable]="isAdminOrHR"
-        (click)="isAdminOrHR && onEmployeeCardClick($event, emp)"
+        [class.has-action]="isHR()"
+        [class.clickable]="isHR()"
+        [class.selected]="selectedIds.has(emp.id)"
+        (click)="
+          isHR() && (selectionMode ? toggleSelection(emp.id) : onEmployeeCardClick($event, emp))
+        "
       >
         <div class="card-top">
+          <div class="checkbox-container" *ngIf="selectionMode">
+            <input type="checkbox" [checked]="selectedIds.has(emp.id)" />
+          </div>
           <div class="avatar-container">
             <div class="avatar">{{ emp.initials }}</div>
             <div class="online-indicator" *ngIf="emp.status === 'In Office'"></div>
@@ -85,6 +96,12 @@
         <p>No team members found matching your filters.</p>
       </div>
     </div>
+
+    <div class="bulk-action-bar" *ngIf="hasSelection && selectionMode">
+      <span>{{ selectedIds.size }} employees selected</span>
+      <button class="bulk-btn danger" (click)="bulkMarkAbsent()">Mark as Absent</button>
+      <button class="bulk-btn" (click)="bulkRemoveAbsent()">Remove Absent</button>
+    </div>
   </div>
 </div>
 
@@ -116,7 +133,20 @@
       <div class="modal-actions">
         <button class="modal-btn cancel-btn" (click)="closeEmployeeMenu()">Close</button>
         <button class="modal-btn secondary" (click)="viewEmployeeProfile()">View Profile</button>
-        <button class="modal-btn primary" (click)="markAsAbsentFromMenu()">Mark as Absent</button>
+        <button
+          *ngIf="selectedEmployee?.status === 'Absent'"
+          class="modal-btn success"
+          (click)="removeAbsentFromMenu()"
+        >
+          Remove Absent
+        </button>
+        <button
+          *ngIf="selectedEmployee?.status !== 'Absent'"
+          class="modal-btn primary"
+          (click)="markAsAbsentFromMenu()"
+        >
+          Mark as Absent
+        </button>
       </div>
     </ng-container>
 

@@ -1,0 +1,92 @@
+<div class="audit-wrapper">
+  <header class="audit-header">
+    <div class="title-area">
+      <h1>Audit Trail</h1>
+      <p>Track all HR and system actions</p>
+    </div>
+
+    <div class="filter-bar">
+      <div class="time-presets">
+        <button
+          *ngFor="let preset of timePresets"
+          class="preset-btn"
+          [class.active]="selectedPreset === preset.value"
+          (click)="setTimePreset(preset.value)"
+        >
+          {{ preset.label }}
+        </button>
+      </div>
+
+      <div class="filter-selects">
+        <select [(ngModel)]="selectedMonth" (change)="applyFilters()" class="filter-select">
+          <option value="">All Months</option>
+          <option *ngFor="let month of months" [value]="month.value">
+            {{ month.label }}
+          </option>
+        </select>
+
+        <select [(ngModel)]="selectedYear" (change)="applyFilters()" class="filter-select">
+          <option *ngFor="let year of years" [value]="year">
+            {{ year }}
+          </option>
+        </select>
+      </div>
+
+      <select [(ngModel)]="filterAction" (change)="applyFilters()" class="action-filter">
+        <option *ngFor="let action of actions" [value]="action">
+          {{ action === 'all' ? 'All Actions' : formatAction(action) }}
+        </option>
+      </select>
+
+      <button *ngIf="hasActiveFilters" class="clear-filter-btn" (click)="clearFilters()">
+        Clear Filters
+      </button>
+    </div>
+  </header>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading audit logs...</p>
+  </div>
+
+  <div *ngIf="!isLoading" class="logs-table">
+    <div class="table-header">
+      <div class="col-time">Time</div>
+      <div class="col-action">Action</div>
+      <div class="col-user">Performed By</div>
+      <div class="col-target">Target</div>
+      <div class="col-details">Details</div>
+    </div>
+
+    <div class="table-body">
+      <div *ngFor="let log of filteredLogs" class="table-row">
+        <div class="col-time">
+          <span class="timestamp">{{ formatTimestamp(log.timestamp) }}</span>
+          <span class="time-ago">{{ getTimeAgo(log.timestamp) }}</span>
+        </div>
+        <div class="col-action">
+          <span class="action-badge" [class]="getActionClass(log.action)">
+            {{ formatAction(log.action) }}
+          </span>
+        </div>
+        <div class="col-user">
+          <span class="user-name">{{ log.performedByName }}</span>
+        </div>
+        <div class="col-target">
+          <span class="target-name">{{ log.targetUserName || '-' }}</span>
+        </div>
+        <div class="col-details">
+          <span class="details-text">{{ log.details }}</span>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="filteredLogs.length === 0">
+        <p>No audit logs found.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="log-count" *ngIf="!isLoading">
+    Showing {{ filteredLogs.length }} of {{ logs.length }} logs
+  </div>
+</div>

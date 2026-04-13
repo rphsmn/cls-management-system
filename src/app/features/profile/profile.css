@@ -100,7 +100,7 @@
 }
 
 [data-theme='dark'] .info-card {
-  background: #1e293b;
+  background: #243040;
   border-color: #334155;
 }
 
@@ -121,7 +121,7 @@
 }
 
 [data-theme='dark'] .data-row span {
-  color: #f1f5f9;
+  color: #ffffff;
 }
 
 [data-theme='dark'] .action-footer {
@@ -215,6 +215,112 @@
 
 .update-btn:hover {
   background: #fde047;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: transparent;
+  color: #1a5336;
+  border: 2px solid #1a5336;
+}
+
+.btn-primary:hover {
+  background: #1a5336;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #facc15;
+  border: 2px solid #facc15;
+}
+
+.btn-secondary:hover {
+  background: #facc15;
+  color: #1a5336;
+  transform: translateY(-1px);
+}
+
+[data-theme='dark'] .btn-primary {
+  background: transparent;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+}
+
+[data-theme='dark'] .btn-primary:hover {
+  background: #ffffff;
+  color: #1a5336;
+  transform: translateY(-1px);
+}
+
+[data-theme='dark'] .btn-secondary {
+  background: transparent;
+  color: #facc15;
+  border: 2px solid #facc15;
+}
+
+[data-theme='dark'] .btn-secondary:hover {
+  background: #facc15;
+  color: #1a5336;
+  transform: translateY(-1px);
+}
+
+[data-theme='dark'] .btn-secondary:hover {
+  background: #facc15;
+  color: #1a5336;
+  transform: translateY(-1px);
+}
+
+.update-btn.ghost {
+  background: transparent;
+  color: #1a5336;
+  border: 2px solid #1a5336;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.update-btn.ghost:hover {
+  background: #1a5336;
+  color: white;
+}
+
+[data-theme='dark'] .update-btn.ghost {
+  background: transparent;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+}
+
+[data-theme='dark'] .update-btn.ghost:hover {
+  background: #ffffff;
+  color: #1a5336;
 }
 
 .dropdown-arrow {

@@ -13,6 +13,7 @@ import {
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
+import { AuditService } from '../../core/services/audit.service';
 import Swal from 'sweetalert2';
 
 interface Employee {
@@ -45,11 +46,159 @@ interface LeaveRequest {
 export class EmployeeStatusComponent implements OnInit, OnDestroy {
   private firestore = inject(Firestore);
   private authService = inject(AuthService);
+  private auditService = inject(AuditService);
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
   private subscription: Subscription | null = null;
 
   searchQuery: string = '';
+  selectionMode = false;
+  selectedIds: Set<string> = new Set();
+
+  toggleSelection(empId: string) {
+    console.log('[EmployeeStatus] toggleSelection:', empId);
+    if (this.selectedIds.has(empId)) {
+      this.selectedIds.delete(empId);
+    } else {
+      this.selectedIds.add(empId);
+    }
+  }
+
+  get hasSelection(): boolean {
+    return this.selectedIds.size > 0;
+  }
+
+  isHR(): boolean {
+    const role = this.currentUser?.role?.toUpperCase() || '';
+    const result = role.includes('HR') || role.includes('HUMAN RESOURCE');
+    console.log('[EmployeeStatus] isHR check:', { role, result });
+    return result;
+  }
+
+  enterSelectionMode() {
+    console.log('[EmployeeStatus] enterSelectionMode called');
+    this.selectionMode = true;
+    this.selectedIds.clear();
+  }
+
+  exitSelectionMode() {
+    console.log('[EmployeeStatus] exitSelectionMode called');
+    this.selectionMode = false;
+    this.selectedIds.clear();
+  }
+
+  bulkMarkAbsent() {
+    console.log('[EmployeeStatus] bulkMarkAbsent called, selected:', this.selectedIds);
+    if (this.selectedIds.size === 0) return;
+
+    const selectedList = Array.from(this.selectedIds);
+    const selectedEmployees = this.employees.filter((e) => selectedList.includes(e.id));
+    const today = new Date().toISOString().split('T')[0];
+
+    Swal.fire({
+      title: 'Mark as Absent',
+      html: `
+        <p>Mark <strong>${selectedEmployees.length}</strong> employees as absent?</p>
+        <textarea id="bulk-reason" placeholder="Reason (optional)" style="width:100%;margin-top:12px;padding:8px;border-radius:6px;border:1px solid #e2e8f0"></textarea>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Mark Absent',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#dc2626',
+      preConfirm: () => {
+        return (document.getElementById('bulk-reason') as HTMLTextAreaElement)?.value || '';
+      },
+    }).then(async (result) => {
+      if (!result.isConfirmed) return;
+
+      const reason = result.value || 'Bulk mark absent';
+
+      try {
+        const updates = selectedEmployees.map(async (emp) => {
+          const userDocRef = doc(this.firestore, 'users', emp.id);
+          await updateDoc(userDocRef, {
+            manuallyAbsent: true,
+            absentDate: today,
+            absentReason: reason,
+            markedAbsentBy: this.currentUser?.name,
+            markedAbsentAt: new Date().toISOString(),
+          });
+
+          await this.auditService.logAction('absent_marked', `${emp.name} marked as absent`, {
+            targetUserId: emp.id,
+            targetUserName: emp.name,
+            metadata: { reason, date: today },
+          });
+        });
+
+        await Promise.all(updates);
+        this.exitSelectionMode();
+
+        Swal.fire({
+          title: 'Marked Absent',
+          text: `${selectedEmployees.length} employees marked as Absent.`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error('[EmployeeStatus] bulkMarkAbsent error:', error);
+        Swal.fire({ title: 'Error', text: 'Failed to mark absent.', icon: 'error' });
+      }
+    });
+  }
+
+  bulkRemoveAbsent() {
+    console.log('[EmployeeStatus] bulkRemoveAbsent called, selected:', this.selectedIds);
+    if (this.selectedIds.size === 0) return;
+
+    const selectedList = Array.from(this.selectedIds);
+    const selectedEmployees = this.employees.filter((e) => selectedList.includes(e.id));
+
+    Swal.fire({
+      title: 'Remove Absent Status',
+      html: `<p>Remove Absent status from <strong>${selectedEmployees.length}</strong> employees?</p>`,
+      showCancelButton: true,
+      confirmButtonText: 'Remove',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#16a34a',
+    }).then(async (result) => {
+      if (!result.isConfirmed) return;
+
+      try {
+        const updates = selectedEmployees.map(async (emp) => {
+          const userDocRef = doc(this.firestore, 'users', emp.id);
+          await updateDoc(userDocRef, {
+            manuallyAbsent: false,
+            absentDate: null,
+            absentReason: null,
+            markedAbsentBy: null,
+            markedAbsentAt: null,
+          });
+
+          await this.auditService.logAction('absent_marked', `${emp.name} removed from absent`, {
+            targetUserId: emp.id,
+            targetUserName: emp.name,
+            metadata: { action: 'bulk_removed' },
+          });
+        });
+
+        await Promise.all(updates);
+        this.exitSelectionMode();
+
+        Swal.fire({
+          title: 'Removed',
+          text: `${selectedEmployees.length} employees are no longer marked as Absent.`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error('[EmployeeStatus] bulkRemoveAbsent error:', error);
+        Swal.fire({ title: 'Error', text: 'Failed to remove Absent status.', icon: 'error' });
+      }
+    });
+  }
   selectedDept: string = 'All Departments';
 
   employees: Employee[] = [];
@@ -81,7 +230,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
 
   // Set an employee as Absent (manually marked by HR/Admin)
   async setEmployeeAbsent(employee: Employee) {
-    if (!this.isAdminOrHR) {
+    if (!this.isHR()) {
       Swal.fire({
         title: 'Access Denied',
         text: 'Only HR can mark employees as Absent.',
@@ -159,7 +308,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
 
   // Toggle absent status - set or remove based on current status
   async toggleAbsentStatus(employee: Employee) {
-    if (!this.isAdminOrHR) return;
+    if (!this.isHR()) return;
 
     if (employee.status === 'Absent') {
       await this.removeAbsentStatus(employee);
@@ -170,7 +319,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
 
   // Remove Absent status from an employee
   async removeAbsentStatus(employee: Employee) {
-    if (!this.isAdminOrHR) {
+    if (!this.isHR()) {
       return;
     }
 
@@ -195,6 +344,12 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
         absentReason: null,
         markedAbsentBy: null,
         markedAbsentAt: null,
+      });
+
+      await this.auditService.logAction('absent_marked', `${employee.name} removed from absent`, {
+        targetUserId: employee.id,
+        targetUserName: employee.name,
+        metadata: { action: 'removed' },
       });
 
       Swal.fire({
@@ -512,17 +667,22 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
   }
 
   get filteredEmployees() {
-    return this.employees.filter((e) => {
+    const filtered = this.employees.filter((e) => {
       const matchesSearch =
         e.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
         e.dept.toLowerCase().includes(this.searchQuery.toLowerCase());
       const matchesDept = this.selectedDept === 'All Departments' || e.dept === this.selectedDept;
       return matchesSearch && matchesDept;
     });
+    console.log('[EmployeeStatus] filteredEmployees:', filtered.length, {
+      search: this.searchQuery,
+      dept: this.selectedDept,
+    });
+    return filtered;
   }
 
   onEmployeeCardClick(event: MouseEvent, employee: Employee) {
-    if (!this.isAdminOrHR) return;
+    if (!this.isHR()) return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -624,5 +784,12 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
     const emp = this.selectedEmployee;
     this.showEmployeeMenu = false;
     this.setEmployeeAbsent(emp);
+  }
+
+  removeAbsentFromMenu() {
+    if (!this.selectedEmployee) return;
+    const emp = this.selectedEmployee;
+    this.showEmployeeMenu = false;
+    this.removeAbsentStatus(emp);
   }
 }

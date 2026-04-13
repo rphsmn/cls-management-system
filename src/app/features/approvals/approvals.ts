@@ -5,6 +5,8 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Observable, map, combineLatest, startWith, BehaviorSubject, tap, take } from 'rxjs';
 import { AuthService, User } from '../../core/services/auth';
 import { LeaveService } from '../../core/services/leave.services';
+import { NotificationService } from '../../core/services/notification.service';
+import { AuditService } from '../../core/services/audit.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -17,6 +19,8 @@ import Swal from 'sweetalert2';
 export class ApprovalsComponent {
   private authService = inject(AuthService);
   private leaveService = inject(LeaveService);
+  private notificationService = inject(NotificationService);
+  private auditService = inject(AuditService);
 
   currentUser$: Observable<User | null> = this.authService.currentUser$;
   allFilteredRequests$: Observable<any[]>;
@@ -223,7 +227,31 @@ export class ApprovalsComponent {
         const status = action === 'Approve' ? 'Approved' : 'Rejected';
         this.leaveService
           .updateRequestStatus(req.id, status, user.role)
-          .then(() => {
+          .then(async () => {
+            // Log to audit
+            const leaveType = req.type || req.leaveType || 'Leave';
+            await this.auditService.logAction(
+              status === 'Approved' ? 'leave_approved' : 'leave_rejected',
+              `${req.employeeName}'s ${leaveType} leave ${status}`,
+              {
+                targetUserId: req.uid,
+                targetUserName: req.employeeName,
+                metadata: { requestId: req.id, period: req.period },
+              },
+            );
+
+            // Send notification to employee
+            await this.notificationService.createNotification(
+              status === 'Approved' ? 'leave_approved' : 'leave_rejected',
+              `Leave ${status}`,
+              `Your ${leaveType} leave (${req.period}) has been ${status.toLowerCase()}`,
+              user.name,
+              user.uid,
+              'EMPLOYEE',
+              req.id,
+              req.uid,
+            );
+
             Swal.fire({
               toast: true,
               position: 'top-end',

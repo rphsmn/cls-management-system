@@ -19,6 +19,7 @@
   --border-color: #e2e8f0;
   --shadow-color: rgba(0, 0, 0, 0.1);
   --input-bg: #f8fafc;
+  --bg-hover: #f1f5f9;
 }
 
 /* Dark Theme */
@@ -34,6 +35,7 @@
   --border-color: #334155;
   --shadow-color: rgba(0, 0, 0, 0.3);
   --input-bg: #334155;
+  --bg-hover: #334155;
 }
 
 html,

@@ -24,7 +24,7 @@
         <span class="verified">✓ Verified</span>
       </div>
       <div class="data-row">
-        <label>Department</label><span>{{ user.department || user.dept || 'N/A' }}</span>
+        <label>Department</label><span>{{ getFormattedDept() }}</span>
       </div>
       <div class="data-row">
         <label>Role</label><span>{{ user.role }}</span>
@@ -86,20 +86,20 @@
         <label>Address</label><span>{{ user.address }}</span>
       </div>
       <div class="data-row" *ngIf="user.emergencyContactPerson">
-        <label>Emergency Contact Person</label><span>{{ user.emergencyContactPerson }}</span>
+        <label>Contact Person</label><span>{{ user.emergencyContactPerson }}</span>
       </div>
       <div class="data-row" *ngIf="user.emergencyContactRelation">
         <label>Relationship</label><span>{{ user.emergencyContactRelation }}</span>
       </div>
       <div class="data-row" *ngIf="user.emergencyContactMobile">
-        <label>Contact Person's Mobile</label><span>{{ user.emergencyContactMobile }}</span>
+        <label>Contact Mobile</label><span>{{ user.emergencyContactMobile }}</span>
       </div>
       <div class="data-row" *ngIf="user.emergencyContactAddress">
-        <label>Contact Person's Address</label><span>{{ user.emergencyContactAddress }}</span>
+        <label>Contact Address</label><span>{{ user.emergencyContactAddress }}</span>
       </div>
     </section>
 
-    <section class="info-card">
+    <section class="info-card" *ngIf="user.role !== 'MANAGING DIRECTOR'">
       <div class="card-title">
         <h3>Leave Balance</h3>
         <span class="verified">✓ Available</span>
@@ -115,44 +115,45 @@
 
   <footer class="action-footer">
     <p>Need to update your professional information?</p>
-    <div class="email-options-container">
-      <button (click)="toggleEmailOptions()" class="update-btn">
+    <div class="action-buttons">
+      <button (click)="downloadPdf()" class="btn-primary">Download Employee Record</button>
+      <button (click)="toggleEmailOptions()" class="btn-secondary">
         Request Info Update from HR
         <span class="dropdown-arrow" [class.open]="showEmailOptions">▼</span>
       </button>
+    </div>
 
-      <div class="email-options-dropdown" *ngIf="showEmailOptions">
-        <div class="email-options-header">
-          <span>Choose your email provider:</span>
-        </div>
-
-        <a [href]="getGmailComposeUrl()" target="_blank" class="email-option gmail">
-          <span class="email-icon">✉️</span>
-          <span class="email-label">Gmail</span>
-        </a>
-
-        <a [href]="getYahooComposeUrl()" target="_blank" class="email-option yahoo">
-          <span class="email-icon">✉️</span>
-          <span class="email-label">Yahoo Mail</span>
-        </a>
-
-        <a [href]="getOutlookWebComposeUrl()" target="_blank" class="email-option outlook">
-          <span class="email-icon">✉️</span>
-          <span class="email-label">Outlook Web</span>
-        </a>
-
-        <a [href]="getMailtoUrl()" class="email-option default">
-          <span class="email-icon">📧</span>
-          <span class="email-label">Default Email Client</span>
-        </a>
-
-        <div class="email-option-divider"></div>
-
-        <button (click)="copyHrEmail()" class="email-option copy">
-          <span class="email-icon">{{ emailCopied ? '✓' : '📋' }}</span>
-          <span class="email-label">{{ emailCopied ? 'Copied!' : 'Copy HR Email' }}</span>
-        </button>
+    <div class="email-options-dropdown" *ngIf="showEmailOptions">
+      <div class="email-options-header">
+        <span>Choose your email provider:</span>
       </div>
+
+      <a [href]="getGmailComposeUrl()" target="_blank" class="email-option gmail">
+        <span class="email-icon">✉️</span>
+        <span class="email-label">Gmail</span>
+      </a>
+
+      <a [href]="getYahooComposeUrl()" target="_blank" class="email-option yahoo">
+        <span class="email-icon">✉️</span>
+        <span class="email-label">Yahoo Mail</span>
+      </a>
+
+      <a [href]="getOutlookWebComposeUrl()" target="_blank" class="email-option outlook">
+        <span class="email-icon">✉️</span>
+        <span class="email-label">Outlook Web</span>
+      </a>
+
+      <a [href]="getMailtoUrl()" class="email-option default">
+        <span class="email-icon">📧</span>
+        <span class="email-label">Default Email Client</span>
+      </a>
+
+      <div class="email-option-divider"></div>
+
+      <button (click)="copyHrEmail()" class="email-option copy">
+        <span class="email-icon">{{ emailCopied ? '✓' : '📋' }}</span>
+        <span class="email-label">{{ emailCopied ? 'Copied!' : 'Copy HR Email' }}</span>
+      </button>
     </div>
   </footer>
 </div>

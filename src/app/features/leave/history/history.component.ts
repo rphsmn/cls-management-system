@@ -16,6 +16,8 @@ import {
 import { AuthService, User } from '../../../core/services/auth';
 import { LeaveService } from '../../../core/services/leave.services';
 import { HolidayService } from '../../../core/services/holiday.service';
+import { AuditService } from '../../../core/services/audit.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { calculateWorkdays } from '../../../core/utils/workday-calculator.util';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import Swal from 'sweetalert2';
@@ -31,6 +33,8 @@ export class HistoryComponent implements OnDestroy {
   private authService = inject(AuthService);
   private leaveService = inject(LeaveService);
   private holidayService = inject(HolidayService);
+  private auditService = inject(AuditService);
+  private notificationService = inject(NotificationService);
   private firestore = inject(Firestore);
 
   currentUser$ = this.authService.currentUser$;
@@ -254,6 +258,13 @@ export class HistoryComponent implements OnDestroy {
     return date.toDateString() === yesterday.toDateString() ? 'Yesterday' : '';
   }
 
+  private getNotificationTargets(employeeRole: string): string[] {
+    const r = employeeRole.toUpperCase();
+    if (r.includes('DEVELOPER')) return ['MANAGER', 'HR', 'HUMAN RESOURCE'];
+    if (r.includes('ACCOUNTS')) return ['ACCOUNT SUPERVISOR', 'HR'];
+    return ['MANAGER', 'HR', 'HUMAN RESOURCE'];
+  }
+
   async cancelRequest(req: any) {
     const { value: reason } = await import('sweetalert2').then((m) =>
       m.default.fire({
@@ -286,6 +297,34 @@ export class HistoryComponent implements OnDestroy {
         const currentUser = (await this.authService.currentUser$.pipe(take(1)).toPromise()) as any;
         const cancelledBy = currentUser?.name || 'Employee';
         await this.leaveService.cancelRequest(req.id, cancelledBy, reason);
+
+        // Log to audit trail
+        const leaveType = req.type || req.leaveType || 'Leave';
+        await this.auditService.logAction(
+          'leave_cancelled',
+          `${currentUser?.name} cancelled ${leaveType} leave request`,
+          {
+            targetUserId: req.uid,
+            targetUserName: req.employeeName,
+            metadata: { requestId: req.id, reason, period: req.period },
+          },
+        );
+
+        // Notify supervisors if different from the employee
+        if (currentUser?.uid !== req.uid) {
+          const targets = this.getNotificationTargets(currentUser?.role || '');
+          for (const role of targets) {
+            await this.notificationService.createNotification(
+              'leave_cancelled',
+              'Leave Cancelled',
+              `${currentUser?.name} cancelled ${leaveType} leave (${req.period})`,
+              currentUser?.name || 'Unknown',
+              currentUser?.uid || '',
+              role,
+            );
+          }
+        }
+
         import('sweetalert2').then((m) =>
           m.default.fire({
             toast: true,
@@ -824,5 +863,18 @@ export class HistoryComponent implements OnDestroy {
         document.body.removeChild(link);
       },
     });
+  }
+
+  formatDepartment(dept: string | undefined): string {
+    if (!dept) return 'N/A';
+    const deptMap: Record<string, string> = {
+      devs: 'DevOps',
+      accounts: 'Accounts',
+      manager: 'Manager',
+      'operations-admin': 'Operations-Admin',
+      'part-time': 'Part-time',
+    };
+    const normalized = dept.toLowerCase().trim();
+    return deptMap[normalized] || dept;
   }
 }

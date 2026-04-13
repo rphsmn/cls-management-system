@@ -133,20 +133,21 @@
 
 .cls-table th {
   padding: 12px 16px;
-  background: #fcfdfd;
-  color: #94a3b8;
+  background: var(--bg-card);
+  color: var(--text-muted);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
   text-align: left;
 }
 
 .cls-table td {
   padding: 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
   color: var(--text-main);
   font-size: 14px;
+  background: var(--bg-card);
 }
 
 .cls-table td strong {
@@ -250,17 +251,17 @@
 
 /* Dark Mode Styles */
 [data-theme='dark'] .cls-table th {
-  background: #1e293b;
-  color: #94a3b8;
+  background: var(--bg-card);
+  color: var(--text-muted);
 }
 
 [data-theme='dark'] .cls-table td {
-  background: #1e293b;
-  border-bottom-color: #334155;
+  background: var(--bg-card);
+  border-bottom-color: var(--border-color);
 }
 
 [data-theme='dark'] .cls-table td strong {
-  color: #ffffff;
+  color: var(--text-main);
 }
 
 [data-theme='dark'] .stat-card {
