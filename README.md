@@ -65,7 +65,12 @@ A guide for HR personnel on how to use the CLS HRIS portal.
 6. Click Submit Request
 
 ### Leave Types
-- Paid Time Off: 1 day/month of service (max 15)
+- Paid Time Off: Years of Service	Credit Entitlement
+Upon 1 yr. in Service:	5 Days
+2nd Year of Service:	7 Days
+4 Years and above: 8 Days
+Admin Manager/ Supervisor: 10 (fixed)
+
 - Sick Leave: Same balance as PTO
 - Birthday Leave: 1 day during birth month
 - Maternity Leave: 105 days (female)
