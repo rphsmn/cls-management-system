@@ -19,7 +19,7 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
-            "outputPath": "dist/cls-management-system/browser",
+            "outputPath": "dist/cls-management-system",
             "assets": [
               {
                 "glob": "**/*",
