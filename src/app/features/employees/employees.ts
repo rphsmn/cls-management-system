@@ -22,7 +22,7 @@ interface Employee {
   dept: string;
   initials: string;
   employeeId?: string;
-  status: 'In Office' | 'On Leave' | 'Upcoming Leave' | 'Absent';
+  status: 'Active' | 'On Leave' | 'Upcoming Leave' | 'Absent';
   leaveType?: string;
   leaveDate?: string;
   absentReason?: string;
@@ -496,7 +496,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
       const initials = this.getInitials(user.name || 'Unknown');
       const dept = user.department || user.dept || 'Unknown';
 
-      let status: Employee['status'] = 'In Office';
+      let status: Employee['status'] = 'Active';
       let leaveType: string | undefined;
       let leaveDate: string | undefined;
 
@@ -513,7 +513,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
         }
       }
 
-      if (status === 'In Office') {
+      if (status === 'Active') {
         const employeeId = user.employeeId;
         const userId = user.id;
 
@@ -657,11 +657,11 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
     }
 
     // No leave found - employee is in office
-    return { status: 'In Office' };
+    return { status: 'Active' };
   }
 
   calculateStats() {
-    this.workingToday = this.employees.filter((e) => e.status === 'In Office').length;
+    this.workingToday = this.employees.filter((e) => e.status === 'Active').length;
     this.awayToday = this.employees.filter(
       (e) => e.status === 'On Leave' || e.status === 'Upcoming Leave' || e.status === 'Absent',
     ).length;

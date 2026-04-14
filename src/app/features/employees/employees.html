@@ -65,11 +65,11 @@
           </div>
           <div class="avatar-container">
             <div class="avatar">{{ emp.initials }}</div>
-            <div class="online-indicator" *ngIf="emp.status === 'In Office'"></div>
+            <div class="online-indicator" *ngIf="emp.status === 'Active'"></div>
           </div>
           <span
             class="status-badge"
-            [class.in-office]="emp.status === 'In Office'"
+            [class.active]="emp.status === 'Active'"
             [class.upcoming]="emp.status === 'Upcoming Leave'"
             [class.is-away]="emp.status === 'On Leave'"
             [class.is-absent]="emp.status === 'Absent'"
