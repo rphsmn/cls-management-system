@@ -175,16 +175,11 @@
               </div>
               <div class="info-row">
                 <label>Email</label>
-                <span class="expandable" [class.expanded]="isFieldExpanded('email')">
-                  <span
-                    class="clickable"
-                    (click)="copyToClipboard(selectedEmployeeProfile.email, $event)"
-                  >
-                    {{ selectedEmployeeProfile.email || '-' }}
-                  </span>
-                  <span class="expand-icon" (click)="toggleFieldExpand('email')">
-                    {{ isFieldExpanded('email') ? '▲' : '▼' }}
-                  </span>
+                <span
+                  class="clickable"
+                  (click)="copyToClipboard(selectedEmployeeProfile.email, $event)"
+                >
+                  {{ selectedEmployeeProfile.email || '-' }}
                 </span>
               </div>
               <div class="info-row">
@@ -207,21 +202,27 @@
               </div>
               <div class="info-row">
                 <label>Gender</label>
-                <span>{{ selectedEmployeeProfile.gender || '-' }}</span>
+                <span
+                  class="clickable"
+                  (click)="copyToClipboard(selectedEmployeeProfile.gender, $event)"
+                >
+                  {{ selectedEmployeeProfile.gender || '-' }}
+                </span>
               </div>
               <div class="info-row">
                 <label>Joined</label>
-                <span>
-                  {{
-                    selectedEmployeeProfile.joinedDate?.toDate
-                      ? (selectedEmployeeProfile.joinedDate.toDate() | date: 'MMM yyyy')
-                      : (selectedEmployeeProfile.joinedDate | date: 'MMM yyyy')
-                  }}
+                <span class="clickable" (click)="copyToClipboard(getJoinedDate(), $event)">
+                  {{ getJoinedDate() }}
                 </span>
               </div>
               <div class="info-row">
                 <label>Yrs Service</label>
-                <span>{{ selectedEmployeeProfile.yearsOfService || '-' }}</span>
+                <span
+                  class="clickable"
+                  (click)="copyToClipboard(selectedEmployeeProfile.yearsOfService, $event)"
+                >
+                  {{ selectedEmployeeProfile.yearsOfService || '-' }}
+                </span>
               </div>
             </div>
 
@@ -235,37 +236,34 @@
               <div class="private-content" [class.visible]="showPrivateInfo">
                 <div class="info-row">
                   <label>Address</label>
-                  <span class="expandable" [class.expanded]="isFieldExpanded('address')">
-                    <span
-                      class="clickable"
-                      (click)="copyToClipboard(selectedEmployeeProfile.address, $event)"
-                    >
-                      {{ selectedEmployeeProfile.address || '-' }}
-                    </span>
-                    <span class="expand-icon" (click)="toggleFieldExpand('address')">
-                      {{ isFieldExpanded('address') ? '▲' : '▼' }}
-                    </span>
+                  <span
+                    class="clickable"
+                    (click)="copyToClipboard(selectedEmployeeProfile.address, $event)"
+                  >
+                    {{ selectedEmployeeProfile.address || '-' }}
                   </span>
                 </div>
                 <div class="info-row">
                   <label>Contact Person</label>
-                  <span class="expandable" [class.expanded]="isFieldExpanded('contactPerson')">
-                    <span
-                      class="clickable"
-                      (click)="
-                        copyToClipboard(selectedEmployeeProfile.emergencyContactPerson, $event)
-                      "
-                    >
-                      {{ selectedEmployeeProfile.emergencyContactPerson || '-' }}
-                    </span>
-                    <span class="expand-icon" (click)="toggleFieldExpand('contactPerson')">
-                      {{ isFieldExpanded('contactPerson') ? '▲' : '▼' }}
-                    </span>
+                  <span
+                    class="clickable"
+                    (click)="
+                      copyToClipboard(selectedEmployeeProfile.emergencyContactPerson, $event)
+                    "
+                  >
+                    {{ selectedEmployeeProfile.emergencyContactPerson || '-' }}
                   </span>
                 </div>
                 <div class="info-row">
                   <label>Relation</label>
-                  <span>{{ selectedEmployeeProfile.emergencyContactRelation || '-' }}</span>
+                  <span
+                    class="clickable"
+                    (click)="
+                      copyToClipboard(selectedEmployeeProfile.emergencyContactRelation, $event)
+                    "
+                  >
+                    {{ selectedEmployeeProfile.emergencyContactRelation || '-' }}
+                  </span>
                 </div>
                 <div class="info-row">
                   <label>Contact Mobile</label>
@@ -280,18 +278,13 @@
                 </div>
                 <div class="info-row">
                   <label>Contact Address</label>
-                  <span class="expandable" [class.expanded]="isFieldExpanded('contactAddress')">
-                    <span
-                      class="clickable"
-                      (click)="
-                        copyToClipboard(selectedEmployeeProfile.emergencyContactAddress, $event)
-                      "
-                    >
-                      {{ selectedEmployeeProfile.emergencyContactAddress || '-' }}
-                    </span>
-                    <span class="expand-icon" (click)="toggleFieldExpand('contactAddress')">
-                      {{ isFieldExpanded('contactAddress') ? '▲' : '▼' }}
-                    </span>
+                  <span
+                    class="clickable"
+                    (click)="
+                      copyToClipboard(selectedEmployeeProfile.emergencyContactAddress, $event)
+                    "
+                  >
+                    {{ selectedEmployeeProfile.emergencyContactAddress || '-' }}
                   </span>
                 </div>
 

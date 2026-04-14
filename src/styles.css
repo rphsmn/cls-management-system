@@ -168,3 +168,37 @@ body {
   height: 100%;
   overflow: hidden; /* Prevent the body itself from scrolling */
 }
+
+/* EMERGENCY OVERRIDE - Force white text in dark mode for modal data rows ONLY */
+[data-theme='dark'] .employee-modal .data-row span,
+[data-theme='dark'] .employee-modal .info-row span,
+[data-theme='dark'] .employee-modal .data-row .value-container span,
+[data-theme='dark'] .employee-modal .info-row .value-container span,
+.main-app-shell[data-theme='dark'] .employee-modal .data-row span,
+.main-app-shell[data-theme='dark'] .employee-modal .info-row span,
+.main-app-shell[data-theme='dark'] .employee-modal .data-row .value-container span,
+.main-app-shell[data-theme='dark'] .employee-modal .info-row .value-container span {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+[data-theme='dark'] .employee-modal .data-row label,
+[data-theme='dark'] .employee-modal .info-row label,
+[data-theme='dark'] .employee-modal .data-row .value-container + span,
+[data-theme='dark'] .employee-modal .info-row .value-container + span,
+.main-app-shell[data-theme='dark'] .employee-modal .data-row label,
+.main-app-shell[data-theme='dark'] .employee-modal .info-row label {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+/* Clickable spans in modal */
+.employee-modal .info-row .value-container span.clickable,
+.employee-modal .data-row span.clickable {
+  cursor: pointer !important;
+}
+
+.employee-modal .info-row .value-container span.clickable:hover,
+.employee-modal .data-row span.clickable:hover {
+  text-decoration: underline;
+}

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -23,6 +23,7 @@ import { AuditService, AuditLog } from '../../core/services/audit.service';
 export class AuditLogsComponent implements OnInit {
   private firestore = inject(Firestore);
   private auditService = inject(AuditService);
+  private cdr = inject(ChangeDetectorRef);
 
   logs: AuditLog[] = [];
   isLoading = true;
@@ -121,6 +122,7 @@ export class AuditLogsComponent implements OnInit {
         this.applyFilters();
 
         this.isLoading = false;
+        this.cdr.detectChanges();
         console.log(
           '[AuditLogs] Total fetch time:',
           (performance.now() - startTime).toFixed(2),

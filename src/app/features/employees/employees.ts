@@ -214,6 +214,7 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
   showEmployeeMenu = false;
   menuPosition = { x: 0, y: 0 };
   showPrivateInfo = false;
+  showGovIds = false;
   expandedFields: { [key: string]: boolean } = {};
 
   // Current user for checking permissions
@@ -698,6 +699,10 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
     this.showPrivateInfo = !this.showPrivateInfo;
   }
 
+  toggleGovIds() {
+    this.showGovIds = !this.showGovIds;
+  }
+
   toggleFieldExpand(fieldKey: string) {
     if (this.expandedFields[fieldKey]) {
       delete this.expandedFields[fieldKey];
@@ -708,6 +713,28 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
 
   isFieldExpanded(fieldKey: string): boolean {
     return this.expandedFields[fieldKey] === true;
+  }
+
+  getJoinedDate(): string {
+    if (!this.selectedEmployeeProfile) return '-';
+    const joinedDate = this.selectedEmployeeProfile.joinedDate;
+    if (!joinedDate) return '-';
+    const date = joinedDate?.toDate ? joinedDate.toDate() : new Date(joinedDate);
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return `${months[date.getMonth()]} ${date.getFullYear()}`;
   }
 
   async copyToClipboard(text: string, event: MouseEvent) {

@@ -772,11 +772,11 @@
   color: var(--text-main);
   font-weight: 600;
   text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  overflow: visible;
   flex: 1;
-  max-width: 180px;
+  min-width: 0;
 }
 
 [data-theme='dark'] .info-row span {
@@ -791,69 +791,30 @@
   -webkit-box-orient: vertical;
 }
 
-.info-row span.expandable {
-  cursor: pointer;
-  position: relative;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 4px;
-  margin: -2px -4px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.info-row span.expandable:hover {
-  background: #f1f5f9;
-}
-
-.info-row span.expandable.expanded {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
-  max-width: 300px;
-  display: block;
-  background: var(--bg-card);
-  box-shadow: 0 2px 8px var(--shadow-color);
-  padding: 8px;
-  margin: -4px -8px;
-  border-radius: 6px;
-}
-
 .info-row span.clickable {
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 4px;
   margin: -2px -4px;
+  display: inline-block;
 }
 
-.info-row span.clickable:hover {
+.info-row .value-container span.clickable {
+  cursor: pointer;
+  display: inline-block;
+}
+
+.info-row span.clickable:hover,
+.info-row .value-container span.clickable:hover {
   background: #f1f5f9;
   color: #1a5336;
   border-radius: 4px;
 }
 
-[data-theme='dark'] .info-row span.clickable:hover {
+[data-theme='dark'] .info-row span.clickable:hover,
+[data-theme='dark'] .info-row .value-container span.clickable:hover {
   background: rgba(74, 222, 128, 0.15);
   color: #4ade80;
-}
-
-.expand-icon {
-  font-size: 14px !important;
-  color: var(--text-muted);
-  margin-left: 6px;
-  padding: 4px;
-  cursor: pointer;
-  transition: color 0.2s;
-  display: inline-flex;
-  align-items: center;
-}
-
-.expand-icon:hover {
-  color: var(--primary-green);
 }
 
 .info-row span.clickable {
@@ -866,36 +827,14 @@
   border-radius: 4px;
 }
 
-.expand-icon {
-  font-size: 9px;
-  color: #64748b;
-  margin-left: 4px;
-}
-
-.info-row span.expandable:hover {
-  background: #f1f5f9;
+.main-app-shell[data-theme='dark'] .info-row span.clickable:hover {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
   border-radius: 4px;
 }
 
-.info-row span.expandable.expanded {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: ellipsis;
-  position: relative;
-  z-index: 1;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 4px 8px;
-  margin: -4px -8px;
-}
-
-.expand-icon {
-  position: absolute;
-  right: 2px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  color: #64748b;
+.info-row span.clickable {
+  cursor: pointer;
 }
 
 .private-column {
@@ -1380,4 +1319,125 @@
 }
 .modal-btn.success:hover {
   background: #15803d;
+}
+
+/* ============================================
+   ACCORDION STYLES
+   ============================================ */
+
+.accordion-section {
+  margin-top: 0;
+}
+
+.accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 12px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.accordion-header h4 {
+  margin: 0;
+  font-size: 11px;
+  color: #dc2626 !important;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: none !important;
+  padding-bottom: 0 !important;
+}
+
+[data-theme='dark'] .accordion-header h4 {
+  color: #ef4444 !important;
+}
+
+.accordion-icon {
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+  padding-left: 10px;
+}
+
+.accordion-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.accordion-content.visible {
+  max-height: 1000px;
+}
+
+/* Nested Accordion (Government IDs) */
+.nested-accordion {
+  margin-top: 16px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+}
+
+.accordion-header.sub {
+  padding: 8px 0;
+}
+
+.accordion-header.sub span:first-child {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================
+   RESTORED MODAL AESTHETIC - HIGH CONTRAST & DEPTH
+   ========================================================== */
+
+/* 1. Modal Container - Maximum Contrast with Deep Background */
+[data-theme='dark'] .employee-modal {
+  background-color: #1a222d !important;
+}
+
+/* 2. Layered Column Effect */
+[data-theme='dark'] .info-column,
+[data-theme='dark'] .private-column {
+  background-color: #232d3b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* 3. Text & Data - Maximum Readability */
+[data-theme='dark'] .info-row span,
+[data-theme='dark'] .data-row span,
+[data-theme='dark'] .info-row .value-container span,
+[data-theme='dark'] .data-row .value-container span {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  font-weight: 600;
+}
+
+[data-theme='dark'] .info-row label,
+[data-theme='dark'] .data-row label {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+/* 4. Section Accent Colors */
+[data-theme='dark'] .info-column.private-column h4 {
+  color: #f87171 !important;
+  border-bottom-color: #f87171 !important;
+}
+
+/* 5. Cleanup Streaks & Dividers */
+[data-theme='dark'] .info-row,
+[data-theme='dark'] .data-row,
+[data-theme='dark'] .modal-header,
+[data-theme='dark'] .modal-footer {
+  border-color: #334155 !important;
 }

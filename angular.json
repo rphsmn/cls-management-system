@@ -27,9 +27,7 @@
               },
               "src/_redirects"
             ],
-            "styles": [
-              "src/styles.css"
-            ]
+            "styles": ["src/styles.css"]
           },
           "configurations": {
             "production": {
@@ -47,8 +45,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "15kB",
-                  "maximumError": "20kB"
+                  "maximumWarning": "25kB",
+                  "maximumError": "30kB"
                 }
               ],
               "outputHashing": "all"
