@@ -354,16 +354,18 @@
 
   .login-card {
     width: 100%;
-    max-width: 360px;
+    max-width: 340px;
+    margin: 0 auto;
     background: white;
     border-radius: 20px;
-    padding: 28px 24px;
+    padding: 28px 20px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    box-sizing: border-box;
   }
 
   .login-header {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
 
   .login-header h2 {
@@ -377,7 +379,7 @@
   }
 
   .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 16px;
   }
 
   .form-group label {
@@ -386,7 +388,7 @@
   }
 
   .input-wrapper input {
-    padding: 14px 44px 14px 44px !important;
+    padding: 14px 40px 14px 40px !important;
     border-radius: 10px;
     font-size: 15px;
   }
@@ -411,8 +413,10 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    padding: 0 4px;
+    margin-bottom: 16px;
+    padding: 0 2px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .remember-me {
@@ -432,9 +436,13 @@
 
   .forgot-link {
     font-size: 12px;
+    white-space: nowrap;
+    padding-left: 8px;
   }
 
   .btn-login {
+    width: 100%;
+    box-sizing: border-box;
     padding: 14px;
     font-size: 14px;
     font-weight: 700;
@@ -460,9 +468,11 @@
   }
 
   .login-card {
-    padding: 24px 18px;
     max-width: 100%;
+    margin: 0 auto;
+    padding: 24px 16px;
     border-radius: 16px;
+    box-sizing: border-box;
   }
 
   .login-header h2 {
@@ -473,19 +483,19 @@
   }
 
   .input-wrapper input {
-    padding: 12px 40px 12px 40px !important;
+    padding: 12px 36px 12px 36px !important;
     font-size: 14px;
     border-radius: 10px;
   }
 
   .input-icon-svg {
-    left: 12px;
+    left: 10px;
     width: 16px;
     height: 16px;
   }
 
   .toggle-password {
-    right: 8px;
+    right: 6px;
     padding: 4px;
   }
   .toggle-password svg {
@@ -494,15 +504,17 @@
   }
 
   .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
   .form-group label {
     font-size: 10px;
   }
 
   .form-options {
-    margin-bottom: 16px;
-    padding: 0 2px;
+    margin-bottom: 14px;
+    padding: 0;
+    width: 100%;
+    box-sizing: border-box;
   }
   .remember-me {
     font-size: 12px;
@@ -515,9 +527,13 @@
   }
   .forgot-link {
     font-size: 12px;
+    white-space: nowrap;
+    padding-left: 6px;
   }
 
   .btn-login {
+    width: 100%;
+    box-sizing: border-box;
     padding: 12px;
     font-size: 14px;
     border-radius: 10px;
@@ -525,6 +541,10 @@
 
   .error-alert {
     padding: 10px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+}
     font-size: 12px;
     border-radius: 6px;
   }
