@@ -3,12 +3,15 @@
   *ngIf="currentUser$ | async as currentUser; else loadingOrError"
   [attr.data-theme]="darkMode ? 'dark' : 'light'"
 >
+  <!-- Mobile Sidebar Overlay -->
+  <div class="sidebar-overlay" [class.show]="sidebarOpen" (click)="closeSidebar()"></div>
+
   <!-- Offline Banner -->
   <div class="offline-banner" *ngIf="!(isOnline$ | async)">
     <span class="offline-icon">📡</span>
     <span>You're offline. Some features may be unavailable.</span>
   </div>
-  <aside class="sidebar">
+  <aside class="sidebar" [class.open]="sidebarOpen">
     <div class="sidebar-header">
       <div class="logo-dot"></div>
       <h2>COR LOGIC</h2>
@@ -72,6 +75,13 @@
   <main class="content-wrapper">
     <!-- Top Header with Notifications -->
     <header class="top-header">
+      <!-- Mobile Menu Toggle -->
+      <button class="menu-toggle" (click)="toggleSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
       <div class="header-spacer"></div>
       <div class="header-actions">
         <!-- Dark Mode Toggle -->

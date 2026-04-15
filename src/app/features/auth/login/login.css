@@ -1,17 +1,19 @@
 :host {
   display: block;
   width: 100%;
-  height: 100vh;
+  height: 100%;
 }
 
 .login-page-wrapper {
   display: flex !important;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100dvh;
   position: fixed;
   top: 0;
   left: 0;
   font-family: 'Inter', sans-serif;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .branding-side {
@@ -296,4 +298,83 @@
   background-color: #450a0a;
   border-left-color: #ef4444;
   color: #fca5a5;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+@media (max-width: 768px) {
+  .login-page-wrapper {
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .visual-side {
+    display: none;
+  }
+
+  .form-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    background: white;
+    padding: 60px;
+    padding-bottom: 40px;
+  }
+
+  /* Mobile: Ensure button is always visible */
+  @media (max-width: 768px) {
+    .form-side {
+      padding: 30px 24px 60px 24px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .form-side {
+      padding: 24px 20px 60px 20px;
+    }
+  }
+
+  .login-header h2 {
+    font-size: 24px;
+  }
+
+  .login-header p {
+    font-size: 14px;
+  }
+
+  .form-options {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .btn-login {
+    padding: 14px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-side {
+    padding: 16px;
+    padding-bottom: 40px;
+  }
+
+  .login-header h2 {
+    font-size: 20px;
+  }
+
+  .input-wrapper input {
+    padding: 14px 44px 14px 46px !important;
+    font-size: 14px;
+  }
+
+  /* Ensure button is always visible on mobile */
+  .btn-login {
+    margin-bottom: 20px;
+  }
 }

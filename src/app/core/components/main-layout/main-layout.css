@@ -1,6 +1,7 @@
 .main-app-shell {
   display: flex;
-  height: 100vh;
+  height: 100dvh;
+  height: 100dvh;
   width: 100%;
   overflow: hidden;
   background-color: var(--bg-main);
@@ -125,12 +126,20 @@
 
 .content-wrapper {
   flex: 1;
-  height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-main);
+}
+
+/* Mobile/Tablet: Allow content to expand beyond viewport */
+@media (max-width: 1024px) {
+  .content-wrapper {
+    height: auto;
+    min-height: calc(100dvh - 60px);
+  }
 }
 
 /* MODALS */
@@ -139,7 +148,7 @@
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
@@ -217,7 +226,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: 100dvh;
   background-color: #f8fafc;
 }
 
@@ -242,7 +251,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: 100dvh;
   background-color: #f8fafc;
   padding: 20px;
   text-align: center;
@@ -517,4 +526,203 @@
   text-align: center;
   color: #94a3b8;
   font-size: 13px;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.sidebar-overlay.show {
+  display: block;
+}
+
+/* Menu Toggle Button (hidden on desktop) */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin-right: 12px;
+}
+
+.menu-toggle span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--text-main);
+  margin: 5px 0;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    left: -280px;
+    top: 0;
+    height: 100dvh;
+    width: 260px;
+    z-index: 1001;
+    transition: left 0.3s ease;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .menu-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .content-wrapper {
+    margin-left: 0 !important;
+  }
+
+  .top-header {
+    padding: 12px 16px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .main-app-shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 280px;
+    left: -300px;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .sidebar-header {
+    padding: 24px 16px;
+  }
+
+  .sidebar-header h2 {
+    font-size: 16px;
+  }
+
+  .nav-menu li {
+    padding: 14px 12px;
+    font-size: 14px;
+  }
+
+  .section-header {
+    padding: 24px 12px 8px !important;
+    font-size: 10px;
+  }
+
+  .sidebar-footer {
+    padding: 16px;
+  }
+
+  .logout-btn-sidebar {
+    padding: 12px;
+    font-size: 12px;
+  }
+
+  /* Header */
+  .top-header {
+    padding: 10px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .theme-toggle {
+    padding: 6px;
+  }
+
+  .theme-icon {
+    font-size: 16px;
+  }
+
+  .notification-bell {
+    padding: 6px;
+  }
+
+  .bell-icon {
+    font-size: 18px;
+  }
+
+  /* Notification Dropdown */
+  .notification-dropdown {
+    position: fixed;
+    top: 50px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-width: none;
+    max-height: 70vh;
+  }
+
+  .dropdown-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .dropdown-header h4 {
+    width: 100%;
+  }
+
+  /* Modal */
+  .modal-card {
+    padding: 24px;
+    width: 90%;
+    margin: 16px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-cancel,
+  .btn-confirm {
+    padding: 14px;
+    font-size: 14px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .sidebar-header h2 {
+    font-size: 14px;
+  }
+
+  .nav-menu li {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  .offline-banner {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
 }

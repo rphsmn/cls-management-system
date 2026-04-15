@@ -105,6 +105,16 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.showNotifications = !this.showNotifications;
   }
 
+  sidebarOpen = false;
+
+  toggleSidebar() {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
+
+  closeSidebar() {
+    this.sidebarOpen = false;
+  }
+
   private resetInactivityTimeout() {
     if (this.inactivityTimeout) {
       clearTimeout(this.inactivityTimeout);

@@ -8,6 +8,12 @@
   box-sizing: border-box;
   background-color: var(--bg-main);
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Hide legend toggle button by default (desktop) */
+.legend-toggle-btn {
+  display: none !important;
 }
 
 .calendar-header {
@@ -1079,4 +1085,402 @@
 [data-theme='dark'] .btn-secondary:hover {
   background: #475569;
   color: #f1f5f9;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .calendar-wrapper {
+    padding: 20px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .calendar-layout {
+    flex-direction: column;
+  }
+
+  /* Restore grid for tablet */
+  .calendar-card,
+  .days-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .weekday-grid {
+    display: grid !important;
+  }
+
+  .sidebar-info {
+    order: -1;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .sidebar-card {
+    flex: 1;
+  }
+
+  /* Hide legend toggle button on tablet - use sidebar */
+  .legend-toggle-btn {
+    display: none !important;
+  }
+}
+
+/* Mobile - Switch to List View */
+@media (max-width: 768px) {
+  .calendar-wrapper {
+    padding: 12px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Show legend toggle button on mobile */
+  .legend-toggle-btn {
+    display: flex !important;
+  }
+
+  /* Reset parent containers to allow full width */
+  .calendar-layout,
+  .calendar-card,
+  .days-grid {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Stack header vertically */
+  .calendar-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .calendar-header h1 {
+    font-size: 18px;
+  }
+
+  .header-main {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .date-display {
+    font-size: 13px;
+  }
+
+  /* Controls in a row */
+  .nav-controls {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .month-nav {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .nav-btn {
+    padding: 8px 14px;
+    font-size: 16px;
+  }
+
+  .today-btn {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .year-select {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  /* Hide weekday headers in list view */
+  .weekday-grid {
+    display: none !important;
+  }
+
+  /* Hide empty/filler days from previous/next month in list view */
+  .day-cell.empty,
+  .day-cell.out-of-month {
+    display: none !important;
+  }
+
+  /* Switch to vertical list view */
+  .days-grid {
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Each day becomes a card */
+  .days-grid .day-cell {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    width: calc(100% - 20px) !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+    margin: 10px auto !important;
+    min-height: 70px !important;
+    padding: 14px 16px !important;
+    border-radius: 10px !important;
+    border: 1px solid var(--border-color) !important;
+    background: var(--bg-card) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+    cursor: pointer;
+  }
+
+  /* Hide empty days from prev/next month */
+  .day-cell.empty {
+    display: none !important;
+  }
+
+  /* Date number on the left */
+  .day-number {
+    font-size: 16px !important;
+    font-weight: 700;
+    min-width: 40px;
+    color: var(--text-main);
+  }
+
+  /* Past days slightly faded */
+  .day-cell.is-past {
+    opacity: 0.5;
+  }
+
+  /* Today gets a border */
+  .day-cell.is-today {
+    border: 2px solid var(--primary-green) !important;
+  }
+
+  /* Event badges inline on the right */
+  .away-badge,
+  .birthday-pill,
+  .company-event-pill,
+  .holiday-pill {
+    display: inline-flex !important;
+    margin-left: auto;
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+
+  /* Hide sidebar entirely on mobile */
+  .sidebar-info {
+    display: none !important;
+  }
+
+  /* Legend toggle button */
+  .legend-toggle-btn {
+    display: flex;
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--primary-green);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    cursor: pointer;
+  }
+
+  /* Modal styling */
+  .modal-card {
+    width: 95%;
+    margin: 10px;
+    max-height: 90vh;
+    border-radius: 20px;
+  }
+
+  .modal-hero {
+    padding: 24px 20px;
+  }
+
+  .hero-title {
+    font-size: 20px;
+  }
+
+  .modal-content {
+    padding: 16px;
+  }
+
+  .notice-box {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .status-row {
+    padding: 10px 0;
+  }
+
+  .hr-admin-zone {
+    padding: 12px;
+  }
+
+  .hr-input-wrapper {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hr-styled-input {
+    width: 100%;
+  }
+
+  .hr-confirm-btn {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+    gap: 8px;
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-card);
+    padding: 12px 0;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    font-size: 14px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .calendar-wrapper {
+    padding: 10px;
+  }
+
+  .day-cell {
+    min-height: 50px;
+    padding: 10px;
+  }
+
+  .day-number {
+    font-size: 14px;
+    min-width: 32px;
+  }
+
+  .away-badge,
+  .birthday-pill,
+  .company-event-pill,
+  .holiday-pill {
+    font-size: 9px !important;
+    padding: 3px 6px !important;
+  }
+
+  .legend-toggle-btn {
+    bottom: 70px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  /* Legend Modal for Mobile */
+  .legend-overlay {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .legend-modal {
+    background: var(--bg-card);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 360px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  .legend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    background: var(--bg-card);
+  }
+
+  .legend-header h3 {
+    margin: 0;
+    font-size: 15px;
+    color: var(--text-heading);
+  }
+
+  .legend-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px;
+  }
+
+  .legend-content {
+    padding: 16px;
+  }
+
+  .legend-content .legend-list {
+    margin-bottom: 12px;
+  }
+
+  .legend-content .legend-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .legend-content .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .legend-content .l-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .legend-content .l-desc {
+    font-size: 10px;
+    color: var(--text-muted);
+    display: block;
+  }
 }

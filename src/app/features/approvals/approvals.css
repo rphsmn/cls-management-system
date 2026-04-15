@@ -413,3 +413,115 @@
 [data-theme='dark'] .empty-state {
   color: #64748b;
 }
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .approvals-wrapper {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .approvals-wrapper {
+    padding: 16px;
+  }
+
+  .approvals-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .approvals-header h1 {
+    font-size: 20px;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+
+  .card-full-width {
+    padding: 16px;
+  }
+
+  .approval-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .approval-table thead,
+  .approval-table tbody,
+  .approval-table th,
+  .approval-table td,
+  .approval-table tr {
+    display: block;
+  }
+
+  .approval-table thead {
+    display: none;
+  }
+
+  .approval-table tr {
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .approval-table td {
+    padding: 8px 0;
+    border: none;
+  }
+
+  .user-info-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .action-buttons {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .btn-approve,
+  .btn-reject {
+    flex: 1;
+    text-align: center;
+  }
+
+  .pagination-footer {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .approvals-wrapper {
+    padding: 12px;
+  }
+
+  .approvals-header h1 {
+    font-size: 18px;
+  }
+
+  .btn-approve,
+  .btn-reject {
+    padding: 10px 12px;
+    font-size: 10px;
+  }
+}

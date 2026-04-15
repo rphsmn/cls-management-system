@@ -1435,6 +1435,102 @@
 }
 
 @media (max-width: 640px) {
+  /* Main Layout */
+  .pulse-wrapper {
+    padding: 16px;
+  }
+
+  .pulse-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .title-area h1 {
+    font-size: 24px;
+  }
+
+  .title-area p {
+    font-size: 12px;
+  }
+
+  /* Filter Actions */
+  .filter-actions {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .dept-select,
+  .search-box {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .search-box {
+    order: 3;
+  }
+
+  .mark-absent-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  /* Stats Grid */
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-value {
+    font-size: 32px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+  }
+
+  /* Employee Grid */
+  .employee-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .emp-card {
+    padding: 16px;
+  }
+
+  .card-top {
+    margin-bottom: 12px;
+  }
+
+  .avatar {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .card-info h3 {
+    font-size: 16px;
+  }
+
+  .card-info .dept {
+    font-size: 12px;
+  }
+
+  /* Status Badge */
+  .status-badge {
+    font-size: 9px;
+    padding: 4px 8px;
+  }
+
+  /* Modal */
   .info-columns {
     grid-template-columns: 1fr;
   }
@@ -1442,10 +1538,117 @@
   .modal-actions,
   .modal-footer {
     flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-btn {
+    width: 100%;
+    min-width: unset;
+    padding: 12px 16px;
   }
 
   .employee-modal {
     max-height: 90vh;
+    width: 95%;
+    margin: 10px;
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+  }
+
+  .modal-header-info h2 {
+    font-size: 18px;
+  }
+
+  /* Info Rows - Stack vertically on mobile */
+  .info-row {
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+  }
+
+  .info-row label {
+    min-width: unset;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .info-row span {
+    text-align: left;
+    padding-right: 0;
+  }
+
+  /* Bulk Action Bar */
+  .bulk-action-bar {
+    width: 90%;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 12px 16px;
+    gap: 8px;
+  }
+
+  .bulk-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  /* Loading & Empty States */
+  .loading-container {
+    padding: 40px 20px;
+  }
+
+  .empty-state {
+    padding: 40px 20px;
+  }
+}
+
+/* Tablet */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .pulse-wrapper {
+    padding: 24px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .employee-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .employee-modal {
+    max-width: 90%;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .title-area h1 {
+    font-size: 20px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+  }
+
+  .modal-header-info h2 {
+    font-size: 16px;
+  }
+
+  .info-column h4,
+  .private-header h4 {
+    font-size: 10px;
   }
 }
 

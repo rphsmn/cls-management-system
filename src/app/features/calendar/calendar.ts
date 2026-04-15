@@ -1,11 +1,11 @@
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../core/services/auth';
 import { LeaveService } from '../../core/services/leave.services';
 import { HolidayService, Holiday } from '../../core/services/holiday.service';
-import { Firestore, collection, getDocs, doc, deleteDoc, addDoc } from '@angular/fire/firestore'; 
+import { Firestore, collection, getDocs, doc, deleteDoc, addDoc } from '@angular/fire/firestore';
 import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
@@ -14,7 +14,7 @@ import Swal from 'sweetalert2';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './calendar.html',
-  styleUrls: ['./calendar.css']
+  styleUrls: ['./calendar.css'],
 })
 export class CalendarComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
@@ -23,7 +23,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
   private firestore = inject(Firestore);
   private router = inject(Router);
   private cd = inject(ChangeDetectorRef);
-  
+
   private subscriptions = new Subscription();
   currentDate = new Date();
   days: any[] = [];
@@ -31,10 +31,11 @@ export class CalendarComponent implements OnInit, OnDestroy {
   years: number[] = [];
   selectedDay: any = null;
   showModal = false;
+  showLegend = false;
   isNoticeWarning = false;
   suggestedNoticeDays = 3;
-  isLoading = false; 
-  isHR = false; 
+  isLoading = false;
+  isHR = false;
   newEventName = ''; // Bound to your [(ngModel)] in the HTML
   holidays: Holiday[] = [];
   companyEvents: any[] = [];
@@ -42,26 +43,27 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.generateYearOptions();
-    
+
     this.subscriptions.add(
       this.authService.currentUser$.subscribe((user: User | null) => {
         if (user) {
           const r = user.role.toUpperCase();
-          this.isHR = r === 'HR' || 
-                       r.includes('HUMAN RESOURCE') || 
-                       r.includes('ADMIN MANAGER') || 
-                       r.includes('MANAGER') || 
-                       r.includes('MGR');
+          this.isHR =
+            r === 'HR' ||
+            r.includes('HUMAN RESOURCE') ||
+            r.includes('ADMIN MANAGER') ||
+            r.includes('MANAGER') ||
+            r.includes('MGR');
         }
-      })
+      }),
     );
 
     // Subscribe to HolidayService for real-time holiday data
     this.subscriptions.add(
-      this.holidayService.holidays$.subscribe(holidays => {
+      this.holidayService.holidays$.subscribe((holidays) => {
         this.holidays = holidays;
         this.generateCalendar();
-      })
+      }),
     );
 
     // Use getDocs instead of collectionData to avoid SDK mismatch
@@ -70,7 +72,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.leaveService.requests$.subscribe(() => {
         this.generateCalendar();
-      })
+      }),
     );
   }
 
@@ -78,7 +80,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     try {
       const eventsRef = collection(this.firestore, 'company_events');
       const snapshot = await getDocs(eventsRef);
-      this.companyEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      this.companyEvents = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       this.loadEmployeeBirthdays();
     } catch (error) {
       // Error loading company events
@@ -89,7 +91,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     try {
       const usersRef = collection(this.firestore, 'users');
       const snapshot = await getDocs(usersRef);
-      const allUsers = snapshot.docs.map(doc => doc.data() as any);
+      const allUsers = snapshot.docs.map((doc) => doc.data() as any);
       this.birthdays = allUsers
         .filter((user: any) => user.birthday) // Only include users with birthday
         .map((user: any) => {
@@ -99,7 +101,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
             birthday: user.birthday,
             // Extract month and day for matching
             month: birthdayDate.getMonth(),
-            day: birthdayDate.getDate()
+            day: birthdayDate.getDate(),
           };
         });
       this.generateCalendar();
@@ -108,8 +110,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy() { 
-    this.subscriptions.unsubscribe(); 
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
   // FIX FOR TS2551: Adding the event to Firestore
@@ -122,17 +124,17 @@ export class CalendarComponent implements OnInit, OnDestroy {
         title: this.newEventName,
         date: this.selectedDay.date, // Format: YYYY-MM-DD
         type: 'company-event',
-        createdBy: this.authService.currentUser?.name || 'Admin'
+        createdBy: this.authService.currentUser?.name || 'Admin',
       });
 
       this.newEventName = ''; // Clear input
-      
+
       // Close modal immediately
       this.showModal = false;
-      
+
       // Reload company events and regenerate calendar to show the new event
       await this.loadCompanyEvents();
-      
+
       // Show toast notification
       Swal.fire({
         toast: true,
@@ -140,7 +142,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         icon: 'success',
         title: 'Event added',
         showConfirmButton: false,
-        timer: 1500
+        timer: 1500,
       });
     } catch (error) {
       Swal.fire({
@@ -153,8 +155,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
         customClass: {
           popup: 'swal-premium-popup',
           confirmButton: 'swal-confirm-mint',
-          actions: 'swal-button-container'
-        }
+          actions: 'swal-button-container',
+        },
       });
     }
   }
@@ -177,21 +179,21 @@ export class CalendarComponent implements OnInit, OnDestroy {
         popup: 'swal-premium-popup',
         confirmButton: 'swal-confirm-danger',
         cancelButton: 'swal-cancel-outline',
-        actions: 'swal-button-container'
-      }
+        actions: 'swal-button-container',
+      },
     });
 
     if (result.isConfirmed) {
       try {
         const eventId = this.selectedDay.companyEvent.id;
         await deleteDoc(doc(this.firestore, `company_events/${eventId}`));
-        
+
         // Close modal immediately
         this.showModal = false;
-        
+
         // Reload company events and regenerate calendar to reflect the deletion
         await this.loadCompanyEvents();
-        
+
         // Show success notification
         Swal.fire({
           title: 'Deleted',
@@ -203,8 +205,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
           customClass: {
             popup: 'swal-premium-popup',
             confirmButton: 'swal-confirm-mint',
-            actions: 'swal-button-container'
-          }
+            actions: 'swal-button-container',
+          },
         });
       } catch (error) {
         Swal.fire({
@@ -217,8 +219,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
           customClass: {
             popup: 'swal-premium-popup',
             confirmButton: 'swal-confirm-mint',
-            actions: 'swal-button-container'
-          }
+            actions: 'swal-button-container',
+          },
         });
       }
     }
@@ -230,31 +232,35 @@ export class CalendarComponent implements OnInit, OnDestroy {
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
 
-    this.leaveService.requests$.subscribe(allRequests => {
+    this.leaveService.requests$.subscribe((allRequests) => {
       this.days = [];
-      for (let i = 0; i < firstDay; i++) { this.days.push({ empty: true }); }
-      
+      for (let i = 0; i < firstDay; i++) {
+        this.days.push({ empty: true });
+      }
+
       for (let i = 1; i <= daysInMonth; i++) {
         const dateObj = new Date(year, month, i);
         const dateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${i.toString().padStart(2, '0')}`;
-        
-        const customEvent = this.companyEvents.find(e => e.date === dateStr);
-        const awayCount = allRequests.filter((r: any) => r.status === 'Approved' && this.isDateInPeriod(dateObj, r.period)).length;
-        
+
+        const customEvent = this.companyEvents.find((e) => e.date === dateStr);
+        const awayCount = allRequests.filter(
+          (r: any) => r.status === 'Approved' && this.isDateInPeriod(dateObj, r.period),
+        ).length;
+
         // Find birthdays on this day
-        const dayBirthdays = this.birthdays.filter(b => b.month === month && b.day === i);
-        
+        const dayBirthdays = this.birthdays.filter((b) => b.month === month && b.day === i);
+
         this.days.push({
-          day: i, 
-          date: dateStr, 
-          holiday: this.holidays.find(h => h.date === dateStr),
+          day: i,
+          date: dateStr,
+          holiday: this.holidays.find((h) => h.date === dateStr),
           companyEvent: customEvent,
-          awayCount, 
-          isToday: today.toDateString() === dateObj.toDateString(), 
+          awayCount,
+          isToday: today.toDateString() === dateObj.toDateString(),
           isPast: dateObj < today,
-          birthdays: this.isHR ? dayBirthdays : [] // Only HR can see birthdays
+          birthdays: this.isHR ? dayBirthdays : [], // Only HR can see birthdays
         });
       }
       // Force change detection by reassigning days array
@@ -269,26 +275,55 @@ export class CalendarComponent implements OnInit, OnDestroy {
     const parts = period.split(sep);
     const start = new Date(parts[0]);
     const end = parts[1] ? new Date(parts[1]) : start;
-    start.setHours(0,0,0,0); end.setHours(23,59,59,999);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
     return target >= start && target <= end;
   }
 
   selectDay(day: any) {
     if (day.empty || (day.isPast && !this.isHR)) return;
     this.selectedDay = day;
-    const diffDays = Math.ceil((new Date(day.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.ceil(
+      (new Date(day.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
+    );
     this.isNoticeWarning = diffDays < this.suggestedNoticeDays && diffDays >= 0;
     this.showModal = true;
+    this.cd.detectChanges();
   }
 
   generateYearOptions() {
     const currentYear = new Date().getFullYear();
-    for (let i = currentYear; i <= currentYear + 10; i++) { this.years.push(i); }
+    for (let i = currentYear; i <= currentYear + 10; i++) {
+      this.years.push(i);
+    }
   }
 
-  prevMonth() { this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getMonth() - 1)); this.holidayService.refreshYear(this.currentDate.getFullYear()); }
-  nextMonth() { this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getMonth() + 1)); this.holidayService.refreshYear(this.currentDate.getFullYear()); }
-  goToToday() { this.currentDate = new Date(); this.holidayService.refreshYear(this.currentDate.getFullYear()); }
-  changeYear(e: any) { this.currentDate = new Date(this.currentDate.setFullYear(e.target.value)); this.holidayService.refreshYear(this.currentDate.getFullYear()); }
-  goToFiling(date: string) { this.router.navigate(['/file-leave'], { queryParams: { date } }); }
+  prevMonth() {
+    this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getMonth() - 1));
+    this.holidayService.refreshYear(this.currentDate.getFullYear());
+    this.cd.detectChanges();
+  }
+  nextMonth() {
+    this.currentDate = new Date(this.currentDate.setMonth(this.currentDate.getMonth() + 1));
+    this.holidayService.refreshYear(this.currentDate.getFullYear());
+    this.cd.detectChanges();
+  }
+  goToToday() {
+    this.currentDate = new Date();
+    this.holidayService.refreshYear(this.currentDate.getFullYear());
+    this.cd.detectChanges();
+  }
+  changeYear(e: any) {
+    this.currentDate = new Date(this.currentDate.setFullYear(e.target.value));
+    this.holidayService.refreshYear(this.currentDate.getFullYear());
+    this.cd.detectChanges();
+  }
+  goToFiling(date: string) {
+    this.router.navigate(['/file-leave'], { queryParams: { date } });
+  }
+
+  toggleLegend() {
+    this.showLegend = !this.showLegend;
+    this.cd.detectChanges();
+  }
 }

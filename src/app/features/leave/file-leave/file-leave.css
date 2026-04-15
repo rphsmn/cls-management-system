@@ -527,3 +527,117 @@ select option[value='']:first-of-type {
   color: #94a3b8;
   border-color: #475569;
 }
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .file-leave-wrapper {
+    padding: 24px;
+  }
+
+  .leave-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .file-leave-wrapper {
+    padding: 16px;
+  }
+
+  .content-header h1 {
+    font-size: 20px;
+  }
+
+  .sub-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .content-card {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .leave-form-grid {
+    gap: 16px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .bal-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .bal {
+    padding: 12px 10px;
+  }
+
+  .bal .count {
+    font-size: 24px;
+  }
+
+  .bal .label {
+    font-size: 10px;
+  }
+
+  .duration-summary {
+    padding: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .summary-content {
+    font-size: 13px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    padding: 14px;
+    font-size: 14px;
+  }
+
+  .notice-banner {
+    padding: 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .file-leave-wrapper {
+    padding: 12px;
+  }
+
+  .content-header h1 {
+    font-size: 18px;
+  }
+
+  .bal-grid {
+    grid-template-columns: 1fr;
+  }
+}

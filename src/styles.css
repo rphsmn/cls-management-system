@@ -44,12 +44,29 @@ body {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden;
   background-color: var(--bg-main);
   color: var(--text-main);
   transition:
     background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
     color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Desktop: Prevent body scroll, content scrolls internally */
+@media (min-width: 1025px) {
+  html,
+  body {
+    overflow: hidden;
+  }
+
+  /* Mobile/Tablet: Allow body scroll */
+  @media (max-width: 1024px) {
+    html,
+    body {
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      min-height: 100dvh;
+    }
+  }
 }
 
 /* Global Font Override */
@@ -201,4 +218,184 @@ body {
 .employee-modal .info-row .value-container span.clickable:hover,
 .employee-modal .data-row span.clickable:hover {
   text-decoration: underline;
+}
+
+/* ============================================
+   GLOBAL MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablet and below - Sidebar becomes collapsible */
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    left: -280px;
+    z-index: 1000;
+    width: 260px;
+    transition: left 0.3s ease;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+
+  .sidebar-overlay.show {
+    display: block;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .menu-toggle {
+    display: flex !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  /* Prevent horizontal scroll */
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Main content area */
+  .main-content {
+    padding: 16px;
+  }
+
+  /* Smaller fonts for mobile */
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 20px !important;
+  }
+
+  h2 {
+    font-size: 18px !important;
+  }
+
+  h3 {
+    font-size: 16px !important;
+  }
+
+  /* Cards */
+  .card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* Forms */
+  input,
+  select,
+  textarea {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  /* Buttons */
+  button {
+    padding: 10px 16px;
+    font-size: 13px;
+    min-height: 44px;
+  }
+
+  /* Tables - horizontal scroll wrapper */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    font-size: 12px;
+    min-width: 600px;
+  }
+
+  /* Modal */
+  .modal,
+  .modal-dialog,
+  .employee-modal {
+    width: 95% !important;
+    max-width: 95vw !important;
+    margin: 10px !important;
+    padding: 16px !important;
+  }
+
+  /* Grid layouts */
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Flex containers */
+  .flex-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Hide non-essential elements on mobile */
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Show mobile alternatives */
+  .mobile-only {
+    display: block !important;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .main-content {
+    padding: 12px;
+  }
+
+  h1 {
+    font-size: 18px !important;
+  }
+
+  .card {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  button {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-height: 40px;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  button,
+  .btn,
+  input[type='checkbox'],
+  input[type='radio'],
+  select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Remove hover effects on touch devices */
+  *:hover {
+    transition: none !important;
+  }
 }
