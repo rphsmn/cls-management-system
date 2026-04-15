@@ -1190,15 +1190,48 @@
 
   /* Hide empty/filler days from previous/next month in list view */
   .day-cell.empty,
-  .day-cell.out-of-month {
+  .day-cell.out-of-month,
+  .day-cell.empty *,
+  .day-cell.out-of-month * {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Make sure the day cell itself is hidden */
+  .day-cell.empty,
+  .day-cell.out-of-month {
+    min-height: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
   }
 
   /* Switch to vertical list view */
   .days-grid {
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
     width: 100% !important;
     padding: 0 !important;
+  }
+
+  /* Completely remove empty/filler days from layout flow */
+  .day-cell.empty,
+  .day-cell.out-of-month {
+    display: none !important;
+    position: absolute !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
   }
 
   /* Each day becomes a card */
@@ -1217,11 +1250,15 @@
     background: var(--bg-card) !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
     cursor: pointer;
+    transition:
+      transform 0.1s ease,
+      background-color 0.1s ease;
   }
 
-  /* Hide empty days from prev/next month */
-  .day-cell.empty {
-    display: none !important;
+  /* Press effect for day cells */
+  .days-grid .day-cell:active {
+    transform: scale(0.98);
+    background-color: var(--bg-hover) !important;
   }
 
   /* Date number on the left */
