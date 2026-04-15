@@ -1,11 +1,12 @@
 .history-content-container {
   padding: 40px;
-  width: 95%;
-  max-width: 1400px;
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-main);
   min-height: 100vh;
+  box-sizing: border-box;
 }
 .content-header {
   margin-bottom: 32px;
@@ -967,4 +968,433 @@
 
 [data-theme='dark'] .empty-state {
   color: #64748b;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .history-content-container {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .history-content-container {
+    padding: 16px;
+    width: 100%;
+  }
+
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .title-group h1 {
+    font-size: 20px;
+  }
+
+  .status-indicator {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .role-badge {
+    font-size: 9px;
+    padding: 2px 8px;
+  }
+
+  .sub-tag {
+    font-size: 11px;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .filter-group {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .filter-select {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .reset-filters-btn {
+    width: 100%;
+    text-align: center;
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  .search-box {
+    width: 100%;
+    padding: 10px 14px;
+  }
+
+  .search-box input {
+    width: 100%;
+    font-size: 13px;
+  }
+
+  .export-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+
+  .card-full-width {
+    border-radius: 12px;
+    min-height: auto;
+  }
+
+  .history-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .history-table thead {
+    display: none;
+  }
+
+  .history-table tbody {
+    display: block;
+  }
+
+  .history-table tr {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    background: var(--bg-card);
+  }
+
+  .history-table td {
+    padding: 8px 0;
+    border: none;
+    background: transparent;
+  }
+
+  .history-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .history-table td:nth-child(1)::before {
+    content: 'Employee';
+  }
+  .history-table td:nth-child(2)::before {
+    content: 'Date Filed';
+  }
+  .history-table td:nth-child(3)::before {
+    content: 'Leave Type';
+  }
+  .history-table td:nth-child(4)::before {
+    content: 'Period';
+  }
+  .history-table td:nth-child(5)::before {
+    content: 'Reason';
+  }
+  .history-table td:nth-child(6)::before {
+    content: 'Progress';
+  }
+
+  .employee-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .user-name {
+    font-size: 16px;
+  }
+
+  .emp-id {
+    font-size: 11px;
+  }
+
+  .period-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .period-word {
+    font-size: 14px;
+  }
+
+  .period-sub {
+    font-size: 10px;
+  }
+
+  .type-pill {
+    display: inline-flex;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .reason-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .reason-text,
+  .reason-full {
+    font-size: 13px;
+  }
+
+  .reason-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .see-more {
+    font-size: 10px;
+  }
+
+  .doc-link-btn {
+    padding: 4px 8px;
+    font-size: 9px;
+  }
+
+  .progress-track {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 8px 0;
+  }
+
+  .step {
+    min-width: 40px;
+    max-width: 50px;
+  }
+
+  .icon-circle {
+    width: 20px;
+    height: 20px;
+    font-size: 9px;
+  }
+
+  .step-label {
+    font-size: 6px;
+    max-width: 40px;
+  }
+
+  .connector {
+    width: 8px;
+  }
+
+  .cancelled-info {
+    align-items: flex-start;
+    padding: 8px 0;
+  }
+
+  .cancelled-badge {
+    width: 100%;
+  }
+
+  .cancel-reason {
+    width: 100%;
+  }
+
+  .cancel-request-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .pagination-footer {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .pagination-left {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+    font-size: 12px;
+  }
+
+  .pagination-controls {
+    width: 100%;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .btn-pager {
+    padding: 10px 16px;
+    font-size: 11px;
+  }
+
+  .page-num {
+    font-size: 12px;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .modal-header h2 {
+    font-size: 18px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .profile-header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .avatar-circle.large {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  .profile-name-section h3 {
+    font-size: 18px;
+  }
+
+  .profile-card {
+    padding: 12px;
+  }
+
+  .profile-card h4 {
+    font-size: 12px;
+  }
+
+  .data-row {
+    padding: 10px 0;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .data-row label {
+    font-size: 11px;
+  }
+
+  .data-row span {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .history-content-container {
+    padding: 12px;
+  }
+
+  .title-group h1 {
+    font-size: 18px;
+  }
+
+  .header-actions {
+    gap: 10px;
+  }
+
+  .filter-group {
+    flex-direction: column;
+  }
+
+  .filter-select {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .search-box input {
+    font-size: 12px;
+  }
+
+  .export-btn {
+    font-size: 11px;
+    padding: 8px 12px;
+  }
+
+  .history-table tr {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .user-name {
+    font-size: 14px;
+  }
+
+  .type-pill {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .period-word {
+    font-size: 13px;
+  }
+
+  .reason-text,
+  .reason-full {
+    font-size: 12px;
+  }
+
+  .step {
+    min-width: 35px;
+    max-width: 45px;
+  }
+
+  .icon-circle {
+    width: 18px;
+    height: 18px;
+    font-size: 8px;
+  }
+
+  .step-label {
+    font-size: 5px;
+    max-width: 35px;
+  }
+
+  .connector {
+    width: 6px;
+  }
+
+  .btn-pager {
+    padding: 8px 12px;
+    font-size: 10px;
+  }
+
+  .empty-state {
+    padding: 40px 16px;
+  }
+
+  .empty-icon {
+    font-size: 48px;
+  }
+
+  .empty-state p {
+    font-size: 13px;
+  }
 }

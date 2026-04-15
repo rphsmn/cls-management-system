@@ -1,11 +1,12 @@
 .approvals-container {
   padding: 40px;
-  width: 95%;
-  max-width: 1400px;
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-main);
   min-height: 100vh;
+  box-sizing: border-box;
 }
 
 [data-theme='dark'] .approvals-container {
@@ -419,42 +420,51 @@
    ============================================ */
 
 @media (max-width: 1024px) {
-  .approvals-wrapper {
+  .approvals-container {
     padding: 24px;
   }
 }
 
 @media (max-width: 640px) {
-  .approvals-wrapper {
+  .approvals-container {
     padding: 16px;
   }
 
-  .approvals-header {
+  .content-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
 
-  .approvals-header h1 {
+  .title-group h1 {
     font-size: 20px;
   }
 
-  .filter-row {
-    flex-direction: column;
-    gap: 12px;
+  .header-actions {
     width: 100%;
+  }
+
+  .filter-group {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .filter-select {
+    flex: 1;
+    min-width: 100px;
   }
 
   .search-box {
     width: 100%;
   }
 
-  .filter-select {
+  .search-box input {
     width: 100%;
   }
 
   .card-full-width {
-    padding: 16px;
+    padding: 0;
+    border-radius: 12px;
   }
 
   .approval-table {
@@ -462,66 +472,205 @@
     overflow-x: auto;
   }
 
-  .approval-table thead,
-  .approval-table tbody,
-  .approval-table th,
-  .approval-table td,
-  .approval-table tr {
-    display: block;
-  }
-
   .approval-table thead {
     display: none;
   }
 
+  .approval-table tbody {
+    display: block;
+  }
+
   .approval-table tr {
+    display: flex;
+    flex-direction: column;
     margin-bottom: 16px;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 12px;
+    padding: 16px;
+    background: var(--bg-card);
   }
 
   .approval-table td {
     padding: 8px 0;
     border: none;
+    background: transparent;
   }
 
-  .user-info-cell {
+  .approval-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .approval-table td:nth-child(1)::before {
+    content: 'Employee';
+  }
+  .approval-table td:nth-child(2)::before {
+    content: 'Leave Type';
+  }
+  .approval-table td:nth-child(3)::before {
+    content: 'Period';
+  }
+  .approval-table td:nth-child(4)::before {
+    content: 'Reason';
+  }
+  .approval-table td:nth-child(5)::before {
+    content: 'Actions';
+  }
+
+  .user-name {
+    display: block;
+    font-size: 16px;
+  }
+
+  .emp-id {
+    display: block;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+
+  .type-pill {
+    display: inline-flex;
+  }
+
+  .period-stack {
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 4px;
+  }
+
+  .period-word {
+    font-size: 14px;
+  }
+
+  .period-sub {
+    font-size: 11px;
+  }
+
+  .reason-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .reason-text,
+  .reason-full {
+    font-size: 13px;
+  }
+
+  .reason-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .doc-actions {
+    margin-top: 4px;
   }
 
   .action-buttons {
     justify-content: flex-start;
-    gap: 8px;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
   }
 
   .btn-approve,
   .btn-reject {
     flex: 1;
     text-align: center;
+    padding: 12px 16px;
+    font-size: 12px;
   }
 
   .pagination-footer {
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
     padding: 16px;
+  }
+
+  .pagination-left {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .pagination-controls {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-pager {
+    padding: 10px 16px;
+    font-size: 12px;
   }
 }
 
 @media (max-width: 480px) {
-  .approvals-wrapper {
+  .approvals-container {
     padding: 12px;
   }
 
-  .approvals-header h1 {
+  .title-group h1 {
     font-size: 18px;
+  }
+
+  .status-indicator {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .action-tag {
+    font-size: 9px;
+  }
+
+  .sub-tag {
+    font-size: 11px;
+  }
+
+  .filter-group {
+    flex-direction: column;
+  }
+
+  .filter-select {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .search-box {
+    padding: 10px 14px;
+  }
+
+  .search-box input {
+    font-size: 13px;
+  }
+
+  .approval-table tr {
+    padding: 12px;
+    border-radius: 10px;
   }
 
   .btn-approve,
   .btn-reject {
     padding: 10px 12px;
-    font-size: 10px;
+    font-size: 11px;
+  }
+
+  .empty-state {
+    padding: 60px 20px;
+  }
+
+  .empty-icon {
+    font-size: 48px;
+  }
+
+  .empty-state p {
+    font-size: 14px;
   }
 }

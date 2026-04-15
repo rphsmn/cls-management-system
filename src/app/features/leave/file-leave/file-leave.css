@@ -1,11 +1,14 @@
 .file-leave-container {
   padding: 40px;
   width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   background-color: var(--bg-main);
   min-height: 100vh;
+  box-sizing: border-box;
 }
 
 /* Dark Mode - Form container */
@@ -233,6 +236,7 @@ select option[value='']:first-of-type {
   gap: 16px;
   margin-top: 32px;
   padding-top: 24px;
+  padding-bottom: 16px;
   border-top: 1px solid #f1f5f9;
 }
 
@@ -533,22 +537,28 @@ select option[value='']:first-of-type {
    ============================================ */
 
 @media (max-width: 1024px) {
-  .file-leave-wrapper {
+  .file-leave-container {
     padding: 24px;
   }
 
-  .leave-form-grid {
+  .form-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 640px) {
-  .file-leave-wrapper {
-    padding: 16px;
+  .file-leave-container {
+    padding: 20px 16px;
   }
 
-  .content-header h1 {
-    font-size: 20px;
+  .content-header {
+    padding: 0;
+    margin-top: 16px;
+    margin-bottom: 24px;
+  }
+
+  .title-section h1 {
+    font-size: 24px;
   }
 
   .sub-header {
@@ -558,12 +568,13 @@ select option[value='']:first-of-type {
   }
 
   .content-card {
-    padding: 16px;
-    margin-bottom: 16px;
+    padding: 20px 16px;
+    margin-bottom: 20px;
+    border-radius: 16px;
   }
 
-  .leave-form-grid {
-    gap: 16px;
+  .form-grid {
+    gap: 20px;
   }
 
   .form-group {
@@ -575,28 +586,28 @@ select option[value='']:first-of-type {
     margin-bottom: 6px;
   }
 
+  .label-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .balance-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .bal {
+    padding: 3px 8px;
+    font-size: 9px;
+  }
+
   input,
   select,
   textarea {
     padding: 10px 12px;
     font-size: 14px;
-  }
-
-  .bal-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  .bal {
-    padding: 12px 10px;
-  }
-
-  .bal .count {
-    font-size: 24px;
-  }
-
-  .bal .label {
-    font-size: 10px;
   }
 
   .duration-summary {
@@ -608,6 +619,12 @@ select option[value='']:first-of-type {
 
   .summary-content {
     font-size: 13px;
+  }
+
+  .half-day-inline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
   .form-actions {
@@ -625,19 +642,85 @@ select option[value='']:first-of-type {
   .notice-banner {
     padding: 12px;
     font-size: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .attachment-upload-box {
+    padding: 20px;
+  }
+
+  .upload-content {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .file-info-active {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
   }
 }
 
 @media (max-width: 480px) {
-  .file-leave-wrapper {
+  .file-leave-container {
     padding: 12px;
   }
 
-  .content-header h1 {
+  .title-section h1 {
     font-size: 18px;
   }
 
-  .bal-grid {
-    grid-template-columns: 1fr;
+  .content-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .role-badge {
+    font-size: 9px;
+    padding: 2px 8px;
+  }
+
+  .status-text {
+    font-size: 12px;
+  }
+
+  .form-grid {
+    gap: 12px;
+  }
+
+  .form-group label {
+    font-size: 11px;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 8px 10px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .attachment-upload-box {
+    padding: 16px;
+  }
+
+  .upload-text {
+    font-size: 12px;
+  }
+
+  .notice-banner {
+    padding: 10px;
+    font-size: 11px;
+  }
+
+  .notice-icon {
+    font-size: 16px;
   }
 }

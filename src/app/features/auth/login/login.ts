@@ -35,6 +35,10 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // Add class to html element to prevent overflow issues on mobile
+    document.documentElement.classList.add('login-page');
+    document.body.classList.add('login-page-body');
+
     // Set time-based greeting
     this.greeting = this.getGreeting();
 
@@ -64,6 +68,10 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    // Clean up classes added for login page
+    document.documentElement.classList.remove('login-page');
+    document.body.classList.remove('login-page-body');
+
     this.destroy$.next();
     this.destroy$.complete();
   }
