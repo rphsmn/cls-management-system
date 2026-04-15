@@ -24,15 +24,21 @@
           routerLink="/dashboard"
           routerLinkActive="active-link"
           [routerLinkActiveOptions]="{ exact: true }"
+          (click)="closeSidebar()"
         >
           Dashboard
         </li>
-        <li routerLink="/calendar" routerLinkActive="active-link">Company Calendar</li>
-        <li routerLink="/history" routerLinkActive="active-link">Leave Tracker</li>
+        <li routerLink="/calendar" routerLinkActive="active-link" (click)="closeSidebar()">
+          Company Calendar
+        </li>
+        <li routerLink="/history" routerLinkActive="active-link" (click)="closeSidebar()">
+          Leave Tracker
+        </li>
         <li
           routerLink="/file-leave"
           routerLinkActive="active-link"
           *ngIf="currentUser?.role !== 'MANAGING DIRECTOR'"
+          (click)="closeSidebar()"
         >
           File Leave
         </li>
@@ -43,6 +49,7 @@
             *ngIf="canSeeEmployees(currentUser.role)"
             routerLink="/employees"
             routerLinkActive="active-link"
+            (click)="closeSidebar()"
           >
             Employee Status
           </li>
@@ -50,6 +57,7 @@
             *ngIf="canSeeApprovals(currentUser.role)"
             routerLink="/approvals"
             routerLinkActive="active-link"
+            (click)="closeSidebar()"
           >
             Leave Approvals
           </li>
@@ -57,13 +65,16 @@
             *ngIf="canSeeAuditLogs(currentUser.role, currentUser.department)"
             routerLink="/audit-logs"
             routerLinkActive="active-link"
+            (click)="closeSidebar()"
           >
             Audit Logs
           </li>
         </ng-container>
 
         <li class="section-header">Account</li>
-        <li routerLink="/profile" routerLinkActive="active-link">My Profile</li>
+        <li routerLink="/profile" routerLinkActive="active-link" (click)="closeSidebar()">
+          My Profile
+        </li>
       </ul>
     </div>
 

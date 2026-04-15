@@ -1,4 +1,11 @@
-import { Component, inject, OnInit, OnDestroy, HostListener } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  OnDestroy,
+  HostListener,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
@@ -19,6 +26,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   private connectionService = inject(ConnectionService);
   private notificationService = inject(NotificationService);
   private router = inject(Router);
+  private cd = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
   private inactivityTimeout: any;
   private readonly INACTIVITY_LIMIT = 2 * 60 * 60 * 1000; // 2 hours
@@ -109,10 +117,20 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   toggleSidebar() {
     this.sidebarOpen = !this.sidebarOpen;
+    this.cd.detectChanges();
   }
 
   closeSidebar() {
     this.sidebarOpen = false;
+    this.cd.detectChanges();
+  }
+
+  onNavItemClick() {
+    // Close sidebar with slight delay to allow animation to complete
+    setTimeout(() => {
+      this.sidebarOpen = false;
+      this.cd.detectChanges();
+    }, 250);
   }
 
   private resetInactivityTimeout() {
