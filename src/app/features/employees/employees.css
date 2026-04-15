@@ -342,17 +342,6 @@
   background: #475569;
 }
 
-[data-theme='dark'] .modal-btn.cancel-btn {
-  background: #1a222d;
-  border-color: #334155;
-  color: #94a3b8;
-}
-
-[data-theme='dark'] .modal-btn.cancel-btn:hover {
-  background: #334155;
-  color: #f1f5f9;
-}
-
 [data-theme='dark'] .employee-dropdown::after {
   background: #1e293b;
 }
@@ -1284,11 +1273,6 @@
   margin-left: 4px;
 }
 
-.info-row span.expandable:hover {
-  background: #f1f5f9;
-  border-radius: 4px;
-}
-
 .private-column {
   background: var(--bg-card);
   border-radius: 12px;
@@ -1417,21 +1401,6 @@
   background: #f1f5f9;
   border-color: #cbd5e1;
   color: #1a2934;
-}
-
-.modal-btn.secondary {
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
-  color: #1a2934;
-}
-
-.modal-btn.secondary:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-}
-
-.modal-btn.danger:hover {
-  background: #b91c1c;
 }
 
 @media (max-width: 640px) {
