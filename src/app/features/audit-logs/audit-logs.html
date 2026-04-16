@@ -70,10 +70,10 @@
           </span>
         </div>
         <div class="col-user">
-          <span class="user-name">{{ log.performedByName }}</span>
+          <span class="user-name">{{ log.performedByName?.trim() }}</span>
         </div>
         <div class="col-target">
-          <span class="target-name">{{ log.targetUserName || '-' }}</span>
+          <span class="target-name" [attr.data-empty]="!log.targetUserName ? 'true' : null">{{ log.targetUserName?.trim() || '-' }}</span>
         </div>
         <div class="col-details">
           <span class="details-text">{{ log.details }}</span>

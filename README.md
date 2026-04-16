@@ -23,7 +23,7 @@ A comprehensive Angular-based HR management system with Firebase backend for man
 | **Frontend** | Angular 17+ |
 | **Backend** | Firebase Firestore |
 | **Auth** | Firebase Authentication |
-| **URL** | cor-logic-hris.web.app |
+| **URL** | hris-corlogic.vercel.app|
 
 ### Navigation
 
