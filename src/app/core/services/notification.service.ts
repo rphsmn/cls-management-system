@@ -47,29 +47,21 @@ export class NotificationService {
   private previousCount = 0;
 
   subscribeToNotifications(userRole: string, userUid: string) {
-    console.log('[NotificationService] Subscribing with role:', userRole, 'uid:', userUid);
-
-    // Determine which roles should receive notifications
     const targetRoles = this.getTargetRolesForRole(userRole);
-    console.log('[NotificationService] Target roles to listen:', targetRoles);
 
     if (targetRoles.length === 0) {
-      console.log('[NotificationService] No target roles, skipping subscription');
       return;
     }
 
-    // Simplified query - get all notifications for target roles and targetUserId
     const notificationsRef = collection(this.firestore, 'notifications');
-    const q = query(notificationsRef); // Get all, filter in memory
+    const q = query(notificationsRef);
 
     this.unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        // Get ALL notifications, filter by role OR targetUserId (personal)
         const notifications = snapshot.docs
           .map((doc) => {
             const data = doc.data() as any;
-            // Filter: role matches OR it's for this specific user
             const isForUser =
               targetRoles.includes(data.targetRole) || data.targetUserId === userUid;
             if (!isForUser && userUid) return null;
@@ -96,24 +88,16 @@ export class NotificationService {
             return dateB - dateA;
           });
 
-        // Count unread for badge and title
         const unreadNotifications = notifications.filter((n) => !n.read);
         const currentCount = unreadNotifications.length;
 
-        console.log('[NotificationService] Received notifications:', notifications.length);
-        console.log('[NotificationService] Unread count:', currentCount);
-
-        // Update title when count changes (for new notifications)
         this.updateBrowserTitle(currentCount);
 
-        // Play sound for new notifications (on every new notification)
         if (currentCount > this.previousCount) {
-          console.log('[NotificationService] New notification detected, playing sound');
           this.playNotificationSound();
         }
         this.previousCount = currentCount;
 
-        // Send all notifications to the dropdown, but unread count for badge
         this.notificationsSubject.next(notifications);
         this.unreadCountSubject.next(currentCount);
       },
@@ -133,66 +117,44 @@ export class NotificationService {
   }
 
   private playNotificationSound(): void {
-    console.log('[NotificationService] === PLAYING SOUND ===');
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const audioContext = new AudioContextClass();
-      console.log('[NotificationService] AudioContext created, state:', audioContext.state);
 
-      // Resume if suspended (browser autoplay policy)
       if (audioContext.state === 'suspended') {
-        console.log('[NotificationService] AudioContext suspended, resuming...');
         audioContext
           .resume()
           .then(() => {
-            console.log('[NotificationService] AudioContext resumed');
             this.playWithContext(audioContext);
           })
-          .catch((err) => {
-            console.error('[NotificationService] Failed to resume:', err);
-          });
+          .catch(() => {});
       } else {
         this.playWithContext(audioContext);
       }
     } catch (e) {
-      console.error('[NotificationService] Audio error:', e);
+      // Audio not supported or blocked
     }
   }
 
   private playWithContext(audioContext: any): void {
-    console.log('[NotificationService] Trying to play MP3 file...');
     const audio = new Audio('sounds/notification.mp3');
     audio.volume = 0.7;
 
-    audio.oncanplaythrough = () => {
-      console.log('[NotificationService] Audio loaded, playing...');
-    };
-
-    audio.onerror = (err) => {
-      console.error('[NotificationService] Audio load error:', err);
-      this.playWebAudioFallback(audioContext);
-    };
-
     const playPromise = audio.play();
     if (playPromise !== undefined) {
-      playPromise
-        .then(() => console.log('[NotificationService] ✅ MP3 played successfully'))
-        .catch((err) => {
-          console.log('[NotificationService] ❌ Audio blocked:', err.message);
-          this.playWebAudioFallback(audioContext);
-        });
+      playPromise.catch(() => {
+        this.playWebAudioFallback(audioContext);
+      });
     }
   }
 
   private playWebAudioFallback(audioContext: any): void {
-    console.log('[NotificationService] Using Web Audio API fallback...');
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    // Nice notification pop
     oscillator.type = 'sine';
     oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
     oscillator.frequency.linearRampToValueAtTime(1200, audioContext.currentTime + 0.03);
@@ -205,8 +167,6 @@ export class NotificationService {
 
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.15);
-
-    console.log('[NotificationService] ✅ Fallback sound played');
   }
 
   private getTargetRolesForRole(role: string): string[] {
@@ -291,24 +251,9 @@ export class NotificationService {
     period: string,
     employeeRole: string,
   ) {
-    console.log('[NotificationService] Creating notification for leave request:', {
-      employeeName,
-      employeeRole,
-      leaveType,
-    });
-
     const targetRoles = this.getNotificationTargets(employeeRole);
-    console.log(
-      '[NotificationService] Notification targets for role',
-      employeeRole,
-      ':',
-      targetRoles,
-    );
 
     for (const role of targetRoles) {
-      const roleLabel = this.getRoleLabel(role);
-      console.log('[NotificationService] Creating notification for role:', role);
-
       try {
         await this.createNotification(
           'new_leave_request',
@@ -318,13 +263,10 @@ export class NotificationService {
           employeeUid,
           role,
         );
-        console.log('[NotificationService] Created notification for', role);
       } catch (err) {
         console.error('[NotificationService] Failed to create notification for', role, err);
       }
     }
-
-    console.log('[NotificationService] All notifications created');
   }
 
   private getNotificationTargets(employeeRole: string): string[] {
@@ -397,22 +339,45 @@ export class NotificationService {
     this.unreadCountSubject.next(0);
   }
 
-  async markAllAsRead(userRole: string) {
+  async markAllAsRead(userRole: string, userUid?: string) {
     const targetRoles = this.getTargetRolesForRole(userRole);
-    if (targetRoles.length === 0) return;
+    if (targetRoles.length === 0 && !userUid) return;
 
+    // Get all notifications and filter in memory (same logic as subscribeToNotifications)
     const notificationsRef = collection(this.firestore, 'notifications');
-    const q = query(
-      notificationsRef,
-      where('targetRole', 'in', targetRoles),
-      where('read', '==', false),
-    );
+    const q = query(notificationsRef);
 
     const snapshot = await getDocs(q);
     const batch = writeBatch(this.firestore);
 
-    snapshot.forEach((doc) => {
-      batch.update(doc.ref, { read: true });
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data() as any;
+      const isForUser = targetRoles.includes(data.targetRole) || data.targetUserId === userUid;
+      if (isForUser && !data.read) {
+        batch.update(doc.ref, { read: true });
+      }
+    });
+
+    await batch.commit();
+    this.updateBrowserTitle(0);
+  }
+
+  async clearAllNotifications(userRole: string, userUid?: string) {
+    const targetRoles = this.getTargetRolesForRole(userRole);
+    if (targetRoles.length === 0 && !userUid) return;
+
+    const notificationsRef = collection(this.firestore, 'notifications');
+    const q = query(notificationsRef);
+
+    const snapshot = await getDocs(q);
+    const batch = writeBatch(this.firestore);
+
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data() as any;
+      const isForUser = targetRoles.includes(data.targetRole) || data.targetUserId === userUid;
+      if (isForUser) {
+        batch.delete(doc.ref);
+      }
     });
 
     await batch.commit();
@@ -431,23 +396,5 @@ export class NotificationService {
   async deleteNotification(notificationId: string) {
     if (!notificationId) return;
     await deleteDoc(doc(this.firestore, 'notifications', notificationId));
-  }
-
-  async clearAllNotifications(userRole: string) {
-    const targetRoles = this.getTargetRolesForRole(userRole);
-    if (targetRoles.length === 0) return;
-
-    const notificationsRef = collection(this.firestore, 'notifications');
-    const q = query(notificationsRef, where('targetRole', 'in', targetRoles));
-
-    const snapshot = await getDocs(q);
-    const batch = writeBatch(this.firestore);
-
-    snapshot.forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-
-    await batch.commit();
-    this.updateBrowserTitle(0);
   }
 }

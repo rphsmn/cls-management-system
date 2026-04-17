@@ -51,7 +51,7 @@
             routerLinkActive="active-link"
             (click)="closeSidebar()"
           >
-            Employee Status
+            Employees
           </li>
           <li
             *ngIf="canSeeApprovals(currentUser.role)"
@@ -127,7 +127,7 @@
                   (click)="markAllAsRead()"
                   *ngIf="((unreadCount$ | async) ?? 0) > 0"
                 >
-                  Mark all read
+                  Mark all as read
                 </button>
                 <button class="close-dropdown" (click)="toggleNotifications()">✕</button>
               </div>

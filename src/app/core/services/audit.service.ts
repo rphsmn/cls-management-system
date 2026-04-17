@@ -34,7 +34,12 @@ export type AuditAction =
   | 'user_created'
   | 'user_deactivated'
   | 'login_success'
-  | 'login_failed';
+  | 'login_failed'
+  | 'company_event_created'
+  | 'company_event_deleted'
+  | 'employee_created'
+  | 'employee_archived'
+  | 'employee_restored';
 
 @Injectable({
   providedIn: 'root',
@@ -57,17 +62,23 @@ export class AuditService {
     const logEntry: Omit<AuditLog, 'id'> = {
       action,
       details,
-      targetUserId: options?.targetUserId,
-      targetUserName: options?.targetUserName,
       performedBy: currentUser?.uid || 'system',
       performedByName: currentUser?.name || 'System',
       timestamp: serverTimestamp(),
-      metadata: options?.metadata,
     };
+
+    if (options?.targetUserId !== undefined) {
+      logEntry.targetUserId = options.targetUserId;
+    }
+    if (options?.targetUserName !== undefined) {
+      logEntry.targetUserName = options.targetUserName;
+    }
+    if (options?.metadata !== undefined) {
+      logEntry.metadata = options.metadata;
+    }
 
     try {
       await addDoc(collection(this.firestore, 'auditLogs'), logEntry);
-      console.log('[AuditService] Logged action:', action, details);
     } catch (error) {
       console.error('[AuditService] Failed to log action:', error);
     }

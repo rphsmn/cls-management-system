@@ -9,6 +9,9 @@ import {
   doc,
   updateDoc,
   getDoc,
+  setDoc,
+  addDoc,
+  serverTimestamp,
 } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -22,7 +25,7 @@ interface Employee {
   dept: string;
   initials: string;
   employeeId?: string;
-  status: 'Active' | 'On Leave' | 'Upcoming Leave' | 'Absent';
+  status: 'Active' | 'On Leave' | 'Upcoming Leave' | 'Absent' | 'Archived';
   leaveType?: string;
   leaveDate?: string;
   absentReason?: string;
@@ -202,12 +205,15 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
   selectedDept: string = 'All Departments';
 
   employees: Employee[] = [];
+  archivedEmployees: Employee[] = [];
   leaveRequests: LeaveRequest[] = [];
   departments: string[] = ['All Departments'];
   isLoading = true;
 
   workingToday = 0;
   awayToday = 0;
+  archivedCount = 0;
+  showArchived = false;
 
   selectedEmployee: any = null;
   selectedEmployeeProfile: any = null;
@@ -492,7 +498,21 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    this.employees = users.map((user) => {
+    const activeUsers = users.filter((user) => user.accountStatus !== 'archived');
+    const archivedUsers = users.filter((user) => user.accountStatus === 'archived');
+
+    this.archivedEmployees = archivedUsers.map((user) => ({
+      id: user.id,
+      name: user.name,
+      dept: user.department || user.dept || 'Unknown',
+      initials: this.getInitials(user.name || 'Unknown'),
+      employeeId: user.employeeId,
+      status: 'Archived' as Employee['status'],
+    }));
+
+    this.archivedCount = this.archivedEmployees.length;
+
+    this.employees = activeUsers.map((user) => {
       const initials = this.getInitials(user.name || 'Unknown');
       const dept = user.department || user.dept || 'Unknown';
 
@@ -668,16 +688,14 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
   }
 
   get filteredEmployees() {
-    const filtered = this.employees.filter((e) => {
+    const source = this.showArchived ? this.archivedEmployees : this.employees;
+    const filtered = source.filter((e) => {
       const matchesSearch =
+        !this.searchQuery ||
         e.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
         e.dept.toLowerCase().includes(this.searchQuery.toLowerCase());
       const matchesDept = this.selectedDept === 'All Departments' || e.dept === this.selectedDept;
       return matchesSearch && matchesDept;
-    });
-    console.log('[EmployeeStatus] filteredEmployees:', filtered.length, {
-      search: this.searchQuery,
-      dept: this.selectedDept,
     });
     return filtered;
   }
@@ -758,6 +776,241 @@ export class EmployeeStatusComponent implements OnInit, OnDestroy {
     this.selectedEmployee = null;
     this.selectedEmployeeProfile = null;
     this.expandedFields = {};
+  }
+
+  // Add Employee Modal State
+  showAddEmployeeModal = false;
+  addEmployeeStep = 1;
+  newEmployee: {
+    name: string;
+    dept: string;
+    employeeId: string;
+    position: string;
+    email: string;
+    mobileNo: string;
+    address: string;
+    birthday: string;
+    gender: string;
+    tin: string;
+    sss: string;
+    philhealth: string;
+    pagibig: string;
+  } = {
+    name: '',
+    dept: '',
+    employeeId: '',
+    position: '',
+    email: '',
+    mobileNo: '',
+    address: '',
+    birthday: '',
+    gender: '',
+    tin: '',
+    sss: '',
+    philhealth: '',
+    pagibig: '',
+  };
+
+  openAddEmployeeModal() {
+    this.showAddEmployeeModal = true;
+    this.addEmployeeStep = 1;
+    this.resetNewEmployeeForm();
+  }
+
+  closeAddEmployeeModal() {
+    this.showAddEmployeeModal = false;
+    this.resetNewEmployeeForm();
+  }
+
+  resetNewEmployeeForm() {
+    this.newEmployee = {
+      name: '',
+      dept: '',
+      employeeId: '',
+      position: '',
+      email: '',
+      mobileNo: '',
+      address: '',
+      birthday: '',
+      gender: '',
+      tin: '',
+      sss: '',
+      philhealth: '',
+      pagibig: '',
+    };
+  }
+
+  nextAddEmployeeStep() {
+    if (this.addEmployeeStep === 1) {
+      if (!this.newEmployee.name || !this.newEmployee.dept || !this.newEmployee.employeeId) {
+        Swal.fire({
+          title: 'Missing Information',
+          text: 'Please fill in all required fields (Name, Department, Employee ID).',
+          icon: 'warning',
+          confirmButtonText: 'OK',
+        });
+        return;
+      }
+    }
+    if (this.addEmployeeStep < 4) {
+      this.addEmployeeStep++;
+    }
+  }
+
+  prevAddEmployeeStep() {
+    if (this.addEmployeeStep > 1) {
+      this.addEmployeeStep--;
+    }
+  }
+
+  async submitAddEmployee() {
+    if (!this.validateNewEmployee()) {
+      return;
+    }
+
+    try {
+      const userRef = doc(collection(this.firestore, 'users'));
+      const employeeData = {
+        name: this.newEmployee.name,
+        dept: this.newEmployee.dept,
+        employeeId: this.newEmployee.employeeId,
+        position: this.newEmployee.position || null,
+        email: this.newEmployee.email || null,
+        mobileNo: this.newEmployee.mobileNo || null,
+        address: this.newEmployee.address || null,
+        birthday: this.newEmployee.birthday ? new Date(this.newEmployee.birthday) : null,
+        gender: this.newEmployee.gender || null,
+        tin: this.newEmployee.tin || null,
+        sss: this.newEmployee.sss || null,
+        philhealth: this.newEmployee.philhealth || null,
+        pagibig: this.newEmployee.pagibig || null,
+        accountStatus: 'active',
+        joinedDate: new Date(),
+        role: 'Employee',
+        createdAt: serverTimestamp(),
+      };
+
+      await setDoc(userRef, employeeData);
+
+      await this.auditService.logAction(
+        'employee_created',
+        `Employee created: ${this.newEmployee.name}`,
+        {
+          targetUserId: userRef.id,
+          targetUserName: this.newEmployee.name,
+          metadata: {
+            employeeId: this.newEmployee.employeeId,
+            dept: this.newEmployee.dept,
+          },
+        },
+      );
+
+      Swal.fire({
+        title: 'Employee Added',
+        text: `${this.newEmployee.name} has been successfully added to the system.`,
+        icon: 'success',
+        timer: 2500,
+        showConfirmButton: false,
+      });
+
+      this.closeAddEmployeeModal();
+    } catch (error) {
+      console.error('[EmployeeStatus] Error adding employee:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to add employee. Please try again.',
+        icon: 'error',
+      });
+    }
+  }
+
+  validateNewEmployee(): boolean {
+    if (!this.newEmployee.name.trim()) {
+      Swal.fire({ title: 'Error', text: 'Full name is required.', icon: 'error' });
+      return false;
+    }
+    if (!this.newEmployee.dept) {
+      Swal.fire({ title: 'Error', text: 'Department is required.', icon: 'error' });
+      return false;
+    }
+    if (!this.newEmployee.employeeId.trim()) {
+      Swal.fire({ title: 'Error', text: 'Employee ID is required.', icon: 'error' });
+      return false;
+    }
+    return true;
+  }
+
+  addEmployee() {
+    this.openAddEmployeeModal();
+  }
+
+  async toggleDeactivate() {
+    if (!this.selectedEmployee || !this.isHR()) {
+      return;
+    }
+
+    const emp = this.selectedEmployee;
+    const isArchived = emp.status === 'Archived';
+    const action = isArchived ? 'reactivate' : 'deactivate';
+    const confirmText = isArchived
+      ? `Reactivate ${emp.name}? They will appear in the active employee list.`
+      : `Deactivate ${emp.name}? This will move them to the archived list.`;
+
+    const result = await Swal.fire({
+      title: isArchived ? 'Reactivate Employee' : 'Deactivate Employee',
+      html: `<p>${confirmText}</p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: isArchived ? 'Reactivate' : 'Deactivate',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: isArchived ? '#16a34a' : '#dc2626',
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const userRef = doc(this.firestore, 'users', emp.id);
+      const newAccountStatus = isArchived ? 'active' : 'archived';
+
+      await updateDoc(userRef, {
+        accountStatus: newAccountStatus,
+      });
+
+      await this.auditService.logAction(
+        isArchived ? 'employee_restored' : 'employee_archived',
+        `${emp.name} ${isArchived ? 'reactivated' : 'deactivated'}`,
+        {
+          targetUserId: emp.id,
+          targetUserName: emp.name,
+          metadata: { newStatus: newAccountStatus },
+        },
+      );
+
+      Swal.fire({
+        title: isArchived ? 'Employee Reactivated' : 'Employee Deactivated',
+        text: `${emp.name} has been ${isArchived ? 'reactivated' : 'deactivated'}.`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      this.closeEmployeeMenu();
+    } catch (error) {
+      console.error(`[EmployeeStatus] Error during employee ${action}:`, error);
+      Swal.fire({
+        title: 'Error',
+        text: `Failed to ${action} employee. Please try again.`,
+        icon: 'error',
+      });
+    }
+  }
+
+  toggleArchived() {
+    this.showArchived = !this.showArchived;
+    if (this.showArchived) {
+      this.selectedDept = 'All Departments';
+      this.searchQuery = '';
+    }
   }
 
   async viewEmployeeProfile() {

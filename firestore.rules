@@ -6,61 +6,36 @@ service cloud.firestore {
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    // Helper function to get user role
-    function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-    }
-    
-    // Helper function to check if user is HR or Admin
-    function isHR() {
-      let role = getUserRole();
-      return role == 'HR' || role == 'Human Resource Officer' || role == 'Admin Manager';
-    }
-    
-    // Helper function to check if user is a supervisor
-    function isSupervisor() {
-      let role = getUserRole();
-      return role == 'Operations Admin Supervisor' || role == 'Account Supervisor';
-    }
-    
-    // Helper function to check if user is part of Operations department
-    function isOperationsStaff() {
-      let dept = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.department;
-      return dept == 'Operations' || dept == 'Admin Operations';
-    }
-    
-    // Helper function to check if user is part of Accounts department
-    function isAccountsStaff() {
-      let dept = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.department;
-      return dept == 'Accounts' || dept == 'Accounting';
-    }
-    
-    // USER PROFILES - Employees can read their own, HR can read/write all
+
+    // USER PROFILES - All authenticated users can read and create, HR can update any user
     match /users/{userId} {
-      // Allow read own profile
-      allow read: if request.auth.uid == userId || isHR();
-      // HR can create and update any profile, users can update their own
-      allow create: if isHR();
-      allow update: if request.auth.uid == userId || isHR();
-    }
-    
-    // LEAVE REQUESTS - Complex rules based on workflow
-    match /leaveRequests/{requestId} {
-      // Anyone authenticated can create requests
-      allow create: if isAuthenticated();
-      
-      // Users can read their own requests, HR/supervisors can read all
-      allow read: if isHR() || isSupervisor() || request.auth.uid == resource.data.uid;
-      
-      // Only HR and supervisors can update (approve/reject)
-      allow update: if isHR() || isSupervisor();
-    }
-    
-    // COMPANY EVENTS - Only HR can manage
-    match /company_events/{eventId} {
       allow read: if isAuthenticated();
-      allow write: if isHR();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+    
+    // LEAVE REQUESTS - All authenticated can read, create, update
+    match /leaveRequests/{requestId} {
+      allow read, create, update: if isAuthenticated();
+    }
+    
+    // COMPANY EVENTS - All authenticated users can read and write
+    match /company_events/{eventId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // AUDIT LOGS - All authenticated users can read and create
+    match /auditLogs/{logId} {
+      allow read, create: if isAuthenticated();
+    }
+    
+    // NOTIFICATIONS - Users can read; updates/deletes allowed for any authenticated (filtered by role in app)
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
   }
 }

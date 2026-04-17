@@ -7,7 +7,6 @@ import {
   query,
   orderBy,
   limit,
-  getDocs,
   onSnapshot,
   Unsubscribe,
 } from '@angular/fire/firestore';
@@ -37,12 +36,13 @@ export class AuditLogsComponent implements OnInit {
     'profile_updated',
     'user_created',
     'leave_cancelled',
+    'company_event_created',
+    'company_event_deleted',
   ];
 
-  // Time filter properties
   selectedPreset = 'all';
   selectedMonth = '';
-  selectedYear = new Date().getFullYear();
+  selectedYear: string | number = '';
 
   timePresets = [
     { label: '24h', value: '24h' },
@@ -85,10 +85,7 @@ export class AuditLogsComponent implements OnInit {
   }
 
   async ngOnInit() {
-    console.log('[AuditLogs] ngOnInit started');
-    const start = performance.now();
     await this.fetchLogs();
-    console.log('[AuditLogs] ngOnInit completed in', (performance.now() - start).toFixed(2), 'ms');
   }
 
   ngOnDestroy() {
@@ -98,9 +95,6 @@ export class AuditLogsComponent implements OnInit {
   }
 
   async fetchLogs() {
-    console.log('[AuditLogs] fetchLogs started');
-    const startTime = performance.now();
-
     try {
       if (this.unsubscribe) {
         this.unsubscribe();
@@ -108,27 +102,29 @@ export class AuditLogsComponent implements OnInit {
 
       const logsRef = collection(this.firestore, 'auditLogs');
       const q = query(logsRef, orderBy('timestamp', 'desc'), limit(500));
-      console.log('[AuditLogs] Query created, fetching...');
 
-      this.unsubscribe = onSnapshot(q, (snapshot) => {
-        const snapStart = performance.now();
-        console.log('[AuditLogs] Snapshot received:', snapshot.size, 'docs');
+      this.unsubscribe = onSnapshot(
+        q,
+        (snapshot: any) => {
+          this.allLogs = snapshot.docs.map((doc: any) => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+            };
+          }) as AuditLog[];
 
-        this.allLogs = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as AuditLog[];
+          this.applyFilters();
 
-        this.applyFilters();
-
-        this.isLoading = false;
-        this.cdr.detectChanges();
-        console.log(
-          '[AuditLogs] Total fetch time:',
-          (performance.now() - startTime).toFixed(2),
-          'ms',
-        );
-      });
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        (error: any) => {
+          console.error('[AuditLogs] Snapshot error:', error);
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+      );
     } catch (error) {
       console.error('[AuditLogs] Error fetching logs:', error);
       this.isLoading = false;
@@ -143,7 +139,6 @@ export class AuditLogsComponent implements OnInit {
   applyFilters() {
     let filtered = [...this.allLogs];
 
-    // Apply time preset filter
     if (this.selectedPreset !== 'all') {
       const now = new Date();
       let startDate: Date;
@@ -162,29 +157,29 @@ export class AuditLogsComponent implements OnInit {
           startDate = new Date(0);
       }
 
-      filtered = filtered.filter((log) => {
+      filtered = filtered.filter((log: AuditLog) => {
         const logDate = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
         return logDate >= startDate;
       });
     }
 
-    // Apply month/year filter
     if (this.selectedMonth || this.selectedYear) {
-      filtered = filtered.filter((log) => {
+      filtered = filtered.filter((log: AuditLog) => {
         const logDate = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
         const logMonth = logDate.getMonth() + 1;
         const logYear = logDate.getFullYear();
 
-        const monthMatch = this.selectedMonth ? logMonth === parseInt(this.selectedMonth) : true;
-        const yearMatch = logYear === this.selectedYear;
+        const monthMatch = this.selectedMonth
+          ? logMonth === parseInt(this.selectedMonth, 10)
+          : true;
+        const yearMatch = this.selectedYear ? logYear === +this.selectedYear : true;
 
         return monthMatch && yearMatch;
       });
     }
 
-    // Apply action filter
     if (this.filterAction !== 'all') {
-      filtered = filtered.filter((log) => log.action === this.filterAction);
+      filtered = filtered.filter((log: AuditLog) => log.action === this.filterAction);
     }
 
     this.logs = filtered;
@@ -193,7 +188,7 @@ export class AuditLogsComponent implements OnInit {
   clearFilters() {
     this.selectedPreset = 'all';
     this.selectedMonth = '';
-    this.selectedYear = new Date().getFullYear();
+    this.selectedYear = '';
     this.filterAction = 'all';
     this.applyFilters();
   }
@@ -214,6 +209,8 @@ export class AuditLogsComponent implements OnInit {
       user_deactivated: 'User Deactivated',
       login_success: 'Login Success',
       login_failed: 'Login Failed',
+      company_event_created: 'Company Event Created',
+      company_event_deleted: 'Company Event Deleted',
     };
     return actionMap[action] || action;
   }

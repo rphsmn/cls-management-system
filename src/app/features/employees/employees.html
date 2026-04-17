@@ -5,21 +5,30 @@
       <p>Live availability for {{ employees.length }} team members</p>
     </div>
 
-    <div class="filter-actions" *ngIf="isHR()">
-      <button class="mark-absent-btn" (click)="enterSelectionMode()">Mark Absent</button>
-      <span *ngIf="selectionMode" class="selection-indicator">
-        {{ selectedIds.size || 0 }} selected
-        <button (click)="exitSelectionMode()">Cancel</button>
-      </span>
-      <div class="select-wrapper">
-        <select [(ngModel)]="selectedDept" class="dept-select">
-          <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
-        </select>
+    <div class="header-right" *ngIf="isHR()">
+      <div class="header-actions">
+        <button class="add-emp-btn" (click)="addEmployee()">+ Add Employee</button>
+        <button class="archive-toggle-btn" (click)="toggleArchived()">
+          <span *ngIf="!showArchived">View Archived ({{ archivedCount }})</span>
+          <span *ngIf="showArchived">View Active</span>
+        </button>
       </div>
+      <div class="filter-actions">
+        <button class="mark-absent-btn" (click)="enterSelectionMode()">Mark Absent</button>
+        <span *ngIf="selectionMode" class="selection-indicator">
+          {{ selectedIds.size || 0 }} selected
+          <button (click)="exitSelectionMode()">Cancel</button>
+        </span>
+        <div class="select-wrapper">
+          <select [(ngModel)]="selectedDept" class="dept-select">
+            <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+          </select>
+        </div>
 
-      <div class="search-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" [(ngModel)]="searchQuery" placeholder="Search name or position..." />
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" [(ngModel)]="searchQuery" placeholder="Search name or position..." />
+        </div>
       </div>
     </div>
   </header>
@@ -30,7 +39,7 @@
   </div>
 
   <div *ngIf="!isLoading">
-    <div class="stats-grid">
+    <div class="stats-grid" *ngIf="!showArchived">
       <div class="stat-card">
         <div class="stat-value">{{ workingToday }}</div>
         <div class="stat-label">WORKING TODAY</div>
@@ -73,6 +82,7 @@
             [class.upcoming]="emp.status === 'Upcoming Leave'"
             [class.is-away]="emp.status === 'On Leave'"
             [class.is-absent]="emp.status === 'Absent'"
+            [class.archived]="emp.status === 'Archived'"
           >
             {{ emp.status | uppercase }}
           </span>
@@ -133,6 +143,22 @@
       <div class="modal-actions">
         <button class="modal-btn cancel-btn" (click)="closeEmployeeMenu()">Close</button>
         <button class="modal-btn secondary" (click)="viewEmployeeProfile()">View Profile</button>
+
+        <!-- Deactivate / Reactivate Button -->
+        <button
+          *ngIf="selectedEmployee && isHR()"
+          class="modal-btn"
+          [class.danger]="selectedEmployee.status !== 'Archived'"
+          [class.success]="selectedEmployee.status === 'Archived'"
+          (click)="toggleDeactivate()"
+          [title]="
+            selectedEmployee.status === 'Archived' ? 'Reactivate Employee' : 'Deactivate Employee'
+          "
+        >
+          {{ selectedEmployee.status === 'Archived' ? 'Reactivate' : 'Deactivate' }}
+        </button>
+
+        <!-- Absent Actions -->
         <button
           *ngIf="selectedEmployee?.status === 'Absent'"
           class="modal-btn success"
@@ -141,7 +167,7 @@
           Remove Absent
         </button>
         <button
-          *ngIf="selectedEmployee?.status !== 'Absent'"
+          *ngIf="selectedEmployee?.status !== 'Absent' && selectedEmployee?.status !== 'Archived'"
           class="modal-btn primary"
           (click)="markAsAbsentFromMenu()"
         >
@@ -333,6 +359,281 @@
         <div class="modal-footer">
           <button class="modal-btn cancel-btn" (click)="closeEmployeeMenu()">Close</button>
         </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div class="modal-overlay" *ngIf="showAddEmployeeModal" (click)="closeAddEmployeeModal()">
+  <div class="employee-modal" (click)="$event.stopPropagation()">
+    <button class="modal-close-btn" (click)="closeAddEmployeeModal()">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+
+    <!-- Step Indicator -->
+    <div class="step-indicator" *ngIf="addEmployeeStep > 1">
+      <div
+        class="step"
+        [class.active]="addEmployeeStep >= 1"
+        [class.completed]="addEmployeeStep > 1"
+      >
+        1
+      </div>
+      <div class="step-line" [class.completed]="addEmployeeStep > 1"></div>
+      <div
+        class="step"
+        [class.active]="addEmployeeStep >= 2"
+        [class.completed]="addEmployeeStep > 2"
+      >
+        2
+      </div>
+      <div class="step-line" [class.completed]="addEmployeeStep > 2"></div>
+      <div class="step" [class.active]="addEmployeeStep >= 3">3</div>
+    </div>
+
+    <!-- Step 1: Basic Information -->
+    <ng-container *ngIf="addEmployeeStep === 1">
+      <div class="modal-header">
+        <div class="modal-header-info">
+          <h2>Add New Employee</h2>
+          <p class="step-description">Step 1: Basic Information</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input
+            type="text"
+            [(ngModel)]="newEmployee.name"
+            placeholder="Juan Dela Cruz"
+            class="form-input"
+          />
+        </div>
+        <div class="form-group">
+          <label>Department *</label>
+          <select [(ngModel)]="newEmployee.dept" class="form-select">
+            <option value="" disabled selected>Select Department</option>
+            <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Employee ID *</label>
+          <input
+            type="text"
+            [(ngModel)]="newEmployee.employeeId"
+            placeholder="EMP-2024-001"
+            class="form-input"
+          />
+        </div>
+        <div class="form-group">
+          <label>Position / Role</label>
+          <input
+            type="text"
+            [(ngModel)]="newEmployee.position"
+            placeholder="Senior Developer"
+            class="form-input"
+          />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel-btn" (click)="closeAddEmployeeModal()">Cancel</button>
+        <button class="modal-btn primary" (click)="nextAddEmployeeStep()">
+          Next: Contact Details
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- Step 2: Contact Information -->
+    <ng-container *ngIf="addEmployeeStep === 2">
+      <div class="modal-header">
+        <div class="modal-header-info">
+          <h2>Add New Employee</h2>
+          <p class="step-description">Step 2: Contact Information</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input
+            type="email"
+            [(ngModel)]="newEmployee.email"
+            placeholder="juan.delacruz@company.com"
+            class="form-input"
+          />
+        </div>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input
+            type="tel"
+            [(ngModel)]="newEmployee.mobileNo"
+            placeholder="+63 912 345 6789"
+            class="form-input"
+          />
+        </div>
+        <div class="form-group">
+          <label>Address</label>
+          <textarea
+            [(ngModel)]="newEmployee.address"
+            placeholder="123 Main St, City, Province"
+            class="form-textarea"
+            rows="2"
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel-btn" (click)="closeAddEmployeeModal()">Cancel</button>
+        <button class="modal-btn secondary" (click)="prevAddEmployeeStep()">Back</button>
+        <button class="modal-btn primary" (click)="nextAddEmployeeStep()">
+          Next: Personal Details
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- Step 3: Personal Details & Government IDs -->
+    <ng-container *ngIf="addEmployeeStep === 3">
+      <div class="modal-header">
+        <div class="modal-header-info">
+          <h2>Add New Employee</h2>
+          <p class="step-description">Step 3: Personal Details & Government IDs</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group half">
+            <label>Date of Birth</label>
+            <input type="date" [(ngModel)]="newEmployee.birthday" class="form-input" />
+          </div>
+          <div class="form-group half">
+            <label>Gender</label>
+            <select [(ngModel)]="newEmployee.gender" class="form-select">
+              <option value="">Select</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <h4 class="section-title">Government IDs (Optional)</h4>
+
+        <div class="form-group">
+          <label>TIN</label>
+          <input
+            type="text"
+            [(ngModel)]="newEmployee.tin"
+            placeholder="123-456-789-000"
+            class="form-input"
+          />
+        </div>
+        <div class="form-group">
+          <label>SSS</label>
+          <input
+            type="text"
+            [(ngModel)]="newEmployee.sss"
+            placeholder="12-3456789-0"
+            class="form-input"
+          />
+        </div>
+        <div class="form-group">
+          <label>PhilHealth</label>
+          <input
+            type="text"
+            [(ngModel)]="newEmployee.philhealth"
+            placeholder="12-345678901-2"
+            class="form-input"
+          />
+        </div>
+        <div class="form-group">
+          <label>Pag-IBIG</label>
+          <input
+            type="text"
+            [(ngModel)]="newEmployee.pagibig"
+            placeholder="1234-567890-123"
+            class="form-input"
+          />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel-btn" (click)="closeAddEmployeeModal()">Cancel</button>
+        <button class="modal-btn secondary" (click)="prevAddEmployeeStep()">Back</button>
+        <button class="modal-btn primary" (click)="nextAddEmployeeStep()">Review & Submit</button>
+      </div>
+    </ng-container>
+
+    <!-- Step 4: Review & Submit -->
+    <ng-container *ngIf="addEmployeeStep === 4">
+      <div class="modal-header">
+        <div class="modal-header-info">
+          <h2>Review Employee Details</h2>
+          <p class="step-description">Confirm before creating</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="review-section">
+          <h4>Basic Information</h4>
+          <div class="info-row">
+            <label>Full Name</label>
+            <span>{{ newEmployee.name }}</span>
+          </div>
+          <div class="info-row">
+            <label>Department</label>
+            <span>{{ newEmployee.dept }}</span>
+          </div>
+          <div class="info-row">
+            <label>Employee ID</label>
+            <span>{{ newEmployee.employeeId }}</span>
+          </div>
+          <div class="info-row">
+            <label>Position</label>
+            <span>{{ newEmployee.position || '-' }}</span>
+          </div>
+        </div>
+
+        <div class="review-section">
+          <h4>Contact Information</h4>
+          <div class="info-row">
+            <label>Email</label>
+            <span>{{ newEmployee.email || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <label>Mobile</label>
+            <span>{{ newEmployee.mobileNo || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <label>Address</label>
+            <span>{{ newEmployee.address || '-' }}</span>
+          </div>
+        </div>
+
+        <div class="review-section">
+          <h4>Personal Details</h4>
+          <div class="info-row">
+            <label>Date of Birth</label>
+            <span>{{
+              newEmployee.birthday ? (newEmployee.birthday | date: 'MMM dd, yyyy') : '-'
+            }}</span>
+          </div>
+          <div class="info-row">
+            <label>Gender</label>
+            <span>{{ newEmployee.gender || '-' }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel-btn" (click)="closeAddEmployeeModal()">Cancel</button>
+        <button class="modal-btn secondary" (click)="prevAddEmployeeStep()">Back</button>
+        <button class="modal-btn success" (click)="submitAddEmployee()">Create Employee</button>
       </div>
     </ng-container>
   </div>

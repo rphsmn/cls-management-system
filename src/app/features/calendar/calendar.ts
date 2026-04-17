@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../core/services/auth';
 import { LeaveService } from '../../core/services/leave.services';
 import { HolidayService, Holiday } from '../../core/services/holiday.service';
+import { AuditService } from '../../core/services/audit.service';
 import { Firestore, collection, getDocs, doc, deleteDoc, addDoc } from '@angular/fire/firestore';
 import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -20,6 +21,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private leaveService = inject(LeaveService);
   private holidayService = inject(HolidayService);
+  private auditService = inject(AuditService);
   private firestore = inject(Firestore);
   private router = inject(Router);
   private cd = inject(ChangeDetectorRef);
@@ -36,10 +38,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
   suggestedNoticeDays = 3;
   isLoading = false;
   isHR = false;
-  newEventName = ''; // Bound to your [(ngModel)] in the HTML
+  newEventName = '';
   holidays: Holiday[] = [];
   companyEvents: any[] = [];
-  birthdays: any[] = []; // Store employee birthdays
+  birthdays: any[] = [];
 
   ngOnInit() {
     this.generateYearOptions();
@@ -66,7 +68,6 @@ export class CalendarComponent implements OnInit, OnDestroy {
       }),
     );
 
-    // Use getDocs instead of collectionData to avoid SDK mismatch
     this.loadCompanyEvents();
 
     this.subscriptions.add(
@@ -83,7 +84,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
       this.companyEvents = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       this.loadEmployeeBirthdays();
     } catch (error) {
-      // Error loading company events
+      console.error('[Calendar] Failed to load company events:', error);
     }
   }
 
@@ -93,19 +94,19 @@ export class CalendarComponent implements OnInit, OnDestroy {
       const snapshot = await getDocs(usersRef);
       const allUsers = snapshot.docs.map((doc) => doc.data() as any);
       this.birthdays = allUsers
-        .filter((user: any) => user.birthday) // Only include users with birthday
+        .filter((user: any) => user.birthday)
         .map((user: any) => {
           const birthdayDate = new Date(user.birthday);
           return {
             name: user.name || user.Name || 'Employee',
             birthday: user.birthday,
-            // Extract month and day for matching
             month: birthdayDate.getMonth(),
             day: birthdayDate.getDate(),
           };
         });
       this.generateCalendar();
     } catch (error) {
+      console.error('[Calendar] Failed to load employee birthdays:', error);
       this.generateCalendar();
     }
   }
@@ -114,7 +115,6 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  // FIX FOR TS2551: Adding the event to Firestore
   async addCompanyEvent() {
     if (!this.newEventName.trim() || !this.selectedDay) return;
 
@@ -122,20 +122,31 @@ export class CalendarComponent implements OnInit, OnDestroy {
       const eventsRef = collection(this.firestore, 'company_events');
       await addDoc(eventsRef, {
         title: this.newEventName,
-        date: this.selectedDay.date, // Format: YYYY-MM-DD
+        date: this.selectedDay.date,
         type: 'company-event',
         createdBy: this.authService.currentUser?.name || 'Admin',
       });
 
-      this.newEventName = ''; // Clear input
+      const eventTitle = this.newEventName;
+      const eventDate = this.selectedDay.date;
 
-      // Close modal immediately
+      this.newEventName = '';
       this.showModal = false;
 
-      // Reload company events and regenerate calendar to show the new event
+      this.auditService.logAction(
+        'company_event_created',
+        `Created company event "${eventTitle}" on ${eventDate}`,
+        {
+          metadata: {
+            eventTitle: eventTitle,
+            eventDate: eventDate,
+            eventType: 'company-event',
+          },
+        },
+      );
+
       await this.loadCompanyEvents();
 
-      // Show toast notification
       Swal.fire({
         toast: true,
         position: 'top-end',
@@ -145,6 +156,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         timer: 1500,
       });
     } catch (error) {
+      console.error('[Calendar] Failed to add company event:', error);
       Swal.fire({
         title: 'Error',
         html: '<div style="color: #64748b; font-size: 14px;">Could not save event</div>',
@@ -183,46 +195,59 @@ export class CalendarComponent implements OnInit, OnDestroy {
       },
     });
 
-    if (result.isConfirmed) {
-      try {
-        const eventId = this.selectedDay.companyEvent.id;
-        await deleteDoc(doc(this.firestore, `company_events/${eventId}`));
+    if (!result.isConfirmed) return;
 
-        // Close modal immediately
-        this.showModal = false;
+    try {
+      const eventId = this.selectedDay.companyEvent.id;
+      const eventTitle = this.selectedDay.companyEvent.title;
+      const eventDate = this.selectedDay.companyEvent.date;
 
-        // Reload company events and regenerate calendar to reflect the deletion
-        await this.loadCompanyEvents();
+      await deleteDoc(doc(this.firestore, `company_events/${eventId}`));
 
-        // Show success notification
-        Swal.fire({
-          title: 'Deleted',
-          html: '<div style="color: #64748b; font-size: 14px;">Event removed successfully</div>',
-          icon: 'success',
-          confirmButtonText: 'OK',
-          confirmButtonColor: '#1a5336',
-          buttonsStyling: false,
-          customClass: {
-            popup: 'swal-premium-popup',
-            confirmButton: 'swal-confirm-mint',
-            actions: 'swal-button-container',
+      this.showModal = false;
+      await this.loadCompanyEvents();
+
+      this.auditService.logAction(
+        'company_event_deleted',
+        `Deleted company event "${eventTitle}" on ${eventDate}`,
+        {
+          metadata: {
+            eventTitle: eventTitle,
+            eventDate: eventDate,
+            eventId: eventId,
+            eventType: 'company-event',
           },
-        });
-      } catch (error) {
-        Swal.fire({
-          title: 'Error',
-          html: '<div style="color: #64748b; font-size: 14px;">Failed to delete event</div>',
-          icon: 'error',
-          confirmButtonText: 'OK',
-          confirmButtonColor: '#1a5336',
-          buttonsStyling: false,
-          customClass: {
-            popup: 'swal-premium-popup',
-            confirmButton: 'swal-confirm-mint',
-            actions: 'swal-button-container',
-          },
-        });
-      }
+        },
+      );
+
+      Swal.fire({
+        title: 'Deleted',
+        html: '<div style="color: #64748b; font-size: 14px;">Event removed successfully</div>',
+        icon: 'success',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#1a5336',
+        buttonsStyling: false,
+        customClass: {
+          popup: 'swal-premium-popup',
+          confirmButton: 'swal-confirm-mint',
+          actions: 'swal-button-container',
+        },
+      });
+    } catch (error) {
+      console.error('[Calendar] Failed to delete company event:', error);
+      Swal.fire({
+        title: 'Error',
+        html: '<div style="color: #64748b; font-size: 14px;">Failed to delete event</div>',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#1a5336',
+        buttonsStyling: false,
+        customClass: {
+          popup: 'swal-premium-popup',
+          confirmButton: 'swal-confirm-mint',
+          actions: 'swal-button-container',
+        },
+      });
     }
   }
 

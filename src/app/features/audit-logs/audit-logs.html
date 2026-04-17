@@ -26,6 +26,7 @@
         </select>
 
         <select [(ngModel)]="selectedYear" (change)="applyFilters()" class="filter-select">
+          <option value="">All Years</option>
           <option *ngFor="let year of years" [value]="year">
             {{ year }}
           </option>
@@ -70,10 +71,12 @@
           </span>
         </div>
         <div class="col-user">
-          <span class="user-name">{{ log.performedByName?.trim() }}</span>
+          <span class="user-name">{{ log.performedByName.trim() }}</span>
         </div>
         <div class="col-target">
-          <span class="target-name" [attr.data-empty]="!log.targetUserName ? 'true' : null">{{ log.targetUserName?.trim() || '-' }}</span>
+          <span class="target-name" [attr.data-empty]="!log.targetUserName ? 'true' : null">{{
+            log.targetUserName?.trim() || '-'
+          }}</span>
         </div>
         <div class="col-details">
           <span class="details-text">{{ log.details }}</span>

@@ -49,13 +49,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   notifications$ = this.notificationService.notifications$;
 
   ngOnInit() {
-    console.log('[MainLayout] ngOnInit - checking theme...');
     const savedTheme = localStorage.getItem('theme');
-    console.log('[MainLayout] Saved theme from localStorage:', savedTheme);
     if (savedTheme === 'dark') {
       this.darkMode = true;
     }
-    console.log('[MainLayout] darkMode state after init:', this.darkMode);
+    document.body.setAttribute('data-theme', savedTheme || 'light');
     this.authService.currentUser$.subscribe((user) => {
       if (user) {
         this.notificationService.subscribeToNotifications(user.role, user.uid);
@@ -102,11 +100,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   toggleDarkMode() {
-    console.log('[MainLayout] toggleDarkMode - before:', this.darkMode);
     this.darkMode = !this.darkMode;
-    console.log('[MainLayout] toggleDarkMode - after:', this.darkMode);
     localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
-    console.log('[MainLayout] localStorage theme set to:', this.darkMode ? 'dark' : 'light');
+    document.body.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
   }
 
   toggleNotifications() {
@@ -140,7 +136,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     const currentUser = this.authService.currentUser;
     if (currentUser) {
       this.inactivityTimeout = setTimeout(() => {
-        console.log('[MainLayout] Session timed out due to inactivity');
         this.authService.logout();
         this.router.navigate(['/login']);
       }, this.INACTIVITY_LIMIT);
@@ -150,19 +145,18 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   async markAllAsRead() {
     const user = this.authService.currentUser;
     if (user) {
-      await this.notificationService.markAllAsRead(user.role);
+      await this.notificationService.markAllAsRead(user.role, user.uid);
     }
   }
 
   async clearAllNotifications() {
     const user = this.authService.currentUser;
     if (user) {
-      await this.notificationService.clearAllNotifications(user.role);
+      await this.notificationService.clearAllNotifications(user.role, user.uid);
     }
   }
 
   async markAsRead(notification: any) {
-    console.log('[MainLayout] Mark as read clicked:', notification);
     if (!notification.read) {
       await this.notificationService.markAsRead(notification.id);
     }
@@ -191,7 +185,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.showLogoutModal = false;
       this.router.navigate(['/login']);
     } catch (error) {
-      // Logout failed silently
+      // Ignore logout errors
     }
   }
 
